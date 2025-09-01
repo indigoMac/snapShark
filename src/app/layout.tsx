@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
+import { ClerkProvider } from '@clerk/nextjs';
+import { Navigation } from '@/components/Navigation';
 import './globals.css';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -37,63 +39,37 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body className={inter.className}>
-        <div className="min-h-screen bg-background">
-          <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-            <div className="container mx-auto px-4">
-              <div className="flex h-16 items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                    <span className="text-primary-foreground font-bold text-lg">
-                      S
-                    </span>
-                  </div>
-                  <span className="font-bold text-xl">SnapShark</span>
-                </div>
+    <ClerkProvider>
+      <html lang="en">
+        <body className={inter.className}>
+          <div className="min-h-screen bg-background">
+            <Navigation />
 
-                <div className="flex items-center gap-4">
-                  <a
-                    href="/pricing"
-                    className="text-sm font-medium hover:text-primary transition-colors"
-                  >
-                    Pricing
-                  </a>
-                  <a
-                    href="/account"
-                    className="text-sm font-medium hover:text-primary transition-colors"
-                  >
-                    Account
-                  </a>
+            <main className="container mx-auto px-4 py-8">{children}</main>
+
+            <footer className="border-t bg-muted/50 mt-16">
+              <div className="container mx-auto px-4 py-8">
+                <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 bg-primary rounded flex items-center justify-center">
+                      <span className="text-primary-foreground font-bold text-sm">
+                        S
+                      </span>
+                    </div>
+                    <span className="font-medium">SnapShark</span>
+                  </div>
+
+                  <div className="flex items-center gap-6 text-sm text-muted-foreground">
+                    <span>🔒 100% Privacy - No uploads</span>
+                    <span>🚀 Powered by your browser</span>
+                    <span>⚡ Lightning fast</span>
+                  </div>
                 </div>
               </div>
-            </div>
-          </nav>
-
-          <main className="container mx-auto px-4 py-8">{children}</main>
-
-          <footer className="border-t bg-muted/50 mt-16">
-            <div className="container mx-auto px-4 py-8">
-              <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 bg-primary rounded flex items-center justify-center">
-                    <span className="text-primary-foreground font-bold text-sm">
-                      S
-                    </span>
-                  </div>
-                  <span className="font-medium">SnapShark</span>
-                </div>
-
-                <div className="flex items-center gap-6 text-sm text-muted-foreground">
-                  <span>🔒 100% Privacy - No uploads</span>
-                  <span>🚀 Powered by your browser</span>
-                  <span>⚡ Lightning fast</span>
-                </div>
-              </div>
-            </div>
-          </footer>
-        </div>
-      </body>
-    </html>
+            </footer>
+          </div>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }

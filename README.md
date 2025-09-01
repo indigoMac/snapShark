@@ -32,7 +32,7 @@ A modern, client-side image converter and resizer built with Next.js. Convert be
 - **Image Processing**: HTML Canvas + Pica (WASM)
 - **Workers**: Web Workers for CPU-heavy operations
 - **Authentication**: Clerk (Phase 2)
-- **Payments**: Stripe (Phase 2)  
+- **Payments**: Stripe (Phase 2)
 - **PWA**: Service Workers (Phase 3)
 - **Testing**: Playwright + Vitest
 - **Deployment**: Vercel
@@ -185,6 +185,7 @@ npm run start
 ## 🎯 Current Status
 
 ✅ **PRODUCTION READY** - App is deployed and fully functional on Vercel!
+
 - Core image processing working perfectly
 - Client-side only (no backend required)
 - All formats supported with proper fallbacks
@@ -193,32 +194,37 @@ npm run start
 ## 🛣️ Development Roadmap
 
 ### Phase 1 ✅ (COMPLETED)
+
 - [x] Basic image conversion and resizing
-- [x] Web Worker integration  
+- [x] Web Worker integration
 - [x] Freemium paywall system
 - [x] Production deployment on Vercel
 - [x] CI/CD pipeline with GitHub Actions
 - [x] Format detection and quality fixes
 
 ### Phase 2 (NEXT - Business Features)
+
 - [ ] **Auth integration (Clerk)** - User accounts and login
 - [ ] **Payment integration (Stripe)** - Pro subscriptions
 - [ ] **User dashboard** - Usage tracking and settings
 - [ ] **Enhanced preset management** - Save custom presets
 
 ### Phase 3 (UX & Performance)
+
 - [ ] **UI/UX improvements** - Better design and user flow
 - [ ] **PWA enhancements** - Offline support, app install
 - [ ] **Performance optimization** - Faster processing, better quality
 - [ ] **Advanced formats** - HEIC input, enhanced AVIF
 
 ### Phase 4 (Advanced Features)
+
 - [ ] **AI upscaling** - WASM ESRGAN integration
 - [ ] **Batch template system** - Complex preset workflows
 - [ ] **Cloud preset sync** - Share presets across devices
 - [ ] **API for developers** - Programmatic access
 
 ### Phase 5 (Scale & Growth)
+
 - [ ] **Team collaboration** - Multi-user accounts
 - [ ] **Desktop app** - Tauri-based standalone app
 - [ ] **Enterprise features** - White-labeling, bulk licensing
@@ -226,21 +232,24 @@ npm run start
 ## 🎯 Immediate Next Steps (Recommended Order)
 
 ### Option A: Business First (Monetization)
+
 1. **Integrate Clerk Auth** - Enable user accounts
-2. **Add Stripe Payments** - Enable Pro subscriptions  
+2. **Add Stripe Payments** - Enable Pro subscriptions
 3. **Build User Dashboard** - Track usage, manage subscription
 4. **UI Polish** - Improve design and user experience
 
-### Option B: User Experience First  
+### Option B: User Experience First
+
 1. **UI/UX Improvements** - Better design, smoother workflow
 2. **PWA Features** - Offline support, app install prompt
 3. **Performance Optimization** - Faster processing
 4. **Auth & Payments** - Business features after UX is perfect
 
 ### Option C: Technical Depth
+
 1. **Advanced Format Support** - HEIC input, better AVIF
 2. **Performance Optimization** - Multi-threading, WASM improvements
-3. **Enhanced PWA** - Full offline functionality 
+3. **Enhanced PWA** - Full offline functionality
 4. **Auth & Payments** - Business layer on solid tech foundation
 
 **💡 Recommendation**: Start with **Option A** to validate monetization early, then circle back to UX improvements.

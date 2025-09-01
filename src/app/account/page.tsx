@@ -11,9 +11,11 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Crown, Settings, CreditCard, Shield, Download } from 'lucide-react';
 import { usePaywall } from '@/hooks/usePaywall';
+import { useUser, RedirectToSignIn } from '@clerk/nextjs';
 
 export default function AccountPage() {
   const { isPro, upgradeToProMock } = usePaywall();
+  const { user: clerkUser, isLoaded } = useUser();
 
   const handleManageSubscription = () => {
     // TODO: Integrate with Stripe Customer Portal
@@ -24,11 +26,25 @@ export default function AccountPage() {
     upgradeToProMock();
   };
 
-  // Mock user data - TODO: Replace with actual auth data
+  if (!isLoaded) {
+    return (
+      <div className="space-y-8 max-w-4xl mx-auto">
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
+          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!clerkUser) {
+    return <RedirectToSignIn />;
+  }
+
   const user = {
-    email: 'user@example.com',
-    name: 'Demo User',
-    joinDate: '2024-01-15',
+    email: clerkUser?.emailAddresses[0]?.emailAddress || 'No email',
+    name: clerkUser?.fullName || clerkUser?.firstName || 'User',
+    joinDate: clerkUser?.createdAt?.toLocaleDateString() || 'Recently',
     plan: isPro ? 'Pro' : 'Free',
   };
 
@@ -59,9 +75,7 @@ export default function AccountPage() {
               </div>
               <div>
                 <label className="text-sm font-medium">Member Since</label>
-                <p className="text-sm text-muted-foreground">
-                  January 15, 2024
-                </p>
+                <p className="text-sm text-muted-foreground">{user.joinDate}</p>
               </div>
             </div>
           </CardContent>
