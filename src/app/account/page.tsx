@@ -37,10 +37,9 @@ export default function AccountPage() {
     );
   }
 
-  // Temporarily disable redirect for debugging
-  // if (!clerkUser) {
-  //   return <RedirectToSignIn />;
-  // }
+  if (!clerkUser) {
+    return <RedirectToSignIn />;
+  }
 
   const user = {
     email: clerkUser?.emailAddresses[0]?.emailAddress || 'No email',
