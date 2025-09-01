@@ -96,7 +96,7 @@ async function canEncode(mimeType: OutputFormat): Promise<boolean> {
   const canvas = new OffscreenCanvas(1, 1);
   try {
     const blob = await canvas.convertToBlob({ type: mimeType });
-    return blob !== null;
+    return blob !== null && blob.type === mimeType;
   } catch {
     return false;
   }
@@ -125,7 +125,7 @@ async function convertToBlob(
   
   const blob = await canvas.convertToBlob({
     type: targetFormat,
-    quality: quality
+    quality: quality || 0.85
   });
   
   return { blob, actualFormat: targetFormat, fallbackUsed };

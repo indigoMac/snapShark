@@ -5,6 +5,7 @@ A modern, client-side image converter and resizer built with Next.js. Convert be
 ## 🚀 Features
 
 ### Free Tier
+
 - ✅ Single image processing
 - ✅ Basic formats (JPG, PNG, WebP)
 - ✅ Resize by dimensions or scale percentage
@@ -14,6 +15,7 @@ A modern, client-side image converter and resizer built with Next.js. Convert be
 - ✅ One-time trial (3 files batch)
 
 ### Pro Tier (£3/month or £15/year)
+
 - ✅ Batch process up to 50 images
 - ✅ Professional presets & templates
 - ✅ Advanced formats (AVIF output, HEIC/HEIF input)
@@ -45,23 +47,27 @@ A modern, client-side image converter and resizer built with Next.js. Convert be
 ### Installation
 
 1. Clone the repository:
+
 ```bash
 git clone <repository-url>
 cd snapshark
 ```
 
 2. Install dependencies:
+
 ```bash
 npm install
 ```
 
 3. Set up environment variables:
+
 ```bash
 cp .env.example .env.local
 # Edit .env.local with your keys (optional for basic functionality)
 ```
 
 4. Run the development server:
+
 ```bash
 npm run dev
 ```
@@ -71,11 +77,13 @@ npm run dev
 ## 🧪 Testing
 
 ### Unit Tests
+
 ```bash
 npm run test
 ```
 
 ### E2E Tests
+
 ```bash
 npm run e2e
 npm run test:setup  # First time only
@@ -135,12 +143,14 @@ src/
 ## 🎨 Key Components
 
 ### Image Processing Pipeline
+
 1. **File Upload**: Drag & drop with format validation
 2. **Settings**: Format, quality, dimensions, presets
 3. **Web Worker**: CPU-intensive processing in background
 4. **Download**: Individual files or ZIP batches
 
 ### Privacy Features
+
 - No server uploads - all processing is client-side
 - Web Workers prevent UI blocking
 - Local storage for settings and presets
@@ -171,6 +181,7 @@ npm run start
 ## 🛣️ Roadmap
 
 ### Phase 1 (Current)
+
 - [x] Basic image conversion and resizing
 - [x] Web Worker integration
 - [x] Freemium paywall system
@@ -179,12 +190,14 @@ npm run start
 - [ ] PWA configuration
 
 ### Phase 2
+
 - [ ] HEIC/HEIF WASM decoder
 - [ ] Advanced AVIF support
 - [ ] AI upscaling (WASM ESRGAN)
 - [ ] Cloud preset sync
 
 ### Phase 3
+
 - [ ] Team collaboration features
 - [ ] API for developers
 - [ ] Desktop app (Tauri)
@@ -210,4 +223,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 Built with ❤️ for privacy-conscious users who want powerful image processing without compromising their data.
+
 # snapShark

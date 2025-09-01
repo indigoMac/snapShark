@@ -17,7 +17,7 @@ import { loadImage } from '@/lib/canvas';
 export default function HomePage() {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [settings, setSettings] = useState<ImageSettings>({
-    format: 'image/webp' as const,
+    format: 'image/jpeg' as const,
     quality: 0.85,
     scale: 1.0,
     lockAspectRatio: true,
