@@ -17,7 +17,10 @@ export function usePaywall() {
   useEffect(() => {
     if (user) {
       console.log('[PAYWALL] User metadata:', (user as any)?.privateMetadata);
-      console.log('[PAYWALL] isProUser check:', (user as any)?.privateMetadata?.isProUser === true);
+      console.log(
+        '[PAYWALL] isProUser check:',
+        (user as any)?.privateMetadata?.isProUser === true
+      );
     } else if (isLoaded) {
       console.log('[PAYWALL] User loaded but no metadata available');
     }
@@ -60,13 +63,21 @@ export function usePaywall() {
 
   // Update state when user data changes
   useEffect(() => {
-    setPaywallState((prev) => ({
-      ...prev,
-      isPro: isProUser,
-      subscriptionStatus,
-      customerId,
-    }));
-  }, [isProUser, subscriptionStatus, customerId]);
+    if (isLoaded) {
+      console.log(
+        '[PAYWALL] Updating state - isProUser:',
+        isProUser,
+        'subscriptionStatus:',
+        subscriptionStatus
+      );
+      setPaywallState((prev) => ({
+        ...prev,
+        isPro: isProUser,
+        subscriptionStatus,
+        customerId,
+      }));
+    }
+  }, [isLoaded, isProUser, subscriptionStatus, customerId]);
 
   const [showPaywallDialog, setShowPaywallDialog] = useState(false);
   const [paywallFeature, setPaywallFeature] = useState<string>('');
@@ -195,11 +206,11 @@ export function usePaywall() {
 
   return {
     // State
-    isPro: isProUser, // Use real subscription status
+    isPro: paywallState.isPro, // Use state that gets updated via useEffect
     hasTrialAvailable: paywallState.hasTrialAvailable,
     trialUsed: paywallState.trialUsed,
-    subscriptionStatus,
-    customerId,
+    subscriptionStatus: paywallState.subscriptionStatus,
+    customerId: paywallState.customerId,
 
     // Feature access
     checkFeatureAccess,
