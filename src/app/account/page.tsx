@@ -34,7 +34,7 @@ function AccountPageContent() {
           console.error('❌ Failed to refresh user data:', error);
         }
       };
-      
+
       // Try refreshing user data after webhook processing time
       setTimeout(refreshUserData, 2000);
     }
@@ -51,7 +51,7 @@ function AccountPageContent() {
 
   const handleRefreshUserData = async () => {
     if (!clerkUser) return;
-    
+
     try {
       console.log('🔄 Manually refreshing Clerk user data...');
       await clerkUser.reload();
@@ -161,9 +161,13 @@ function AccountPageContent() {
                     Upgrade to Pro
                   </Button>
                 )}
-                
+
                 {/* Debug button - remove after fixing */}
-                <Button onClick={handleRefreshUserData} variant="outline" size="sm">
+                <Button
+                  onClick={handleRefreshUserData}
+                  variant="outline"
+                  size="sm"
+                >
                   🔄 Refresh Data
                 </Button>
               </div>
