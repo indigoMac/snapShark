@@ -13,6 +13,14 @@ export interface PaywallState {
 export function usePaywall() {
   const { user } = useUser();
 
+  // Debug: Log user metadata (remove in production)
+  useEffect(() => {
+    if (user) {
+      console.log('[PAYWALL] User metadata:', (user as any)?.privateMetadata);
+      console.log('[PAYWALL] isProUser check:', (user as any)?.privateMetadata?.isProUser === true);
+    }
+  }, [user]);
+
   // Get subscription status from Clerk user metadata
   const isProUser = (user as any)?.privateMetadata?.isProUser === true;
   const subscriptionStatus = (user as any)?.privateMetadata
