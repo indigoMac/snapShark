@@ -12,10 +12,10 @@ import { Badge } from '@/components/ui/badge';
 import { Crown, Settings, CreditCard, Shield, Download } from 'lucide-react';
 import { usePaywall } from '@/hooks/usePaywall';
 import { useUser, RedirectToSignIn } from '@clerk/nextjs';
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 
-export default function AccountPage() {
+function AccountPageContent() {
   const { isPro, upgradeToPro, manageSubscription, subscriptionStatus } =
     usePaywall();
   const { user: clerkUser, isLoaded } = useUser();
@@ -27,12 +27,16 @@ export default function AccountPage() {
     if (success === 'true' && clerkUser && !isPro) {
       // In a real app, this would be handled by webhooks
       // For local testing, we'll show a message
-      console.log('Payment successful! In production, webhook would update Pro status.');
-      
+      console.log(
+        'Payment successful! In production, webhook would update Pro status.'
+      );
+
       // Optionally, you could call a function to manually update the user's status
       // For now, we'll just show a success message
       setTimeout(() => {
-        alert('Payment successful! 🎉\n\nNote: In production, your Pro status would be automatically updated by webhooks.\n\nFor local testing, please check your Stripe dashboard to confirm the payment.');
+        alert(
+          'Payment successful! 🎉\n\nNote: In production, your Pro status would be automatically updated by webhooks.\n\nFor local testing, please check your Stripe dashboard to confirm the payment.'
+        );
       }, 1000);
     }
   }, [success, clerkUser, isPro]);
@@ -259,5 +263,20 @@ export default function AccountPage() {
         </Card>
       </div>
     </div>
+  );
+}
+
+export default function AccountPage() {
+  return (
+    <Suspense fallback={
+      <div className="space-y-8 max-w-4xl mx-auto">
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
+          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+        </div>
+      </div>
+    }>
+      <AccountPageContent />
+    </Suspense>
   );
 }
