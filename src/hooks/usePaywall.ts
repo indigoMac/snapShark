@@ -26,10 +26,19 @@ export function usePaywall() {
     }
   }, [user, isLoaded]);
 
-  // Log if metadata is missing (removed auto-refresh)
+  // Debug logging for metadata issues
   useEffect(() => {
-    if (isLoaded && user && !(user as any)?.privateMetadata) {
-      console.log('[PAYWALL] ⚠️ User metadata missing - manual refresh needed');
+    if (isLoaded && user) {
+      console.log('[PAYWALL] 🔍 Full user object:', user);
+      console.log('[PAYWALL] 📋 User privateMetadata:', (user as any)?.privateMetadata);
+      console.log('[PAYWALL] 📋 User publicMetadata:', (user as any)?.publicMetadata);
+      console.log('[PAYWALL] 📋 User unsafeMetadata:', (user as any)?.unsafeMetadata);
+      
+      if (!(user as any)?.privateMetadata) {
+        console.log('[PAYWALL] ⚠️ User metadata missing - this is the problem!');
+      } else {
+        console.log('[PAYWALL] ✅ Metadata found, checking Pro status...');
+      }
     }
   }, [user, isLoaded]);
 

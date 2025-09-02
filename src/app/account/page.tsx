@@ -25,14 +25,20 @@ function AccountPageContent() {
   // Handle successful payment return
   useEffect(() => {
     if (success === 'true' && clerkUser) {
-      // Refresh page after delay to check if webhook updated Pro status
-      setTimeout(() => {
-        if (!isPro) {
-          window.location.reload();
+      // Force Clerk to refresh user data instead of page reload
+      const refreshUserData = async () => {
+        try {
+          await clerkUser.reload();
+          console.log('✅ Clerk user data refreshed');
+        } catch (error) {
+          console.error('❌ Failed to refresh user data:', error);
         }
-      }, 3000); // Give webhook time to process
+      };
+      
+      // Try refreshing user data after webhook processing time
+      setTimeout(refreshUserData, 2000);
     }
-  }, [success, clerkUser, isPro]);
+  }, [success, clerkUser]);
 
   const handleManageSubscription = () => {
     manageSubscription();
@@ -41,6 +47,18 @@ function AccountPageContent() {
   const handleUpgrade = () => {
     // Redirect to pricing page for upgrade
     window.location.href = '/pricing';
+  };
+
+  const handleRefreshUserData = async () => {
+    if (!clerkUser) return;
+    
+    try {
+      console.log('🔄 Manually refreshing Clerk user data...');
+      await clerkUser.reload();
+      console.log('✅ User data refreshed successfully');
+    } catch (error) {
+      console.error('❌ Failed to refresh user data:', error);
+    }
   };
 
   if (!isLoaded) {
@@ -143,6 +161,11 @@ function AccountPageContent() {
                     Upgrade to Pro
                   </Button>
                 )}
+                
+                {/* Debug button - remove after fixing */}
+                <Button onClick={handleRefreshUserData} variant="outline" size="sm">
+                  🔄 Refresh Data
+                </Button>
               </div>
             </div>
 
