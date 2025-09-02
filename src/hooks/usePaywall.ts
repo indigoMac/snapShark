@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { getStripe } from '@/lib/stripe';
 
@@ -14,20 +14,42 @@ export function usePaywall() {
   const { user } = useUser();
 
   // Get subscription status from Clerk user metadata
-  const isProUser = user?.privateMetadata?.isProUser === true;
-  const subscriptionStatus = user?.privateMetadata
+  const isProUser = (user as any)?.privateMetadata?.isProUser === true;
+  const subscriptionStatus = (user as any)?.privateMetadata
     ?.subscriptionStatus as string;
-  const customerId = user?.privateMetadata?.stripeCustomerId as string;
-  const trialUsedFromStorage =
-    localStorage.getItem('snapshark-trial-used') === 'true';
+  const customerId = (user as any)?.privateMetadata?.stripeCustomerId as string;
 
+  // Initialize state without localStorage (will be set in useEffect)
   const [paywallState, setPaywallState] = useState<PaywallState>({
     isPro: isProUser,
-    hasTrialAvailable: !trialUsedFromStorage,
-    trialUsed: trialUsedFromStorage,
+    hasTrialAvailable: true, // Default to true, will be updated in useEffect
+    trialUsed: false, // Default to false, will be updated in useEffect
     subscriptionStatus,
     customerId,
   });
+
+  // Update trial state from localStorage after component mounts
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const trialUsedFromStorage =
+        localStorage.getItem('snapshark-trial-used') === 'true';
+      setPaywallState((prev) => ({
+        ...prev,
+        hasTrialAvailable: !trialUsedFromStorage,
+        trialUsed: trialUsedFromStorage,
+      }));
+    }
+  }, []);
+
+  // Update state when user data changes
+  useEffect(() => {
+    setPaywallState((prev) => ({
+      ...prev,
+      isPro: isProUser,
+      subscriptionStatus,
+      customerId,
+    }));
+  }, [isProUser, subscriptionStatus, customerId]);
 
   const [showPaywallDialog, setShowPaywallDialog] = useState(false);
   const [paywallFeature, setPaywallFeature] = useState<string>('');
@@ -70,8 +92,10 @@ export function usePaywall() {
       return false;
     }
 
-    // Save trial usage to localStorage
-    localStorage.setItem('snapshark-trial-used', 'true');
+    // Save trial usage to localStorage (only on client)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('snapshark-trial-used', 'true');
+    }
 
     setPaywallState((prev) => ({
       ...prev,
@@ -99,13 +123,32 @@ export function usePaywall() {
           body: JSON.stringify({ priceId, isYearly }),
         });
 
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error('Checkout error:', errorData);
+
+          if (response.status === 401) {
+            alert('Please sign in first to upgrade to Pro');
+            return;
+          }
+
+          alert(
+            `Error: ${errorData.error || 'Failed to create checkout session'}`
+          );
+          return;
+        }
+
         const { sessionId, url } = await response.json();
 
         if (url) {
           window.location.href = url;
+        } else {
+          console.error('No checkout URL received');
+          alert('Failed to create checkout session');
         }
       } catch (error) {
         console.error('Upgrade error:', error);
+        alert('Network error. Please try again.');
       }
     },
     []

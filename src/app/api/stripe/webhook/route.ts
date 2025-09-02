@@ -8,6 +8,13 @@ const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
 
 export async function POST(req: NextRequest) {
   try {
+    if (!stripe) {
+      return NextResponse.json(
+        { error: 'Stripe not configured' },
+        { status: 500 }
+      );
+    }
+
     const body = await req.text();
     const signature = headers().get('stripe-signature')!;
 
@@ -27,7 +34,8 @@ export async function POST(req: NextRequest) {
 
         if (userId && session.subscription) {
           // Update user metadata with subscription info
-          await clerkClient.users.updateUserMetadata(userId, {
+          const client = await clerkClient();
+          await client.users.updateUserMetadata(userId, {
             privateMetadata: {
               stripeCustomerId: session.customer,
               stripeSubscriptionId: session.subscription,
@@ -47,17 +55,18 @@ export async function POST(req: NextRequest) {
         const customerId = subscription.customer as string;
 
         // Find user by customer ID
-        const users = await clerkClient.users.getUserList({
-          limit: 1,
+        const client = await clerkClient();
+        const users = await client.users.getUserList({
+          limit: 100, // Increased limit to find users
         });
 
-        const user = users.find(
-          (u) => u.privateMetadata?.stripeCustomerId === customerId
+        const user = users.data.find(
+          (u: any) => u.privateMetadata?.stripeCustomerId === customerId
         );
 
         if (user) {
           const isActive = subscription.status === 'active';
-          await clerkClient.users.updateUserMetadata(user.id, {
+          await client.users.updateUserMetadata(user.id, {
             privateMetadata: {
               ...user.privateMetadata,
               subscriptionStatus: subscription.status,
@@ -78,16 +87,17 @@ export async function POST(req: NextRequest) {
         const customerId = subscription.customer as string;
 
         // Find user by customer ID
-        const users = await clerkClient.users.getUserList({
-          limit: 1,
+        const client = await clerkClient();
+        const users = await client.users.getUserList({
+          limit: 100, // Increased limit to find users
         });
 
-        const user = users.find(
-          (u) => u.privateMetadata?.stripeCustomerId === customerId
+        const user = users.data.find(
+          (u: any) => u.privateMetadata?.stripeCustomerId === customerId
         );
 
         if (user) {
-          await clerkClient.users.updateUserMetadata(user.id, {
+          await client.users.updateUserMetadata(user.id, {
             privateMetadata: {
               ...user.privateMetadata,
               subscriptionStatus: 'canceled',
@@ -106,16 +116,17 @@ export async function POST(req: NextRequest) {
         const customerId = invoice.customer as string;
 
         // Find user by customer ID and notify of payment failure
-        const users = await clerkClient.users.getUserList({
-          limit: 1,
+        const client = await clerkClient();
+        const users = await client.users.getUserList({
+          limit: 100, // Increased limit to find users
         });
 
-        const user = users.find(
-          (u) => u.privateMetadata?.stripeCustomerId === customerId
+        const user = users.data.find(
+          (u: any) => u.privateMetadata?.stripeCustomerId === customerId
         );
 
         if (user) {
-          await clerkClient.users.updateUserMetadata(user.id, {
+          await client.users.updateUserMetadata(user.id, {
             privateMetadata: {
               ...user.privateMetadata,
               lastPaymentFailed: new Date().toISOString(),

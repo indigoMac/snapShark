@@ -13,7 +13,7 @@ interface PaywallDialogProps {
 }
 
 export function PaywallDialog({ open, onOpenChange, feature }: PaywallDialogProps) {
-  const { hasTrialAvailable, useTrial, upgradeToProMock } = usePaywall();
+  const { hasTrialAvailable, useTrial, upgradeToPro } = usePaywall();
 
   const handleTrial = () => {
     if (useTrial()) {
@@ -22,8 +22,8 @@ export function PaywallDialog({ open, onOpenChange, feature }: PaywallDialogProp
   };
 
   const handleUpgrade = () => {
-    // TODO: Integrate with actual Stripe checkout
-    upgradeToProMock();
+    // Redirect to pricing page for upgrade
+    window.location.href = '/pricing';
     onOpenChange(false);
   };
 

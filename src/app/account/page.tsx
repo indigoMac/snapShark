@@ -12,11 +12,30 @@ import { Badge } from '@/components/ui/badge';
 import { Crown, Settings, CreditCard, Shield, Download } from 'lucide-react';
 import { usePaywall } from '@/hooks/usePaywall';
 import { useUser, RedirectToSignIn } from '@clerk/nextjs';
+import { useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 
 export default function AccountPage() {
   const { isPro, upgradeToPro, manageSubscription, subscriptionStatus } =
     usePaywall();
   const { user: clerkUser, isLoaded } = useUser();
+  const searchParams = useSearchParams();
+  const success = searchParams.get('success');
+
+  // Handle successful payment (for local testing)
+  useEffect(() => {
+    if (success === 'true' && clerkUser && !isPro) {
+      // In a real app, this would be handled by webhooks
+      // For local testing, we'll show a message
+      console.log('Payment successful! In production, webhook would update Pro status.');
+      
+      // Optionally, you could call a function to manually update the user's status
+      // For now, we'll just show a success message
+      setTimeout(() => {
+        alert('Payment successful! 🎉\n\nNote: In production, your Pro status would be automatically updated by webhooks.\n\nFor local testing, please check your Stripe dashboard to confirm the payment.');
+      }, 1000);
+    }
+  }, [success, clerkUser, isPro]);
 
   const handleManageSubscription = () => {
     manageSubscription();

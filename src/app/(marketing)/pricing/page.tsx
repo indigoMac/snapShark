@@ -21,6 +21,18 @@ export default function PricingPage() {
       plan === 'yearly'
         ? STRIPE_CONFIG.PRO_YEARLY_PRICE_ID
         : STRIPE_CONFIG.PRO_PRICE_ID;
+
+    console.log('Upgrade plan:', plan);
+    console.log('Price ID:', priceId);
+    console.log('Stripe config:', STRIPE_CONFIG);
+
+    if (!priceId) {
+      alert(
+        `Price ID not found for ${plan} plan. Check environment variables.`
+      );
+      return;
+    }
+
     upgradeToPro(priceId, plan === 'yearly');
   };
 
