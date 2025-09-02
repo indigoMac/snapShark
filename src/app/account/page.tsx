@@ -14,7 +14,8 @@ import { usePaywall } from '@/hooks/usePaywall';
 import { useUser, RedirectToSignIn } from '@clerk/nextjs';
 
 export default function AccountPage() {
-  const { isPro, upgradeToPro, manageSubscription, subscriptionStatus } = usePaywall();
+  const { isPro, upgradeToPro, manageSubscription, subscriptionStatus } =
+    usePaywall();
   const { user: clerkUser, isLoaded } = useUser();
 
   const handleManageSubscription = () => {

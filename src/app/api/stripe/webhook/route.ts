@@ -12,7 +12,11 @@ export async function POST(req: NextRequest) {
     const signature = headers().get('stripe-signature')!;
 
     // Verify webhook signature
-    const event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+    const event = stripe.webhooks.constructEvent(
+      body,
+      signature,
+      webhookSecret
+    );
 
     console.log('Stripe webhook event:', event.type);
 
@@ -32,7 +36,7 @@ export async function POST(req: NextRequest) {
               subscriptionStarted: new Date().toISOString(),
             },
           });
-          
+
           console.log(`Subscription activated for user ${userId}`);
         }
         break;
@@ -46,9 +50,9 @@ export async function POST(req: NextRequest) {
         const users = await clerkClient.users.getUserList({
           limit: 1,
         });
-        
-        const user = users.find(u => 
-          u.privateMetadata?.stripeCustomerId === customerId
+
+        const user = users.find(
+          (u) => u.privateMetadata?.stripeCustomerId === customerId
         );
 
         if (user) {
@@ -61,8 +65,10 @@ export async function POST(req: NextRequest) {
               subscriptionUpdated: new Date().toISOString(),
             },
           });
-          
-          console.log(`Subscription ${subscription.status} for user ${user.id}`);
+
+          console.log(
+            `Subscription ${subscription.status} for user ${user.id}`
+          );
         }
         break;
       }
@@ -75,9 +81,9 @@ export async function POST(req: NextRequest) {
         const users = await clerkClient.users.getUserList({
           limit: 1,
         });
-        
-        const user = users.find(u => 
-          u.privateMetadata?.stripeCustomerId === customerId
+
+        const user = users.find(
+          (u) => u.privateMetadata?.stripeCustomerId === customerId
         );
 
         if (user) {
@@ -89,7 +95,7 @@ export async function POST(req: NextRequest) {
               subscriptionCanceled: new Date().toISOString(),
             },
           });
-          
+
           console.log(`Subscription canceled for user ${user.id}`);
         }
         break;
@@ -103,9 +109,9 @@ export async function POST(req: NextRequest) {
         const users = await clerkClient.users.getUserList({
           limit: 1,
         });
-        
-        const user = users.find(u => 
-          u.privateMetadata?.stripeCustomerId === customerId
+
+        const user = users.find(
+          (u) => u.privateMetadata?.stripeCustomerId === customerId
         );
 
         if (user) {
@@ -115,7 +121,7 @@ export async function POST(req: NextRequest) {
               lastPaymentFailed: new Date().toISOString(),
             },
           });
-          
+
           console.log(`Payment failed for user ${user.id}`);
         }
         break;
@@ -126,7 +132,6 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ received: true });
-
   } catch (error) {
     console.error('Webhook error:', error);
     return NextResponse.json(

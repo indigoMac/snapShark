@@ -1,6 +1,12 @@
 'use client';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Check, Crown, Zap, Shield, Sparkles } from 'lucide-react';
@@ -11,7 +17,10 @@ export default function PricingPage() {
   const { upgradeToPro, isPro } = usePaywall();
 
   const handleUpgrade = (plan: 'monthly' | 'yearly') => {
-    const priceId = plan === 'yearly' ? STRIPE_CONFIG.PRO_YEARLY_PRICE_ID : STRIPE_CONFIG.PRO_PRICE_ID;
+    const priceId =
+      plan === 'yearly'
+        ? STRIPE_CONFIG.PRO_YEARLY_PRICE_ID
+        : STRIPE_CONFIG.PRO_PRICE_ID;
     upgradeToPro(priceId, plan === 'yearly');
   };
 
@@ -23,7 +32,8 @@ export default function PricingPage() {
           Simple, Transparent Pricing
         </h1>
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-          Start free and upgrade when you need more power. No hidden fees, cancel anytime.
+          Start free and upgrade when you need more power. No hidden fees,
+          cancel anytime.
         </p>
       </div>
 
@@ -75,7 +85,7 @@ export default function PricingPage() {
                 <span className="text-sm">One-time trial (3 files batch)</span>
               </div>
             </div>
-            
+
             <Button variant="outline" className="w-full" disabled>
               Current Plan
             </Button>
@@ -90,7 +100,7 @@ export default function PricingPage() {
               Most Popular
             </Badge>
           </div>
-          
+
           <CardHeader>
             <div className="flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-primary" />
@@ -105,26 +115,36 @@ export default function PricingPage() {
                 <span className="text-muted-foreground">/month</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-lg font-semibold text-green-600">£15/year</span>
-                <Badge variant="secondary" className="text-xs">Save 58%</Badge>
+                <span className="text-lg font-semibold text-green-600">
+                  £15/year
+                </span>
+                <Badge variant="secondary" className="text-xs">
+                  Save 58%
+                </Badge>
               </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-3">
-              <div className="text-sm font-medium text-muted-foreground">Everything in Free, plus:</div>
-              
+              <div className="text-sm font-medium text-muted-foreground">
+                Everything in Free, plus:
+              </div>
+
               <div className="flex items-center gap-2">
                 <Check className="w-4 h-4 text-primary" />
                 <span className="text-sm">Batch process up to 50 images</span>
               </div>
               <div className="flex items-center gap-2">
                 <Check className="w-4 h-4 text-primary" />
-                <span className="text-sm">Professional presets & templates</span>
+                <span className="text-sm">
+                  Professional presets & templates
+                </span>
               </div>
               <div className="flex items-center gap-2">
                 <Check className="w-4 h-4 text-primary" />
-                <span className="text-sm">Advanced formats (AVIF, HEIC/HEIF)</span>
+                <span className="text-sm">
+                  Advanced formats (AVIF, HEIC/HEIF)
+                </span>
               </div>
               <div className="flex items-center gap-2">
                 <Check className="w-4 h-4 text-primary" />
@@ -143,9 +163,9 @@ export default function PricingPage() {
                 <span className="text-sm">Priority support</span>
               </div>
             </div>
-            
+
             <div className="space-y-2">
-              <Button 
+              <Button
                 onClick={() => handleUpgrade('yearly')}
                 className="w-full"
                 disabled={isPro}
@@ -153,7 +173,7 @@ export default function PricingPage() {
                 <Crown className="w-4 h-4 mr-2" />
                 {isPro ? 'Already Pro' : 'Get Pro - £15/year'}
               </Button>
-              <Button 
+              <Button
                 onClick={() => handleUpgrade('monthly')}
                 variant="outline"
                 className="w-full"
@@ -170,7 +190,7 @@ export default function PricingPage() {
       {/* Features Comparison */}
       <div className="space-y-6">
         <h2 className="text-2xl font-bold text-center">Feature Comparison</h2>
-        
+
         <div className="overflow-x-auto">
           <table className="w-full border-collapse">
             <thead>
@@ -183,17 +203,27 @@ export default function PricingPage() {
             <tbody>
               <tr className="border-b">
                 <td className="p-4">Single image processing</td>
-                <td className="text-center p-4"><Check className="w-4 h-4 text-green-500 mx-auto" /></td>
-                <td className="text-center p-4"><Check className="w-4 h-4 text-green-500 mx-auto" /></td>
+                <td className="text-center p-4">
+                  <Check className="w-4 h-4 text-green-500 mx-auto" />
+                </td>
+                <td className="text-center p-4">
+                  <Check className="w-4 h-4 text-green-500 mx-auto" />
+                </td>
               </tr>
               <tr className="border-b">
                 <td className="p-4">Batch processing</td>
-                <td className="text-center p-4 text-muted-foreground">Trial only</td>
-                <td className="text-center p-4"><Check className="w-4 h-4 text-green-500 mx-auto" /></td>
+                <td className="text-center p-4 text-muted-foreground">
+                  Trial only
+                </td>
+                <td className="text-center p-4">
+                  <Check className="w-4 h-4 text-green-500 mx-auto" />
+                </td>
               </tr>
               <tr className="border-b">
                 <td className="p-4">Max files per batch</td>
-                <td className="text-center p-4 text-muted-foreground">3 (trial)</td>
+                <td className="text-center p-4 text-muted-foreground">
+                  3 (trial)
+                </td>
                 <td className="text-center p-4">50</td>
               </tr>
               <tr className="border-b">
@@ -208,18 +238,26 @@ export default function PricingPage() {
               </tr>
               <tr className="border-b">
                 <td className="p-4">Professional presets</td>
-                <td className="text-center p-4 text-muted-foreground">Limited</td>
-                <td className="text-center p-4"><Check className="w-4 h-4 text-green-500 mx-auto" /></td>
+                <td className="text-center p-4 text-muted-foreground">
+                  Limited
+                </td>
+                <td className="text-center p-4">
+                  <Check className="w-4 h-4 text-green-500 mx-auto" />
+                </td>
               </tr>
               <tr className="border-b">
                 <td className="p-4">ZIP download</td>
                 <td className="text-center p-4 text-muted-foreground">No</td>
-                <td className="text-center p-4"><Check className="w-4 h-4 text-green-500 mx-auto" /></td>
+                <td className="text-center p-4">
+                  <Check className="w-4 h-4 text-green-500 mx-auto" />
+                </td>
               </tr>
               <tr className="border-b">
                 <td className="p-4">Metadata stripping</td>
                 <td className="text-center p-4 text-muted-foreground">No</td>
-                <td className="text-center p-4"><Check className="w-4 h-4 text-green-500 mx-auto" /></td>
+                <td className="text-center p-4">
+                  <Check className="w-4 h-4 text-green-500 mx-auto" />
+                </td>
               </tr>
             </tbody>
           </table>
@@ -228,8 +266,10 @@ export default function PricingPage() {
 
       {/* FAQ */}
       <div className="space-y-6 max-w-2xl mx-auto">
-        <h2 className="text-2xl font-bold text-center">Frequently Asked Questions</h2>
-        
+        <h2 className="text-2xl font-bold text-center">
+          Frequently Asked Questions
+        </h2>
+
         <div className="space-y-4">
           <Card>
             <CardHeader>
@@ -237,8 +277,9 @@ export default function PricingPage() {
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">
-                Absolutely! All image processing happens directly in your browser. 
-                No files are ever uploaded to our servers. Your images never leave your device.
+                Absolutely! All image processing happens directly in your
+                browser. No files are ever uploaded to our servers. Your images
+                never leave your device.
               </p>
             </CardContent>
           </Card>
@@ -249,20 +290,24 @@ export default function PricingPage() {
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">
-                Yes, you can cancel your Pro subscription at any time. You'll continue to have access 
-                to Pro features until the end of your billing period.
+                Yes, you can cancel your Pro subscription at any time. You'll
+                continue to have access to Pro features until the end of your
+                billing period.
               </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">What happens to my custom presets if I cancel?</CardTitle>
+              <CardTitle className="text-lg">
+                What happens to my custom presets if I cancel?
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">
-                Custom presets are saved locally in your browser, so they'll remain available even 
-                if you cancel your Pro subscription. However, you won't be able to create new ones.
+                Custom presets are saved locally in your browser, so they'll
+                remain available even if you cancel your Pro subscription.
+                However, you won't be able to create new ones.
               </p>
             </CardContent>
           </Card>
@@ -273,8 +318,8 @@ export default function PricingPage() {
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">
-                We offer a 30-day money-back guarantee. If you're not satisfied with Pro features, 
-                contact us within 30 days for a full refund.
+                We offer a 30-day money-back guarantee. If you're not satisfied
+                with Pro features, contact us within 30 days for a full refund.
               </p>
             </CardContent>
           </Card>

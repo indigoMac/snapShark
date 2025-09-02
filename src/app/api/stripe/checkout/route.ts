@@ -5,7 +5,7 @@ import { stripe, STRIPE_CONFIG } from '@/lib/stripe';
 export async function POST(req: NextRequest) {
   try {
     const { userId } = auth();
-    
+
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -13,7 +13,10 @@ export async function POST(req: NextRequest) {
     const { priceId, isYearly = false } = await req.json();
 
     if (!priceId) {
-      return NextResponse.json({ error: 'Price ID is required' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Price ID is required' },
+        { status: 400 }
+      );
     }
 
     // Create Stripe checkout session
@@ -43,11 +46,10 @@ export async function POST(req: NextRequest) {
       allow_promotion_codes: true,
     });
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       sessionId: session.id,
-      url: session.url 
+      url: session.url,
     });
-
   } catch (error) {
     console.error('Stripe checkout error:', error);
     return NextResponse.json(

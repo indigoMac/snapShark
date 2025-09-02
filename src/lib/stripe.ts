@@ -19,7 +19,7 @@ export const getStripe = () => {
 export const STRIPE_CONFIG = {
   // Pro subscription price (monthly)
   PRO_PRICE_ID: process.env.STRIPE_PRO_PRICE_ID!,
-  // Pro subscription price (yearly) 
+  // Pro subscription price (yearly)
   PRO_YEARLY_PRICE_ID: process.env.STRIPE_PRO_YEARLY_PRICE_ID!,
   // Success and cancel URLs
   SUCCESS_URL: `${process.env.NEXT_PUBLIC_APP_URL}/account?success=true`,
@@ -37,7 +37,7 @@ export const PRODUCTS = {
     interval: 'month' as const,
   },
   PRO_YEARLY: {
-    name: 'SnapShark Pro Yearly', 
+    name: 'SnapShark Pro Yearly',
     description: 'Batch processing, advanced presets, and priority support',
     price: 15, // £15/year (5 months free)
     interval: 'year' as const,
