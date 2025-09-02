@@ -19,11 +19,7 @@ export async function POST(req: NextRequest) {
 
     const { priceId, isYearly = false } = await req.json();
 
-    console.log('Checkout request:', { priceId, isYearly });
-    console.log('Stripe config on server:', STRIPE_CONFIG);
-
     if (!priceId) {
-      console.log('Missing price ID in request');
       return NextResponse.json(
         { error: 'Price ID is required' },
         { status: 400 }

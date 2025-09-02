@@ -22,22 +22,15 @@ function AccountPageContent() {
   const searchParams = useSearchParams();
   const success = searchParams.get('success');
 
-  // Handle successful payment (for local testing)
+  // Handle successful payment return
   useEffect(() => {
-    if (success === 'true' && clerkUser && !isPro) {
-      // In a real app, this would be handled by webhooks
-      // For local testing, we'll show a message
-      console.log(
-        'Payment successful! In production, webhook would update Pro status.'
-      );
-
-      // Optionally, you could call a function to manually update the user's status
-      // For now, we'll just show a success message
+    if (success === 'true' && clerkUser) {
+      // Refresh page after delay to check if webhook updated Pro status
       setTimeout(() => {
-        alert(
-          'Payment successful! 🎉\n\nNote: In production, your Pro status would be automatically updated by webhooks.\n\nFor local testing, please check your Stripe dashboard to confirm the payment.'
-        );
-      }, 1000);
+        if (!isPro) {
+          window.location.reload();
+        }
+      }, 3000); // Give webhook time to process
     }
   }, [success, clerkUser, isPro]);
 
@@ -268,14 +261,16 @@ function AccountPageContent() {
 
 export default function AccountPage() {
   return (
-    <Suspense fallback={
-      <div className="space-y-8 max-w-4xl mx-auto">
-        <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
-          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+    <Suspense
+      fallback={
+        <div className="space-y-8 max-w-4xl mx-auto">
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
+            <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+          </div>
         </div>
-      </div>
-    }>
+      }
+    >
       <AccountPageContent />
     </Suspense>
   );

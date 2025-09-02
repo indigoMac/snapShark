@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
       webhookSecret
     );
 
-    console.log('Stripe webhook event:', event.type);
+    console.log(`[WEBHOOK] Event: ${event.type}`);
 
     switch (event.type) {
       case 'checkout.session.completed': {
@@ -45,7 +45,9 @@ export async function POST(req: NextRequest) {
             },
           });
 
-          console.log(`Subscription activated for user ${userId}`);
+          console.log(`[WEBHOOK] ✅ Subscription activated for user ${userId}`);
+        } else {
+          console.log(`[WEBHOOK] ❌ Missing data - userId: ${userId}, subscription: ${session.subscription}`);
         }
         break;
       }
@@ -75,9 +77,9 @@ export async function POST(req: NextRequest) {
             },
           });
 
-          console.log(
-            `Subscription ${subscription.status} for user ${user.id}`
-          );
+          console.log(`[WEBHOOK] ✅ Subscription ${subscription.status} for user ${user.id}`);
+        } else {
+          console.log(`[WEBHOOK] ❌ User not found for customer: ${customerId}`);
         }
         break;
       }
@@ -106,7 +108,9 @@ export async function POST(req: NextRequest) {
             },
           });
 
-          console.log(`Subscription canceled for user ${user.id}`);
+          console.log(`[WEBHOOK] ✅ Subscription canceled for user ${user.id}`);
+        } else {
+          console.log(`[WEBHOOK] ❌ User not found for customer: ${customerId}`);
         }
         break;
       }
@@ -133,7 +137,9 @@ export async function POST(req: NextRequest) {
             },
           });
 
-          console.log(`Payment failed for user ${user.id}`);
+          console.log(`[WEBHOOK] ✅ Payment failed recorded for user ${user.id}`);
+        } else {
+          console.log(`[WEBHOOK] ❌ User not found for customer: ${customerId}`);
         }
         break;
       }

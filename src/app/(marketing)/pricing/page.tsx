@@ -22,14 +22,8 @@ export default function PricingPage() {
         ? STRIPE_CONFIG.PRO_YEARLY_PRICE_ID
         : STRIPE_CONFIG.PRO_PRICE_ID;
 
-    console.log('Upgrade plan:', plan);
-    console.log('Price ID:', priceId);
-    console.log('Stripe config:', STRIPE_CONFIG);
-
     if (!priceId) {
-      alert(
-        `Price ID not found for ${plan} plan. Check environment variables.`
-      );
+      alert('Pricing configuration error. Please try again or contact support.');
       return;
     }
 
