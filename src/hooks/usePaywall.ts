@@ -11,15 +11,31 @@ export interface PaywallState {
 }
 
 export function usePaywall() {
-  const { user } = useUser();
+  const { user, isLoaded } = useUser();
 
   // Debug: Log user metadata (remove in production)
   useEffect(() => {
     if (user) {
       console.log('[PAYWALL] User metadata:', (user as any)?.privateMetadata);
       console.log('[PAYWALL] isProUser check:', (user as any)?.privateMetadata?.isProUser === true);
+    } else if (isLoaded) {
+      console.log('[PAYWALL] User loaded but no metadata available');
     }
-  }, [user]);
+  }, [user, isLoaded]);
+
+  // Force refresh user data if metadata is missing but user exists
+  useEffect(() => {
+    if (isLoaded && user && !(user as any)?.privateMetadata) {
+      console.log('[PAYWALL] ⚠️ User metadata missing, attempting refresh...');
+      // Force a page reload to refresh Clerk data
+      setTimeout(() => {
+        if (!(user as any)?.privateMetadata) {
+          console.log('[PAYWALL] 🔄 Refreshing page to sync Clerk metadata');
+          window.location.reload();
+        }
+      }, 2000);
+    }
+  }, [user, isLoaded]);
 
   // Get subscription status from Clerk user metadata
   const isProUser = (user as any)?.privateMetadata?.isProUser === true;
