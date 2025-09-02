@@ -8,22 +8,54 @@ const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
 
 export async function POST(req: NextRequest) {
   try {
+    console.log('[WEBHOOK] 🚀 Webhook request received');
+    
     if (!stripe) {
+      console.log('[WEBHOOK] ❌ Stripe not configured');
       return NextResponse.json(
         { error: 'Stripe not configured' },
         { status: 500 }
       );
     }
 
+    if (!webhookSecret) {
+      console.log('[WEBHOOK] ❌ Webhook secret not configured');
+      return NextResponse.json(
+        { error: 'Webhook secret not configured' },
+        { status: 500 }
+      );
+    }
+
     const body = await req.text();
-    const signature = headers().get('stripe-signature')!;
+    const signature = headers().get('stripe-signature');
+    
+    console.log('[WEBHOOK] 📝 Body length:', body.length);
+    console.log('[WEBHOOK] 🔑 Signature present:', !!signature);
+    
+    if (!signature) {
+      console.log('[WEBHOOK] ❌ No stripe-signature header');
+      return NextResponse.json(
+        { error: 'No stripe-signature header' },
+        { status: 400 }
+      );
+    }
 
     // Verify webhook signature
-    const event = stripe.webhooks.constructEvent(
-      body,
-      signature,
-      webhookSecret
-    );
+    let event;
+    try {
+      event = stripe.webhooks.constructEvent(
+        body,
+        signature,
+        webhookSecret
+      );
+      console.log('[WEBHOOK] ✅ Signature verified successfully');
+    } catch (err: any) {
+      console.log('[WEBHOOK] ❌ Signature verification failed:', err.message);
+      return NextResponse.json(
+        { error: `Webhook signature verification failed: ${err.message}` },
+        { status: 400 }
+      );
+    }
 
     console.log(`[WEBHOOK] Event: ${event.type}`);
 
@@ -149,10 +181,11 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ received: true });
-  } catch (error) {
-    console.error('Webhook error:', error);
+  } catch (error: any) {
+    console.error('[WEBHOOK] 🚨 Webhook error:', error.message || error);
+    console.error('[WEBHOOK] 🚨 Full error:', error);
     return NextResponse.json(
-      { error: 'Webhook handler failed' },
+      { error: 'Webhook handler failed', details: error.message },
       { status: 400 }
     );
   }
