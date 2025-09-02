@@ -23,17 +23,10 @@ export function usePaywall() {
     }
   }, [user, isLoaded]);
 
-  // Force refresh user data if metadata is missing but user exists
+  // Log if metadata is missing (removed auto-refresh)
   useEffect(() => {
     if (isLoaded && user && !(user as any)?.privateMetadata) {
-      console.log('[PAYWALL] ⚠️ User metadata missing, attempting refresh...');
-      // Force a page reload to refresh Clerk data
-      setTimeout(() => {
-        if (!(user as any)?.privateMetadata) {
-          console.log('[PAYWALL] 🔄 Refreshing page to sync Clerk metadata');
-          window.location.reload();
-        }
-      }, 2000);
+      console.log('[PAYWALL] ⚠️ User metadata missing - manual refresh needed');
     }
   }, [user, isLoaded]);
 
