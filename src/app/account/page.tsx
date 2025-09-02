@@ -14,16 +14,16 @@ import { usePaywall } from '@/hooks/usePaywall';
 import { useUser, RedirectToSignIn } from '@clerk/nextjs';
 
 export default function AccountPage() {
-  const { isPro, upgradeToProMock } = usePaywall();
+  const { isPro, upgradeToPro, manageSubscription, subscriptionStatus } = usePaywall();
   const { user: clerkUser, isLoaded } = useUser();
 
   const handleManageSubscription = () => {
-    // TODO: Integrate with Stripe Customer Portal
-    console.log('Opening Stripe Customer Portal...');
+    manageSubscription();
   };
 
   const handleUpgrade = () => {
-    upgradeToProMock();
+    // Redirect to pricing page for upgrade
+    window.location.href = '/pricing';
   };
 
   if (!isLoaded) {

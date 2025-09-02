@@ -4,11 +4,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Check, Crown, Zap, Shield, Sparkles } from 'lucide-react';
+import { usePaywall } from '@/hooks/usePaywall';
+import { STRIPE_CONFIG } from '@/lib/stripe';
 
 export default function PricingPage() {
+  const { upgradeToPro, isPro } = usePaywall();
+
   const handleUpgrade = (plan: 'monthly' | 'yearly') => {
-    // TODO: Integrate with Stripe checkout
-    console.log(`Upgrading to ${plan} plan`);
+    const priceId = plan === 'yearly' ? STRIPE_CONFIG.PRO_YEARLY_PRICE_ID : STRIPE_CONFIG.PRO_PRICE_ID;
+    upgradeToPro(priceId, plan === 'yearly');
   };
 
   return (
@@ -144,17 +148,19 @@ export default function PricingPage() {
               <Button 
                 onClick={() => handleUpgrade('yearly')}
                 className="w-full"
+                disabled={isPro}
               >
                 <Crown className="w-4 h-4 mr-2" />
-                Get Pro - £15/year
+                {isPro ? 'Already Pro' : 'Get Pro - £15/year'}
               </Button>
               <Button 
                 onClick={() => handleUpgrade('monthly')}
                 variant="outline"
                 className="w-full"
                 size="sm"
+                disabled={isPro}
               >
-                Monthly - £3/month
+                {isPro ? 'Current Plan' : 'Monthly - £3/month'}
               </Button>
             </div>
           </CardContent>
