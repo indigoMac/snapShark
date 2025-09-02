@@ -52,6 +52,8 @@ export const STRIPE_CONFIG = {
   CANCEL_URL: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/pricing?canceled=true`,
   // Customer portal
   CUSTOMER_PORTAL_URL: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/account`,
+  // Webhook endpoint (for documentation)
+  WEBHOOK_URL: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/stripe/webhook`,
 };
 
 // Product configuration
