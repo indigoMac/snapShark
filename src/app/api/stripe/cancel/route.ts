@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { stripe } from '@/lib/stripe';
+import Stripe from 'stripe';
 
 export async function POST(req: NextRequest) {
   try {
@@ -31,7 +32,7 @@ export async function POST(req: NextRequest) {
     );
 
     // Cancel the subscription
-    let subscription;
+    let subscription: Stripe.Subscription;
     if (cancelAtPeriodEnd) {
       // Cancel at the end of the billing period (recommended)
       subscription = await stripe.subscriptions.update(subscriptionId, {
@@ -54,7 +55,6 @@ export async function POST(req: NextRequest) {
         id: subscription.id,
         status: subscription.status,
         cancelAtPeriodEnd: subscription.cancel_at_period_end,
-        currentPeriodEnd: subscription.current_period_end,
       },
     });
   } catch (error: any) {
