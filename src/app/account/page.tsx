@@ -49,18 +49,6 @@ function AccountPageContent() {
     window.location.href = '/pricing';
   };
 
-  const handleRefreshUserData = async () => {
-    if (!clerkUser) return;
-
-    try {
-      console.log('🔄 Manually refreshing Clerk user data...');
-      await clerkUser.reload();
-      console.log('✅ User data refreshed successfully');
-    } catch (error) {
-      console.error('❌ Failed to refresh user data:', error);
-    }
-  };
-
   if (!isLoaded) {
     return (
       <div className="space-y-8 max-w-4xl mx-auto">
@@ -161,15 +149,6 @@ function AccountPageContent() {
                     Upgrade to Pro
                   </Button>
                 )}
-
-                {/* Debug button - remove after fixing */}
-                <Button
-                  onClick={handleRefreshUserData}
-                  variant="outline"
-                  size="sm"
-                >
-                  🔄 Refresh Data
-                </Button>
               </div>
             </div>
 

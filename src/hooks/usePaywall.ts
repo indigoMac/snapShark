@@ -13,45 +13,30 @@ export interface PaywallState {
 export function usePaywall() {
   const { user, isLoaded } = useUser();
 
-  // Debug: Log user metadata (remove in production)
+  // Log metadata loading issues for production monitoring
   useEffect(() => {
-    if (user) {
-      console.log('[PAYWALL] User metadata:', (user as any)?.privateMetadata);
-      console.log(
-        '[PAYWALL] isProUser check:',
-        (user as any)?.privateMetadata?.isProUser === true
+    if (
+      isLoaded &&
+      user &&
+      !(user as any)?.publicMetadata &&
+      !(user as any)?.privateMetadata
+    ) {
+      console.warn(
+        '[PAYWALL] No user metadata found - user may need to refresh'
       );
-    } else if (isLoaded) {
-      console.log('[PAYWALL] User loaded but no metadata available');
-    }
-  }, [user, isLoaded]);
-
-  // Debug logging for metadata issues
-  useEffect(() => {
-    if (isLoaded && user) {
-      console.log('[PAYWALL] 🔍 Full user object:', user);
-      console.log('[PAYWALL] 📋 User privateMetadata:', (user as any)?.privateMetadata);
-      console.log('[PAYWALL] 📋 User publicMetadata:', (user as any)?.publicMetadata);
-      console.log('[PAYWALL] 📋 User unsafeMetadata:', (user as any)?.unsafeMetadata);
-      
-      if (!(user as any)?.privateMetadata) {
-        console.log('[PAYWALL] ⚠️ User metadata missing - this is the problem!');
-      } else {
-        console.log('[PAYWALL] ✅ Metadata found, checking Pro status...');
-      }
     }
   }, [user, isLoaded]);
 
   // Get subscription status from Clerk user metadata
   // Check public metadata first (syncs immediately), fallback to private
-  const isProUser = 
+  const isProUser =
     (user as any)?.publicMetadata?.isProUser === true ||
     (user as any)?.privateMetadata?.isProUser === true;
-  
-  const subscriptionStatus = 
+
+  const subscriptionStatus =
     (user as any)?.publicMetadata?.subscriptionStatus ||
-    (user as any)?.privateMetadata?.subscriptionStatus as string;
-    
+    ((user as any)?.privateMetadata?.subscriptionStatus as string);
+
   const customerId = (user as any)?.privateMetadata?.stripeCustomerId as string;
 
   // Initialize state without localStorage (will be set in useEffect)
@@ -79,12 +64,6 @@ export function usePaywall() {
   // Update state when user data changes
   useEffect(() => {
     if (isLoaded) {
-      console.log(
-        '[PAYWALL] Updating state - isProUser:',
-        isProUser,
-        'subscriptionStatus:',
-        subscriptionStatus
-      );
       setPaywallState((prev) => ({
         ...prev,
         isPro: isProUser,
