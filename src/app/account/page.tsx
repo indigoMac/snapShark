@@ -9,18 +9,45 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Crown, Settings, CreditCard, Shield, Download } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  Crown,
+  Settings,
+  CreditCard,
+  Shield,
+  Download,
+  X,
+  AlertTriangle,
+} from 'lucide-react';
 import { usePaywall } from '@/hooks/usePaywall';
 import { useUser, RedirectToSignIn } from '@clerk/nextjs';
-import { useEffect, Suspense } from 'react';
+import { useEffect, Suspense, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 
 function AccountPageContent() {
-  const { isPro, upgradeToPro, manageSubscription, subscriptionStatus } =
-    usePaywall();
+  const {
+    isPro,
+    upgradeToPro,
+    manageSubscription,
+    cancelSubscription,
+    subscriptionStatus,
+    subscriptionId,
+  } = usePaywall();
   const { user: clerkUser, isLoaded } = useUser();
   const searchParams = useSearchParams();
   const success = searchParams.get('success');
+
+  // Cancel subscription dialog state
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [cancelAtPeriodEnd, setCancelAtPeriodEnd] = useState(true);
+  const [isCanceling, setIsCanceling] = useState(false);
 
   // Handle successful payment return
   useEffect(() => {
@@ -47,6 +74,44 @@ function AccountPageContent() {
   const handleUpgrade = () => {
     // Redirect to pricing page for upgrade
     window.location.href = '/pricing';
+  };
+
+  const handleCancelClick = () => {
+    setShowCancelDialog(true);
+  };
+
+  const handleCancelConfirm = async () => {
+    if (!subscriptionId) {
+      alert('No subscription found to cancel');
+      return;
+    }
+
+    setIsCanceling(true);
+    try {
+      await cancelSubscription(subscriptionId, cancelAtPeriodEnd);
+      setShowCancelDialog(false);
+
+      if (cancelAtPeriodEnd) {
+        alert(
+          "Your subscription will be canceled at the end of your current billing period. You'll continue to have Pro access until then."
+        );
+      } else {
+        alert(
+          'Your subscription has been canceled immediately. You no longer have Pro access.'
+        );
+      }
+    } catch (error: any) {
+      console.error('Cancel error:', error);
+      alert(`Failed to cancel subscription: ${error.message}`);
+    } finally {
+      setIsCanceling(false);
+    }
+  };
+
+  const handleCancelDialogClose = () => {
+    if (isCanceling) return; // Prevent closing during cancellation
+    setShowCancelDialog(false);
+    setCancelAtPeriodEnd(true); // Reset to default
   };
 
   if (!isLoaded) {
@@ -139,10 +204,23 @@ function AccountPageContent() {
 
               <div className="flex gap-2">
                 {isPro ? (
-                  <Button onClick={handleManageSubscription} variant="outline">
-                    <CreditCard className="w-4 h-4 mr-2" />
-                    Manage Subscription
-                  </Button>
+                  <>
+                    <Button
+                      onClick={handleManageSubscription}
+                      variant="outline"
+                    >
+                      <CreditCard className="w-4 h-4 mr-2" />
+                      Manage Subscription
+                    </Button>
+                    <Button
+                      onClick={handleCancelClick}
+                      variant="outline"
+                      className="text-red-600 border-red-200 hover:bg-red-50"
+                    >
+                      <X className="w-4 h-4 mr-2" />
+                      Cancel
+                    </Button>
+                  </>
                 ) : (
                   <Button onClick={handleUpgrade}>
                     <Crown className="w-4 h-4 mr-2" />
@@ -163,6 +241,18 @@ function AccountPageContent() {
                   <div>✓ Metadata stripping</div>
                   <div>✓ Priority support</div>
                 </div>
+              </div>
+            )}
+
+            {subscriptionStatus === 'canceled' && (
+              <div className="bg-orange-50 border border-orange-200 p-4 rounded-lg">
+                <h4 className="font-medium text-orange-800 mb-2">
+                  Subscription Canceled
+                </h4>
+                <p className="text-sm text-orange-700">
+                  Your subscription has been canceled. You may still have Pro
+                  access until the end of your billing period.
+                </p>
               </div>
             )}
           </CardContent>
@@ -261,6 +351,88 @@ function AccountPageContent() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Cancel Subscription Dialog */}
+      <Dialog open={showCancelDialog} onOpenChange={handleCancelDialogClose}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-orange-500" />
+              Cancel Subscription
+            </DialogTitle>
+            <DialogDescription>
+              Are you sure you want to cancel your SnapShark Pro subscription?
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+              <h4 className="font-medium text-orange-800 mb-2">
+                What happens when you cancel:
+              </h4>
+              <ul className="text-sm text-orange-700 space-y-1">
+                <li>• You'll lose access to batch processing (50+ files)</li>
+                <li>• Professional presets will be disabled</li>
+                <li>• AVIF & HEIC support will be removed</li>
+                <li>• ZIP download functionality will be disabled</li>
+              </ul>
+            </div>
+
+            <div className="space-y-3">
+              <label className="flex items-center space-x-3 cursor-pointer">
+                <input
+                  type="radio"
+                  name="cancelType"
+                  checked={cancelAtPeriodEnd}
+                  onChange={() => setCancelAtPeriodEnd(true)}
+                  className="w-4 h-4 text-blue-600"
+                />
+                <div>
+                  <div className="font-medium">
+                    Cancel at end of billing period (Recommended)
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Keep Pro access until your current billing period ends
+                  </div>
+                </div>
+              </label>
+
+              <label className="flex items-center space-x-3 cursor-pointer">
+                <input
+                  type="radio"
+                  name="cancelType"
+                  checked={!cancelAtPeriodEnd}
+                  onChange={() => setCancelAtPeriodEnd(false)}
+                  className="w-4 h-4 text-blue-600"
+                />
+                <div>
+                  <div className="font-medium">Cancel immediately</div>
+                  <div className="text-sm text-muted-foreground">
+                    Lose Pro access right away (no refund)
+                  </div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={handleCancelDialogClose}
+              disabled={isCanceling}
+            >
+              Keep Subscription
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleCancelConfirm}
+              disabled={isCanceling}
+            >
+              {isCanceling ? 'Canceling...' : 'Cancel Subscription'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

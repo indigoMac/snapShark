@@ -8,6 +8,7 @@ export interface PaywallState {
   trialUsed: boolean;
   subscriptionStatus?: string;
   customerId?: string;
+  subscriptionId?: string;
 }
 
 export function usePaywall() {
@@ -38,6 +39,8 @@ export function usePaywall() {
     ((user as any)?.privateMetadata?.subscriptionStatus as string);
 
   const customerId = (user as any)?.privateMetadata?.stripeCustomerId as string;
+  const subscriptionId = (user as any)?.privateMetadata
+    ?.stripeSubscriptionId as string;
 
   // Initialize state without localStorage (will be set in useEffect)
   const [paywallState, setPaywallState] = useState<PaywallState>({
@@ -46,6 +49,7 @@ export function usePaywall() {
     trialUsed: false, // Default to false, will be updated in useEffect
     subscriptionStatus,
     customerId,
+    subscriptionId,
   });
 
   // Update trial state from localStorage after component mounts
@@ -69,9 +73,10 @@ export function usePaywall() {
         isPro: isProUser,
         subscriptionStatus,
         customerId,
+        subscriptionId,
       }));
     }
-  }, [isLoaded, isProUser, subscriptionStatus, customerId]);
+  }, [isLoaded, isProUser, subscriptionStatus, customerId, subscriptionId]);
 
   const [showPaywallDialog, setShowPaywallDialog] = useState(false);
   const [paywallFeature, setPaywallFeature] = useState<string>('');
@@ -198,6 +203,40 @@ export function usePaywall() {
     }
   }, [customerId]);
 
+  const cancelSubscription = useCallback(
+    async (subscriptionId: string, cancelAtPeriodEnd: boolean = true) => {
+      try {
+        const response = await fetch('/api/stripe/cancel', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ subscriptionId, cancelAtPeriodEnd }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error('Cancel subscription error:', errorData);
+          throw new Error(errorData.error || 'Failed to cancel subscription');
+        }
+
+        const result = await response.json();
+        console.log('Subscription cancellation result:', result);
+
+        // Refresh user data to update the UI immediately
+        if (user) {
+          await user.reload();
+        }
+
+        return result;
+      } catch (error) {
+        console.error('Cancel subscription error:', error);
+        throw error;
+      }
+    },
+    [user]
+  );
+
   return {
     // State
     isPro: paywallState.isPro, // Use state that gets updated via useEffect
@@ -205,6 +244,7 @@ export function usePaywall() {
     trialUsed: paywallState.trialUsed,
     subscriptionStatus: paywallState.subscriptionStatus,
     customerId: paywallState.customerId,
+    subscriptionId: paywallState.subscriptionId,
 
     // Feature access
     checkFeatureAccess,
@@ -221,5 +261,6 @@ export function usePaywall() {
     // Stripe integration
     upgradeToPro,
     manageSubscription,
+    cancelSubscription,
   };
 }

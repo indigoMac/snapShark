@@ -9,7 +9,7 @@ const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
 export async function POST(req: NextRequest) {
   try {
     console.log('[WEBHOOK] 🚀 Webhook request received');
-    
+
     if (!stripe) {
       console.log('[WEBHOOK] ❌ Stripe not configured');
       return NextResponse.json(
@@ -28,10 +28,10 @@ export async function POST(req: NextRequest) {
 
     const body = await req.text();
     const signature = headers().get('stripe-signature');
-    
+
     console.log('[WEBHOOK] 📝 Body length:', body.length);
     console.log('[WEBHOOK] 🔑 Signature present:', !!signature);
-    
+
     if (!signature) {
       console.log('[WEBHOOK] ❌ No stripe-signature header');
       return NextResponse.json(
@@ -43,11 +43,7 @@ export async function POST(req: NextRequest) {
     // Verify webhook signature
     let event;
     try {
-      event = stripe.webhooks.constructEvent(
-        body,
-        signature,
-        webhookSecret
-      );
+      event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
       console.log('[WEBHOOK] ✅ Signature verified successfully');
     } catch (err: any) {
       console.log('[WEBHOOK] ❌ Signature verification failed:', err.message);
@@ -86,7 +82,9 @@ export async function POST(req: NextRequest) {
 
           console.log(`[WEBHOOK] ✅ Subscription activated for user ${userId}`);
         } else {
-          console.log(`[WEBHOOK] ❌ Missing data - userId: ${userId}, subscription: ${session.subscription}`);
+          console.log(
+            `[WEBHOOK] ❌ Missing data - userId: ${userId}, subscription: ${session.subscription}`
+          );
         }
         break;
       }
@@ -107,6 +105,7 @@ export async function POST(req: NextRequest) {
 
         if (user) {
           const isActive = subscription.status === 'active';
+          // Update metadata in BOTH private and public for immediate sync
           await client.users.updateUserMetadata(user.id, {
             privateMetadata: {
               ...user.privateMetadata,
@@ -114,11 +113,21 @@ export async function POST(req: NextRequest) {
               isProUser: isActive,
               subscriptionUpdated: new Date().toISOString(),
             },
+            // ALSO update public metadata - this syncs immediately to client
+            publicMetadata: {
+              subscriptionStatus: subscription.status,
+              isProUser: isActive,
+              plan: isActive ? 'pro' : 'free',
+            },
           });
 
-          console.log(`[WEBHOOK] ✅ Subscription ${subscription.status} for user ${user.id}`);
+          console.log(
+            `[WEBHOOK] ✅ Subscription ${subscription.status} for user ${user.id}`
+          );
         } else {
-          console.log(`[WEBHOOK] ❌ User not found for customer: ${customerId}`);
+          console.log(
+            `[WEBHOOK] ❌ User not found for customer: ${customerId}`
+          );
         }
         break;
       }
@@ -138,6 +147,7 @@ export async function POST(req: NextRequest) {
         );
 
         if (user) {
+          // Update metadata in BOTH private and public for immediate sync
           await client.users.updateUserMetadata(user.id, {
             privateMetadata: {
               ...user.privateMetadata,
@@ -145,11 +155,19 @@ export async function POST(req: NextRequest) {
               isProUser: false,
               subscriptionCanceled: new Date().toISOString(),
             },
+            // ALSO update public metadata - this syncs immediately to client
+            publicMetadata: {
+              subscriptionStatus: 'canceled',
+              isProUser: false,
+              plan: 'free',
+            },
           });
 
           console.log(`[WEBHOOK] ✅ Subscription canceled for user ${user.id}`);
         } else {
-          console.log(`[WEBHOOK] ❌ User not found for customer: ${customerId}`);
+          console.log(
+            `[WEBHOOK] ❌ User not found for customer: ${customerId}`
+          );
         }
         break;
       }
@@ -176,9 +194,13 @@ export async function POST(req: NextRequest) {
             },
           });
 
-          console.log(`[WEBHOOK] ✅ Payment failed recorded for user ${user.id}`);
+          console.log(
+            `[WEBHOOK] ✅ Payment failed recorded for user ${user.id}`
+          );
         } else {
-          console.log(`[WEBHOOK] ❌ User not found for customer: ${customerId}`);
+          console.log(
+            `[WEBHOOK] ❌ User not found for customer: ${customerId}`
+          );
         }
         break;
       }
