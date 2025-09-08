@@ -63,7 +63,6 @@ export async function POST(req: NextRequest) {
         if (userId && session.subscription) {
           // Update user metadata with subscription info
           const client = await clerkClient();
-          // Update metadata in BOTH private and public for immediate sync
           await client.users.updateUserMetadata(userId, {
             privateMetadata: {
               stripeCustomerId: session.customer,
@@ -71,12 +70,6 @@ export async function POST(req: NextRequest) {
               subscriptionStatus: 'active',
               isProUser: true,
               subscriptionStarted: new Date().toISOString(),
-            },
-            // ALSO update public metadata - this syncs immediately to client
-            publicMetadata: {
-              subscriptionStatus: 'active',
-              isProUser: true,
-              plan: 'pro',
             },
           });
 

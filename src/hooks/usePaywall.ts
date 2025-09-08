@@ -29,14 +29,9 @@ export function usePaywall() {
   }, [user, isLoaded]);
 
   // Get subscription status from Clerk user metadata
-  // Check public metadata first (syncs immediately), fallback to private
-  const isProUser =
-    (user as any)?.publicMetadata?.isProUser === true ||
-    (user as any)?.privateMetadata?.isProUser === true;
-
-  const subscriptionStatus =
-    (user as any)?.publicMetadata?.subscriptionStatus ||
-    ((user as any)?.privateMetadata?.subscriptionStatus as string);
+  const isProUser = (user as any)?.privateMetadata?.isProUser === true;
+  const subscriptionStatus = (user as any)?.privateMetadata
+    ?.subscriptionStatus as string;
 
   const customerId = (user as any)?.privateMetadata?.stripeCustomerId as string;
   const subscriptionId = (user as any)?.privateMetadata
