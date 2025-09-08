@@ -1,54 +1,78 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
 import { clerkClient } from '@clerk/nextjs/server';
 
-// DEBUG ENDPOINT - Test webhook functionality manually
+// Test endpoint to verify webhook-style operations
 export async function POST(req: NextRequest) {
   try {
-    const { userId } = await auth();
+    const { userId } = await req.json();
 
     if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'userId is required' },
+        { status: 400 }
+      );
     }
 
-    console.log(`[DEBUG] Testing webhook logic for user: ${userId}`);
+    console.log(`[TEST] Testing webhook operations for user: ${userId}`);
 
-    // Simulate successful checkout.session.completed event
     const client = await clerkClient();
-    
-    // Get current user data first
-    const currentUser = await client.users.getUser(userId);
-    console.log(`[DEBUG] Current user metadata:`, currentUser.privateMetadata);
 
-    // Update user metadata (same as webhook)
-    await client.users.updateUserMetadata(userId, {
-      privateMetadata: {
-        stripeCustomerId: 'test_customer_id',
-        stripeSubscriptionId: 'test_subscription_id', 
-        subscriptionStatus: 'active',
-        isProUser: true,
-        subscriptionStarted: new Date().toISOString(),
-        debugTest: true,
-      },
-    });
+    // First, verify the user exists
+    try {
+      const user = await client.users.getUser(userId);
+      console.log(`[TEST] User found: ${user.id}`);
+      console.log(`[TEST] Current metadata:`, {
+        private: user.privateMetadata,
+        public: user.publicMetadata,
+      });
 
-    console.log(`[DEBUG] ✅ Pro status updated for user: ${userId}`);
+      // Test updating metadata (similar to webhook)
+      await client.users.updateUserMetadata(userId, {
+        privateMetadata: {
+          ...(user.privateMetadata || {}),
+          debugTest: true,
+          stripeCustomerId: 'test_customer_123',
+          stripeSubscriptionId: 'test_sub_123',
+          subscriptionStatus: 'active',
+          isProUser: true,
+          subscriptionStarted: new Date().toISOString(),
+        },
+        publicMetadata: {
+          ...(user.publicMetadata || {}),
+          debugTest: true,
+          subscriptionStatus: 'active',
+          isProUser: true,
+          plan: 'pro',
+        },
+      });
 
-    // Get updated user data
-    const updatedUser = await client.users.getUser(userId);
-    console.log(`[DEBUG] Updated user metadata:`, updatedUser.privateMetadata);
+      // Get updated user data
+      const updatedUser = await client.users.getUser(userId);
 
-    return NextResponse.json({ 
-      success: true, 
-      message: 'Debug test completed - check if Pro status updated',
-      userId,
-      before: currentUser.privateMetadata,
-      after: updatedUser.privateMetadata
-    });
+      return NextResponse.json({
+        success: true,
+        message: 'Test webhook operations completed',
+        userId,
+        metadata: {
+          private: updatedUser.privateMetadata,
+          public: updatedUser.publicMetadata,
+        },
+      });
+    } catch (userError: any) {
+      console.error(`[TEST] User lookup error:`, userError.message);
+      return NextResponse.json(
+        {
+          error: 'User not found or access denied',
+          details: userError.message,
+          userId,
+        },
+        { status: 404 }
+      );
+    }
   } catch (error: any) {
-    console.error('[DEBUG] Test webhook error:', error);
+    console.error('[TEST] Error:', error);
     return NextResponse.json(
-      { error: 'Debug test failed', details: error.message },
+      { error: 'Test failed', details: error.message },
       { status: 500 }
     );
   }
