@@ -24,5 +24,6 @@
 [ ] Upscaling feature for larger posters without losing picture quality
 [ ] Remove water mark feature
 [ ] Underwater colour correcting feature
+[ ] Create a one off payment op
 [ ] Professional presets (social media sizes, print formats)
 [ ] Advanced processing (watermarks, filters, compression)

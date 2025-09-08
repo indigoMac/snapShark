@@ -8,9 +8,6 @@ const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
 
 // Configure Next.js App Router for webhooks
 export const runtime = 'nodejs';
-export const preferredRegion = 'auto';
-
-// Explicitly disable body parsing for webhooks
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
@@ -33,13 +30,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Read the raw request body - this is critical for signature verification
-    const rawBody = await req.text();
+    // Get signature from headers
     const sig = headers().get('stripe-signature') as string;
-
-    console.log('[WEBHOOK] 📝 Raw body length:', rawBody.length);
-    console.log('[WEBHOOK] 🔑 Signature present:', !!sig);
-    console.log('[WEBHOOK] 📋 Webhook secret configured:', !!webhookSecret);
 
     if (!sig) {
       console.log('[WEBHOOK] ❌ No stripe-signature header');
@@ -49,13 +41,26 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Construct the event using Stripe's webhook verification
+    // Try both approaches for Vercel compatibility
     let event: Stripe.Event;
     try {
-      event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret);
+      // Method 1: Read as text (most common approach)
+      const body = await req.text();
+
+      console.log('[WEBHOOK] 📝 Body length:', body.length);
+      console.log('[WEBHOOK] 🔑 Signature:', sig.substring(0, 20) + '...');
+      console.log(
+        '[WEBHOOK] 📋 Webhook secret prefix:',
+        webhookSecret.substring(0, 12) + '...'
+      );
+      console.log('[WEBHOOK] 🔧 Body first 100 chars:', body.substring(0, 100));
+
+      event = stripe.webhooks.constructEvent(body, sig, webhookSecret);
       console.log('[WEBHOOK] ✅ Signature verified successfully');
     } catch (err: any) {
       console.log('[WEBHOOK] ❌ Signature verification failed:', err.message);
+      console.log('[WEBHOOK] ❌ Error type:', err.constructor.name);
+      console.log('[WEBHOOK] ❌ Full error:', err);
       return NextResponse.json(
         { error: `Webhook signature verification failed: ${err.message}` },
         { status: 400 }
