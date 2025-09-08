@@ -151,25 +151,38 @@ export async function POST(req: NextRequest) {
 
           if (user) {
             const isActive = subscription.status === 'active';
+            const willCancel = subscription.cancel_at_period_end;
+            const cancelAt = subscription.cancel_at
+              ? new Date(subscription.cancel_at * 1000).toISOString()
+              : null;
+
+            console.log(
+              `[WEBHOOK] Subscription status: ${subscription.status}, cancel_at_period_end: ${willCancel}, cancel_at: ${cancelAt}`
+            );
+
             // Update metadata in BOTH private and public for immediate sync
             await client.users.updateUserMetadata(user.id, {
               privateMetadata: {
                 ...(user.privateMetadata || {}),
                 subscriptionStatus: subscription.status,
-                isProUser: isActive,
+                isProUser: isActive, // Keep Pro until actually canceled
+                cancelAtPeriodEnd: willCancel,
+                cancelAt: cancelAt,
                 subscriptionUpdated: new Date().toISOString(),
               },
               // ALSO update public metadata - this syncs immediately to client
               publicMetadata: {
                 ...(user.publicMetadata || {}),
                 subscriptionStatus: subscription.status,
-                isProUser: isActive,
+                isProUser: isActive, // Keep Pro until actually canceled
                 plan: isActive ? 'pro' : 'free',
+                cancelAtPeriodEnd: willCancel,
+                cancelAt: cancelAt,
               },
             });
 
             console.log(
-              `[WEBHOOK] ✅ Subscription ${subscription.status} for user ${user.id}`
+              `[WEBHOOK] ✅ Subscription ${subscription.status} for user ${user.id} (will cancel: ${willCancel})`
             );
           } else {
             console.log(

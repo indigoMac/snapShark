@@ -39,6 +39,8 @@ function AccountPageContent() {
     cancelSubscription,
     subscriptionStatus,
     subscriptionId,
+    cancelAtPeriodEnd,
+    cancelAt,
   } = usePaywall();
   const { user: clerkUser, isLoaded } = useUser();
   const searchParams = useSearchParams();
@@ -46,8 +48,12 @@ function AccountPageContent() {
 
   // Cancel subscription dialog state
   const [showCancelDialog, setShowCancelDialog] = useState(false);
-  const [cancelAtPeriodEnd, setCancelAtPeriodEnd] = useState(true);
+  const [cancelAtPeriodEndChoice, setCancelAtPeriodEndChoice] = useState(true);
   const [isCanceling, setIsCanceling] = useState(false);
+  const [message, setMessage] = useState<{
+    type: 'success' | 'error';
+    text: string;
+  } | null>(null);
 
   // Handle successful payment return
   useEffect(() => {
@@ -82,27 +88,33 @@ function AccountPageContent() {
 
   const handleCancelConfirm = async () => {
     if (!subscriptionId) {
-      alert('No subscription found to cancel');
+      setMessage({ type: 'error', text: 'No subscription found to cancel' });
       return;
     }
 
     setIsCanceling(true);
+    setMessage(null);
     try {
-      await cancelSubscription(subscriptionId, cancelAtPeriodEnd);
+      await cancelSubscription(subscriptionId, cancelAtPeriodEndChoice);
       setShowCancelDialog(false);
 
-      if (cancelAtPeriodEnd) {
-        alert(
-          "Your subscription will be canceled at the end of your current billing period. You'll continue to have Pro access until then."
-        );
+      if (cancelAtPeriodEndChoice) {
+        setMessage({
+          type: 'success',
+          text: "Your subscription will be canceled at the end of your current billing period. You'll continue to have Pro access until then.",
+        });
       } else {
-        alert(
-          'Your subscription has been canceled immediately. You no longer have Pro access.'
-        );
+        setMessage({
+          type: 'success',
+          text: 'Your subscription has been canceled immediately. You no longer have Pro access.',
+        });
       }
     } catch (error: any) {
       console.error('Cancel error:', error);
-      alert(`Failed to cancel subscription: ${error.message}`);
+      setMessage({
+        type: 'error',
+        text: `Failed to cancel subscription: ${error.message}`,
+      });
     } finally {
       setIsCanceling(false);
     }
@@ -111,7 +123,7 @@ function AccountPageContent() {
   const handleCancelDialogClose = () => {
     if (isCanceling) return; // Prevent closing during cancellation
     setShowCancelDialog(false);
-    setCancelAtPeriodEnd(true); // Reset to default
+    setCancelAtPeriodEndChoice(true); // Reset to default
   };
 
   if (!isLoaded) {
@@ -145,6 +157,27 @@ function AccountPageContent() {
           Manage your subscription and account preferences
         </p>
       </div>
+
+      {/* Success/Error Messages */}
+      {message && (
+        <div
+          className={`p-4 rounded-lg border ${
+            message.type === 'success'
+              ? 'bg-green-50 border-green-200 text-green-800'
+              : 'bg-red-50 border-red-200 text-red-800'
+          }`}
+        >
+          <div className="flex justify-between items-start">
+            <p>{message.text}</p>
+            <button
+              onClick={() => setMessage(null)}
+              className="text-gray-400 hover:text-gray-600"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="grid gap-6">
         {/* Account Info */}
@@ -196,7 +229,9 @@ function AccountPageContent() {
                   </div>
                   <p className="text-sm text-muted-foreground">
                     {isPro
-                      ? 'Access to all Pro features and unlimited batch processing'
+                      ? cancelAtPeriodEnd
+                        ? `Pro access until ${cancelAt ? new Date(cancelAt).toLocaleDateString() : 'end of billing period'} - will not renew`
+                        : 'Access to all Pro features and unlimited batch processing'
                       : 'Free plan with basic image processing features'}
                   </p>
                 </div>
@@ -216,9 +251,10 @@ function AccountPageContent() {
                       onClick={handleCancelClick}
                       variant="outline"
                       className="text-red-600 border-red-200 hover:bg-red-50"
+                      disabled={cancelAtPeriodEnd}
                     >
                       <X className="w-4 h-4 mr-2" />
-                      Cancel
+                      {cancelAtPeriodEnd ? 'Will Cancel' : 'Cancel'}
                     </Button>
                   </>
                 ) : (
@@ -383,8 +419,8 @@ function AccountPageContent() {
                 <input
                   type="radio"
                   name="cancelType"
-                  checked={cancelAtPeriodEnd}
-                  onChange={() => setCancelAtPeriodEnd(true)}
+                  checked={cancelAtPeriodEndChoice}
+                  onChange={() => setCancelAtPeriodEndChoice(true)}
                   className="w-4 h-4 text-blue-600"
                 />
                 <div>
@@ -401,8 +437,8 @@ function AccountPageContent() {
                 <input
                   type="radio"
                   name="cancelType"
-                  checked={!cancelAtPeriodEnd}
-                  onChange={() => setCancelAtPeriodEnd(false)}
+                  checked={!cancelAtPeriodEndChoice}
+                  onChange={() => setCancelAtPeriodEndChoice(false)}
                   className="w-4 h-4 text-blue-600"
                 />
                 <div>

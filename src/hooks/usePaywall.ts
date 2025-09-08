@@ -9,6 +9,8 @@ export interface PaywallState {
   subscriptionStatus?: string;
   customerId?: string;
   subscriptionId?: string;
+  cancelAtPeriodEnd?: boolean;
+  cancelAt?: string;
 }
 
 export function usePaywall() {
@@ -72,6 +74,17 @@ export function usePaywall() {
     ?.stripeSubscriptionId as string;
   const subscriptionId = subscriptionIdPrivate || subscriptionIdPublic;
 
+  // Get cancellation info
+  const cancelAtPeriodEndPrivate = (user as any)?.privateMetadata
+    ?.cancelAtPeriodEnd;
+  const cancelAtPeriodEndPublic = (user as any)?.publicMetadata
+    ?.cancelAtPeriodEnd;
+  const cancelAtPeriodEnd = cancelAtPeriodEndPrivate || cancelAtPeriodEndPublic;
+
+  const cancelAtPrivate = (user as any)?.privateMetadata?.cancelAt;
+  const cancelAtPublic = (user as any)?.publicMetadata?.cancelAt;
+  const cancelAt = cancelAtPrivate || cancelAtPublic;
+
   // Initialize state without localStorage (will be set in useEffect)
   const [paywallState, setPaywallState] = useState<PaywallState>({
     isPro: isProUser,
@@ -80,6 +93,8 @@ export function usePaywall() {
     subscriptionStatus,
     customerId,
     subscriptionId,
+    cancelAtPeriodEnd,
+    cancelAt,
   });
 
   // Update trial state from localStorage after component mounts
@@ -104,9 +119,19 @@ export function usePaywall() {
         subscriptionStatus,
         customerId,
         subscriptionId,
+        cancelAtPeriodEnd,
+        cancelAt,
       }));
     }
-  }, [isLoaded, isProUser, subscriptionStatus, customerId, subscriptionId]);
+  }, [
+    isLoaded,
+    isProUser,
+    subscriptionStatus,
+    customerId,
+    subscriptionId,
+    cancelAtPeriodEnd,
+    cancelAt,
+  ]);
 
   const [showPaywallDialog, setShowPaywallDialog] = useState(false);
   const [paywallFeature, setPaywallFeature] = useState<string>('');
@@ -275,6 +300,8 @@ export function usePaywall() {
     subscriptionStatus: paywallState.subscriptionStatus,
     customerId: paywallState.customerId,
     subscriptionId: paywallState.subscriptionId,
+    cancelAtPeriodEnd: paywallState.cancelAtPeriodEnd,
+    cancelAt: paywallState.cancelAt,
 
     // Feature access
     checkFeatureAccess,
