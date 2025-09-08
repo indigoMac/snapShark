@@ -61,9 +61,16 @@ export function usePaywall() {
     subscriptionStatus,
   ]);
 
-  const customerId = (user as any)?.privateMetadata?.stripeCustomerId as string;
-  const subscriptionId = (user as any)?.privateMetadata
+  const customerIdPrivate = (user as any)?.privateMetadata
+    ?.stripeCustomerId as string;
+  const customerIdPublic = (user as any)?.publicMetadata
+    ?.stripeCustomerId as string;
+  const customerId = customerIdPrivate || customerIdPublic;
+  const subscriptionIdPrivate = (user as any)?.privateMetadata
     ?.stripeSubscriptionId as string;
+  const subscriptionIdPublic = (user as any)?.publicMetadata
+    ?.stripeSubscriptionId as string;
+  const subscriptionId = subscriptionIdPrivate || subscriptionIdPublic;
 
   // Initialize state without localStorage (will be set in useEffect)
   const [paywallState, setPaywallState] = useState<PaywallState>({

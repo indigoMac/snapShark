@@ -105,6 +105,8 @@ export async function POST(req: NextRequest) {
                 subscriptionStatus: 'active',
                 isProUser: true,
                 plan: 'pro',
+                stripeCustomerId: session.customer,
+                stripeSubscriptionId: session.subscription,
               },
             });
 
