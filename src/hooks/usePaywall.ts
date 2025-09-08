@@ -28,10 +28,38 @@ export function usePaywall() {
     }
   }, [user, isLoaded]);
 
-  // Get subscription status from Clerk user metadata
-  const isProUser = (user as any)?.privateMetadata?.isProUser === true;
-  const subscriptionStatus = (user as any)?.privateMetadata
+  // Get subscription status from Clerk user metadata (check both private and public)
+  const isProUserPrivate = (user as any)?.privateMetadata?.isProUser === true;
+  const isProUserPublic = (user as any)?.publicMetadata?.isProUser === true;
+  const isProUser = isProUserPrivate || isProUserPublic;
+
+  const subscriptionStatusPrivate = (user as any)?.privateMetadata
     ?.subscriptionStatus as string;
+  const subscriptionStatusPublic = (user as any)?.publicMetadata
+    ?.subscriptionStatus as string;
+  const subscriptionStatus =
+    subscriptionStatusPrivate || subscriptionStatusPublic;
+
+  // Debug logging
+  useEffect(() => {
+    if (user && isLoaded) {
+      console.log('[PAYWALL DEBUG] User metadata:', {
+        privateMetadata: (user as any)?.privateMetadata,
+        publicMetadata: (user as any)?.publicMetadata,
+        isProUserPrivate,
+        isProUserPublic,
+        finalIsProUser: isProUser,
+        subscriptionStatus,
+      });
+    }
+  }, [
+    user,
+    isLoaded,
+    isProUserPrivate,
+    isProUserPublic,
+    isProUser,
+    subscriptionStatus,
+  ]);
 
   const customerId = (user as any)?.privateMetadata?.stripeCustomerId as string;
   const subscriptionId = (user as any)?.privateMetadata
