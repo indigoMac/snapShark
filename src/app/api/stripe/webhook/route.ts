@@ -6,9 +6,12 @@ import Stripe from 'stripe';
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
 
-// Configure Next.js to not parse the body for webhooks
+// Configure Next.js App Router for webhooks
 export const runtime = 'nodejs';
 export const preferredRegion = 'auto';
+
+// Explicitly disable body parsing for webhooks
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
   try {
@@ -30,15 +33,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Get the raw body as buffer for signature verification
-    const body = await req.arrayBuffer();
-    const bodyText = Buffer.from(body).toString('utf8');
-    const signature = headers().get('stripe-signature');
+    // Read the raw request body - this is critical for signature verification
+    const rawBody = await req.text();
+    const sig = headers().get('stripe-signature') as string;
 
-    console.log('[WEBHOOK] 📝 Body length:', bodyText.length);
-    console.log('[WEBHOOK] 🔑 Signature present:', !!signature);
+    console.log('[WEBHOOK] 📝 Raw body length:', rawBody.length);
+    console.log('[WEBHOOK] 🔑 Signature present:', !!sig);
+    console.log('[WEBHOOK] 📋 Webhook secret configured:', !!webhookSecret);
 
-    if (!signature) {
+    if (!sig) {
       console.log('[WEBHOOK] ❌ No stripe-signature header');
       return NextResponse.json(
         { error: 'No stripe-signature header' },
@@ -46,14 +49,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Verify webhook signature using the raw body text
-    let event;
+    // Construct the event using Stripe's webhook verification
+    let event: Stripe.Event;
     try {
-      event = stripe.webhooks.constructEvent(
-        bodyText,
-        signature,
-        webhookSecret
-      );
+      event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret);
       console.log('[WEBHOOK] ✅ Signature verified successfully');
     } catch (err: any) {
       console.log('[WEBHOOK] ❌ Signature verification failed:', err.message);
