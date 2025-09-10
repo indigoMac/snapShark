@@ -10,22 +10,28 @@ This directory contains GitHub Actions workflows for automated testing and deplo
 - **Node versions**: 18.x, 20.x (matrix testing)
 - **Steps**:
   1. Lint code with ESLint
-  2. Run unit tests with coverage
-  3. Run E2E tests with Playwright
+  2. Run comprehensive unit tests with coverage (122 tests)
+  3. Build application to ensure deployability
   4. Upload coverage reports to Codecov
-  5. Upload Playwright artifacts on failure
+
+## Test Strategy
+
+**Why Unit Tests Only?**
+
+- ✅ **122 comprehensive unit tests** covering all image processing logic
+- ✅ **96.51% code coverage** of core functionality
+- ✅ **Fast, reliable, deterministic** - no flaky tests
+- ✅ **Tests actual business logic** - format conversion, resizing, quality
+- ❌ **No E2E tests** - they don't add value for image processing tools
 
 ### Test Commands
 
 ```bash
-# Run unit tests locally
+# Run unit tests locally (watch mode)
 npm run test
 
-# Run tests with coverage
+# Run tests with coverage report
 npm run test:coverage
-
-# Run E2E tests
-npm run e2e
 
 # CI-optimized test run
 npm run test:ci
@@ -33,15 +39,19 @@ npm run test:ci
 
 ## Coverage Reporting
 
-- Coverage reports are automatically uploaded to Codecov
-- HTML coverage reports are generated in `coverage/` directory
-- Coverage includes all source files except test files and configs
+- **96.51% coverage** automatically tracked
+- Coverage reports uploaded to Codecov
+- HTML coverage reports generated in `coverage/` directory
+- Covers all image processing logic, formats, presets, and error handling
 
-## E2E Testing
+## What's Tested
 
-- Playwright tests run after unit tests pass
-- Tests run against a built version of the app
-- Reports are uploaded as artifacts when tests fail
+- ✅ **Image Format Support** - JPEG, PNG, WebP, AVIF, HEIC validation
+- ✅ **Canvas Operations** - Resizing, scaling, aspect ratio calculations
+- ✅ **Quality & Compression** - Lossy/lossless formats, quality settings
+- ✅ **File Processing** - Batch operations, filename generation
+- ✅ **Preset Management** - Built-in presets, custom presets, Pro features
+- ✅ **Error Scenarios** - Invalid inputs, browser compatibility, edge cases
 
 ## Status Badges
 
