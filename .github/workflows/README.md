@@ -7,7 +7,7 @@ This directory contains GitHub Actions workflows for automated testing and deplo
 ### `test.yml` - Test Suite
 
 - **Triggers**: Push to `main`/`develop` branches, Pull Requests
-- **Node versions**: 18.x, 20.x (matrix testing)
+- **Node version**: 20.x (single, fast run)
 - **Steps**:
   1. Lint code with ESLint
   2. Run comprehensive unit tests with coverage (122 tests)
