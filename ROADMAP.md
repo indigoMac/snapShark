@@ -1,16 +1,10 @@
 ## Phase 1: Critical Subscription Management 🔧
 
-[ ] Cancel subscription functionality
-[ ] Billing management (view invoices, update payment method)
+[X] Cancel subscription functionality
+[X] Billing management (view invoices, update payment method)
 [ ] Subscription status handling (past due, canceled, etc.)
 
-## Phase 2: Enhanced Testing 🧪
-
-[ ] Comprehensive test suite (the foundation for safe iteration)
-[ ] CI/CD with test gates (prevent breaking changes)
-[ ] Visual regression testing (UI consistency)
-
-## Phase 3: UI/UX Improvements ✨
+## Phase 2: UI/UX Improvements ✨
 
 [ ] Use logo images in the public directory
 [ ] Better design system (consistent spacing, colors, typography)
@@ -19,7 +13,7 @@
 [ ] Mobile-first responsive design
 [ ] Progress indicators for batch processing
 
-# Phase 4: Feature Expansion 🚀
+# Phase 3: Feature Expansion 🚀
 
 [ ] Upscaling feature for larger posters without losing picture quality
 [ ] Remove water mark feature

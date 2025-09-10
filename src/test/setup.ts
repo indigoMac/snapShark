@@ -1,25 +1,30 @@
-import { beforeAll, vi } from 'vitest';
+import { vi } from 'vitest';
 
-// Mock Web Workers
-beforeAll(() => {
-  global.Worker = vi.fn().mockImplementation(() => ({
-    postMessage: vi.fn(),
-    terminate: vi.fn(),
+// Mock ResizeObserver which is not available in JSDOM
+global.ResizeObserver = vi.fn(() => ({
+  observe: vi.fn(),
+  unobserve: vi.fn(),
+  disconnect: vi.fn(),
+}));
+
+// Mock IntersectionObserver
+global.IntersectionObserver = vi.fn(() => ({
+  observe: vi.fn(),
+  unobserve: vi.fn(),
+  disconnect: vi.fn(),
+}));
+
+// Mock matchMedia
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: vi.fn().mockImplementation((query) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: vi.fn(), // deprecated
+    removeListener: vi.fn(), // deprecated
     addEventListener: vi.fn(),
     removeEventListener: vi.fn(),
-  }));
-
-  // Mock URL.createObjectURL
-  Object.defineProperty(global.URL, 'createObjectURL', {
-    value: vi.fn(() => 'mocked-object-url'),
-    writable: true,
-  });
-  Object.defineProperty(global.URL, 'revokeObjectURL', {
-    value: vi.fn(),
-    writable: true,
-  });
-
-  // Mock Canvas API
-  global.HTMLCanvasElement.prototype.getContext = vi.fn();
-  global.HTMLCanvasElement.prototype.toBlob = vi.fn();
+    dispatchEvent: vi.fn(),
+  })),
 });
