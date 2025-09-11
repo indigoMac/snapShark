@@ -2,13 +2,20 @@
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Dropzone } from '@/components/Dropzone';
 import { SettingsPanel, ImageSettings } from '@/components/SettingsPanel';
 import { PreviewGrid } from '@/components/PreviewGrid';
 import { ProgressBar } from '@/components/ProgressBar';
 import { PaywallDialog } from '@/components/PaywallDialog';
 import { Badge } from '@/components/ui/badge';
+// Removed logo imports since we no longer show logo on homepage
 import { Zap, Shield, Cpu, Sparkles } from 'lucide-react';
 import { useImageProcessor } from '@/hooks/useImageProcessor';
 import { usePaywall } from '@/hooks/usePaywall';
@@ -22,35 +29,31 @@ export default function HomePage() {
     scale: 1.0,
     lockAspectRatio: true,
     usePica: true,
-    stripMetadata: false
+    stripMetadata: false,
   });
-  const [originalDimensions, setOriginalDimensions] = useState<{ width: number; height: number } | undefined>();
+  const [originalDimensions, setOriginalDimensions] = useState<
+    { width: number; height: number } | undefined
+  >();
 
-  const { 
-    processImages, 
-    isProcessing, 
-    progress, 
-    error, 
-    results, 
-    reset 
-  } = useImageProcessor();
+  const { processImages, isProcessing, progress, error, results, reset } =
+    useImageProcessor();
 
-  const { 
-    isPro, 
-    showPaywallDialog, 
-    paywallFeature, 
+  const {
+    isPro,
+    showPaywallDialog,
+    paywallFeature,
     closePaywallDialog,
-    requestFeatureAccess 
+    requestFeatureAccess,
   } = usePaywall();
 
   // Load first image dimensions for settings panel
   useEffect(() => {
     if (selectedFiles.length > 0) {
       loadImage(selectedFiles[0])
-        .then(img => {
+        .then((img) => {
           setOriginalDimensions({
             width: img.naturalWidth,
-            height: img.naturalHeight
+            height: img.naturalHeight,
           });
         })
         .catch(console.error);
@@ -62,7 +65,9 @@ export default function HomePage() {
   const handleFilesSelected = (files: File[]) => {
     // Check if batch processing requires Pro
     if (files.length > 1 && !isPro) {
-      if (!requestFeatureAccess('batch', `Process ${files.length} images at once`)) {
+      if (
+        !requestFeatureAccess('batch', `Process ${files.length} images at once`)
+      ) {
         return;
       }
     }
@@ -83,154 +88,165 @@ export default function HomePage() {
   };
 
   return (
-    <div className="space-y-8">
-      {/* Hero Section */}
-      <div className="text-center space-y-4">
-        <div className="flex items-center justify-center gap-2 mb-2">
-          <Badge variant="secondary" className="text-xs">
-            <Shield className="w-3 h-3 mr-1" />
-            Privacy-First
-          </Badge>
-          <Badge variant="secondary" className="text-xs">
-            <Cpu className="w-3 h-3 mr-1" />
-            Client-Side
-          </Badge>
-        </div>
-        
-        <h1 className="text-4xl font-bold tracking-tight">
-          Convert & Resize Images
-          <span className="text-primary"> Instantly</span>
-        </h1>
-        
-        <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-          Professional image processing directly in your browser. 
-          No uploads, complete privacy, lightning fast.
-        </p>
-        
-        <div className="flex items-center justify-center gap-6 text-sm text-muted-foreground">
-          <div className="flex items-center gap-1">
-            <Shield className="w-4 h-4" />
-            <span>100% Private</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Zap className="w-4 h-4" />
-            <span>Instant Processing</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Sparkles className="w-4 h-4" />
-            <span>Professional Quality</span>
+    <div className="space-y-6">
+      {/* Enhanced Hero Section */}
+      <div className="relative bg-gradient-to-b from-blue-50 to-white dark:from-blue-950/20 dark:to-slate-900">
+        <div className="text-center py-12 px-4">
+          <div className="max-w-4xl mx-auto space-y-6">
+            <div className="space-y-4">
+              <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
+                <span className="text-slate-900 dark:text-slate-100">
+                  Convert & Resize Images
+                </span>
+                <br />
+                <span className="bg-gradient-to-r from-blue-600 to-blue-700 dark:from-blue-400 dark:to-blue-500 bg-clip-text text-transparent">
+                  Instantly & Privately
+                </span>
+              </h1>
+              <p className="text-xl text-slate-600 dark:text-slate-300 max-w-2xl mx-auto">
+                Professional image processing directly in your browser.
+                <span className="block text-blue-600 dark:text-blue-400 font-semibold mt-1">
+                  No uploads • No tracking • Always free
+                </span>
+              </p>
+            </div>
+
+            {/* Trust Indicators */}
+            <div className="flex flex-wrap items-center justify-center gap-8 pt-4">
+              <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
+                <div className="w-8 h-8 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center">
+                  <Shield className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                </div>
+                <span className="font-medium">100% Private</span>
+              </div>
+              <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
+                <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
+                  <Zap className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                </div>
+                <span className="font-medium">Lightning Fast</span>
+              </div>
+              <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
+                <div className="w-8 h-8 bg-indigo-100 dark:bg-indigo-900/30 rounded-full flex items-center justify-center">
+                  <Sparkles className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                </div>
+                <span className="font-medium">Pro Quality</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Main Interface */}
-      <div className="grid lg:grid-cols-3 gap-8">
-        {/* Left Column - File Upload */}
-        <div className="lg:col-span-2 space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Upload Images</CardTitle>
-              <CardDescription>
-                Drag and drop or click to select images. Supports PNG, JPG, WebP, and HEIC formats.
+      {/* Centered Main Upload Section */}
+      <div className="max-w-4xl mx-auto px-4">
+        <Card className="shadow-lg border border-blue-200/50 dark:border-blue-800/50 bg-white dark:bg-slate-800">
+          <CardHeader className="text-center pb-4">
+            <CardTitle className="text-2xl text-slate-800 dark:text-slate-100">
+              Drop Your Images Here
+            </CardTitle>
+            <CardDescription className="text-base text-slate-600 dark:text-slate-300">
+              Supports PNG, JPG, WebP, and HEIC formats • Max{' '}
+              {isPro ? '50' : '10'} files • 100% private processing
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Dropzone
+              onFilesSelected={handleFilesSelected}
+              maxFiles={isPro ? 50 : 10}
+              disabled={isProcessing}
+            />
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Horizontal Settings Layout */}
+      <div className="max-w-6xl mx-auto px-4 space-y-6">
+        <SettingsPanel
+          settings={settings}
+          onSettingsChange={setSettings}
+          originalDimensions={originalDimensions}
+          disabled={isProcessing}
+        />
+
+        {/* Processing Progress */}
+        {isProcessing && (
+          <ProgressBar
+            current={progress.current}
+            total={progress.total}
+            currentFileName={progress.currentFileName}
+          />
+        )}
+
+        {/* Error Display */}
+        {error && (
+          <Card className="border-destructive">
+            <CardContent className="pt-6">
+              <p className="text-destructive font-medium">Error:</p>
+              <p className="text-sm">{error}</p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Convert Button */}
+        {selectedFiles.length > 0 && !isProcessing && (
+          <div className="flex justify-center">
+            <Button
+              onClick={handleConvert}
+              size="lg"
+              className="px-12 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg hover:shadow-xl transition-all duration-200"
+              disabled={isProcessing}
+            >
+              <Zap className="w-5 h-5 mr-2" />
+              Convert{' '}
+              {selectedFiles.length > 1
+                ? `${selectedFiles.length} Images`
+                : 'Image'}
+            </Button>
+          </div>
+        )}
+
+        {/* Results Grid */}
+        {results.length > 0 && (
+          <PreviewGrid images={results} onClear={handleClearResults} />
+        )}
+
+        {/* Clean Pro Features Card */}
+        {!isPro && (
+          <Card className="border border-blue-200 dark:border-blue-800 bg-blue-50/50 dark:bg-blue-950/20 max-w-2xl mx-auto">
+            <CardHeader className="text-center">
+              <CardTitle className="flex items-center justify-center gap-2 text-slate-800 dark:text-slate-100">
+                <Sparkles className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                Upgrade to Pro
+              </CardTitle>
+              <CardDescription className="text-slate-600 dark:text-slate-300">
+                Unlock advanced tools and batch processing for £3/month
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Dropzone 
-                onFilesSelected={handleFilesSelected}
-                maxFiles={isPro ? 50 : 10}
-                disabled={isProcessing}
-              />
+              <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
+                <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 bg-blue-600 dark:bg-blue-400 rounded-full" />
+                  <span>Batch process up to 50 images</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 bg-blue-600 dark:bg-blue-400 rounded-full" />
+                  <span>Professional presets & templates</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 bg-blue-600 dark:bg-blue-400 rounded-full" />
+                  <span>AVIF & HEIC format support</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 bg-blue-600 dark:bg-blue-400 rounded-full" />
+                  <span>ZIP download for batches</span>
+                </div>
+              </div>
+              <Button className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white">
+                <Sparkles className="w-4 h-4 mr-2" />
+                Upgrade to Pro - £3/month
+              </Button>
             </CardContent>
           </Card>
-
-          {/* Processing Progress */}
-          {isProcessing && (
-            <ProgressBar 
-              current={progress.current}
-              total={progress.total}
-              currentFileName={progress.currentFileName}
-            />
-          )}
-
-          {/* Error Display */}
-          {error && (
-            <Card className="border-destructive">
-              <CardContent className="pt-6">
-                <p className="text-destructive font-medium">Error:</p>
-                <p className="text-sm">{error}</p>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Convert Button */}
-          {selectedFiles.length > 0 && !isProcessing && (
-            <Button 
-              onClick={handleConvert}
-              size="lg"
-              className="w-full"
-              disabled={isProcessing}
-            >
-              <Zap className="w-4 h-4 mr-2" />
-              Convert {selectedFiles.length > 1 ? `${selectedFiles.length} Images` : 'Image'}
-            </Button>
-          )}
-
-          {/* Results Grid */}
-          {results.length > 0 && (
-            <PreviewGrid 
-              images={results}
-              onClear={handleClearResults}
-            />
-          )}
-        </div>
-
-        {/* Right Column - Settings */}
-        <div className="space-y-6">
-          <SettingsPanel
-            settings={settings}
-            onSettingsChange={setSettings}
-            originalDimensions={originalDimensions}
-            disabled={isProcessing}
-          />
-
-          {/* Pro Features Card */}
-          {!isPro && (
-            <Card className="border-primary/20 bg-primary/5">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Sparkles className="w-5 h-5 text-primary" />
-                  Pro Features
-                </CardTitle>
-                <CardDescription>
-                  Unlock advanced tools and batch processing
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 bg-primary rounded-full" />
-                    <span>Batch process up to 50 images</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 bg-primary rounded-full" />
-                    <span>Professional presets & templates</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 bg-primary rounded-full" />
-                    <span>AVIF & HEIC format support</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 bg-primary rounded-full" />
-                    <span>ZIP download for batches</span>
-                  </div>
-                </div>
-                <Button size="sm" className="w-full">
-                  Upgrade to Pro - £3/month
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-        </div>
+        )}
       </div>
 
       {/* Paywall Dialog */}

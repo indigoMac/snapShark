@@ -1,8 +1,16 @@
 'use client';
 
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { LogoIcon } from '@/components/Logo';
 import { Crown, Check, Zap } from 'lucide-react';
 import { usePaywall } from '@/hooks/usePaywall';
 
@@ -12,7 +20,11 @@ interface PaywallDialogProps {
   feature?: string;
 }
 
-export function PaywallDialog({ open, onOpenChange, feature }: PaywallDialogProps) {
+export function PaywallDialog({
+  open,
+  onOpenChange,
+  feature,
+}: PaywallDialogProps) {
   const { hasTrialAvailable, useTrial, upgradeToPro } = usePaywall();
 
   const handleTrial = () => {
@@ -31,12 +43,16 @@ export function PaywallDialog({ open, onOpenChange, feature }: PaywallDialogProp
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <div className="flex items-center gap-2">
-            <Crown className="h-5 w-5 text-yellow-500" />
-            <DialogTitle>Upgrade to Pro</DialogTitle>
+          <div className="flex flex-col items-center gap-4 mb-2">
+            <LogoIcon size="xl" />
+            <div className="flex items-center gap-2">
+              <Crown className="h-5 w-5 text-yellow-500" />
+              <DialogTitle>Upgrade to Pro</DialogTitle>
+            </div>
           </div>
-          <DialogDescription>
-            {feature ? `${feature} requires` : 'Unlock'} Pro features for powerful batch processing and advanced tools.
+          <DialogDescription className="text-center">
+            {feature ? `${feature} requires` : 'Unlock'} Pro features for
+            powerful batch processing and advanced tools.
           </DialogDescription>
         </DialogHeader>
 
@@ -79,9 +95,13 @@ export function PaywallDialog({ open, onOpenChange, feature }: PaywallDialogProp
                 <span className="text-muted-foreground">/month</span>
               </div>
               <div className="flex items-baseline gap-1">
-                <span className="text-lg font-semibold text-green-600">£15</span>
+                <span className="text-lg font-semibold text-green-600">
+                  £15
+                </span>
                 <span className="text-muted-foreground">/year</span>
-                <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">Save 58%</span>
+                <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">
+                  Save 58%
+                </span>
               </div>
             </div>
           </div>

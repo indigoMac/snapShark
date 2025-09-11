@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import { ClerkProvider } from '@clerk/nextjs';
 import { Navigation } from '@/components/Navigation';
+import { LogoIcon } from '@/components/Logo';
+import { ThemeProvider } from '@/components/theme-provider';
 import './globals.css';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -20,10 +22,26 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: 'SnapShark' }],
   manifest: '/manifest.json',
+  icons: {
+    icon: [
+      { url: '/snapshark-icon-16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/snapshark-icon-32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/snapshark-icon-128.png', sizes: '128x128', type: 'image/png' },
+      { url: '/snapshark-icon-256.png', sizes: '256x256', type: 'image/png' },
+      { url: '/snapshark-icon-512.png', sizes: '512x512', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/snapshark-icon-128.png', sizes: '128x128', type: 'image/png' },
+      { url: '/snapshark-icon-256.png', sizes: '256x256', type: 'image/png' },
+      { url: '/snapshark-icon-512.png', sizes: '512x512', type: 'image/png' },
+    ],
+    shortcut: '/snapshark-icon-32.png',
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
     title: 'SnapShark',
+    startupImage: '/snapshark-icon-512.png',
   },
 };
 
@@ -40,34 +58,47 @@ export default function RootLayout({
 }) {
   return (
     <ClerkProvider>
-      <html lang="en">
+      <html lang="en" suppressHydrationWarning>
+        <head>
+          {/* Test simple high-contrast favicon */}
+          <link rel="icon" type="image/svg+xml" href="/simple-favicon.svg" />
+          <link rel="icon" href="/favicon.ico" sizes="32x32" />
+        </head>
         <body className={inter.className}>
-          <div className="min-h-screen bg-background">
-            <Navigation />
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="light"
+            enableSystem={false}
+            disableTransitionOnChange={false}
+          >
+            <div className="min-h-screen bg-white dark:bg-slate-900 transition-colors">
+              <Navigation />
 
-            <main className="container mx-auto px-4 py-8">{children}</main>
+              <main className="container mx-auto px-4 py-6">{children}</main>
 
-            <footer className="border-t bg-muted/50 mt-16">
-              <div className="container mx-auto px-4 py-8">
-                <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 bg-primary rounded flex items-center justify-center">
-                      <span className="text-primary-foreground font-bold text-sm">
-                        S
+              <footer className="border-t border-blue-200/30 dark:border-blue-800/30 bg-blue-50/50 dark:bg-slate-800/50 mt-16">
+                <div className="container mx-auto px-4 py-8">
+                  <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+                    <div className="flex items-center gap-3">
+                      <LogoIcon size="md" />
+                      <span className="font-medium text-slate-800 dark:text-slate-200">
+                        <span>Snap</span>
+                        <span className="text-blue-600 dark:text-blue-400">
+                          Shark
+                        </span>
                       </span>
                     </div>
-                    <span className="font-medium">SnapShark</span>
-                  </div>
 
-                  <div className="flex items-center gap-6 text-sm text-muted-foreground">
-                    <span>🔒 100% Privacy - No uploads</span>
-                    <span>🚀 Powered by your browser</span>
-                    <span>⚡ Lightning fast</span>
+                    <div className="flex items-center gap-6 text-sm text-slate-600 dark:text-slate-400">
+                      <span>🔒 100% Privacy - No uploads</span>
+                      <span>🚀 Powered by your browser</span>
+                      <span>⚡ Lightning fast</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </footer>
-          </div>
+              </footer>
+            </div>
+          </ThemeProvider>
         </body>
       </html>
     </ClerkProvider>
