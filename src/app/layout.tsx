@@ -60,11 +60,26 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en" suppressHydrationWarning>
         <head>
-          {/* Test simple high-contrast favicon */}
-          <link rel="icon" type="image/svg+xml" href="/simple-favicon.svg" />
+          {/* Modern favicon configuration */}
           <link rel="icon" href="/favicon.ico" sizes="32x32" />
+          <link
+            rel="icon"
+            href="/snapshark-icon-16.png"
+            sizes="16x16"
+            type="image/png"
+          />
+          <link
+            rel="icon"
+            href="/snapshark-icon-32.png"
+            sizes="32x32"
+            type="image/png"
+          />
+          <link rel="apple-touch-icon" href="/snapshark-icon-128.png" />
+
+          {/* Modern mobile web app capability */}
+          <meta name="mobile-web-app-capable" content="yes" />
         </head>
-        <body className={inter.className}>
+        <body className={inter.className} suppressHydrationWarning={true}>
           <ThemeProvider
             attribute="class"
             defaultTheme="light"
