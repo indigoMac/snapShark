@@ -33,6 +33,12 @@ export function Navigation() {
 
           <div className="flex items-center gap-4">
             <Link
+              href="/underwater"
+              className="text-sm font-medium text-slate-600 hover:text-blue-600 dark:text-slate-300 dark:hover:text-blue-400 transition-colors"
+            >
+              Underwater
+            </Link>
+            <Link
               href="/pricing"
               className="text-sm font-medium text-slate-600 hover:text-blue-600 dark:text-slate-300 dark:hover:text-blue-400 transition-colors"
             >
