@@ -1012,10 +1012,458 @@ export function useImageProcessor() {
     [initWorker]
   );
 
+  const generateEcommercePackage = useCallback(
+    async (productFile: File) => {
+      // E-commerce Package - Square product photos for all major marketplaces
+      const ecommerceFormats = [
+        // Amazon Requirements
+        {
+          name: 'amazon-main-1000',
+          width: 1000,
+          height: 1000,
+          format: 'image/jpeg' as const,
+          description: 'Amazon Main 1000×1000',
+          marketplace: 'Amazon',
+        },
+        {
+          name: 'amazon-zoom-2000',
+          width: 2000,
+          height: 2000,
+          format: 'image/jpeg' as const,
+          description: 'Amazon Zoom 2000×2000',
+          marketplace: 'Amazon',
+        },
+
+        // eBay Requirements
+        {
+          name: 'ebay-thumb-500',
+          width: 500,
+          height: 500,
+          format: 'image/jpeg' as const,
+          description: 'eBay Thumbnail 500×500',
+          marketplace: 'eBay',
+        },
+        {
+          name: 'ebay-large-1600',
+          width: 1600,
+          height: 1600,
+          format: 'image/jpeg' as const,
+          description: 'eBay Large 1600×1600',
+          marketplace: 'eBay',
+        },
+
+        // Shopify Requirements
+        {
+          name: 'shopify-thumb-160',
+          width: 160,
+          height: 160,
+          format: 'image/jpeg' as const,
+          description: 'Shopify Thumbnail 160×160',
+          marketplace: 'Shopify',
+        },
+        {
+          name: 'shopify-small-360',
+          width: 360,
+          height: 360,
+          format: 'image/jpeg' as const,
+          description: 'Shopify Small 360×360',
+          marketplace: 'Shopify',
+        },
+        {
+          name: 'shopify-medium-480',
+          width: 480,
+          height: 480,
+          format: 'image/jpeg' as const,
+          description: 'Shopify Medium 480×480',
+          marketplace: 'Shopify',
+        },
+        {
+          name: 'shopify-large-800',
+          width: 800,
+          height: 800,
+          format: 'image/jpeg' as const,
+          description: 'Shopify Large 800×800',
+          marketplace: 'Shopify',
+        },
+
+        // Universal/Other Marketplaces
+        {
+          name: 'universal-square-600',
+          width: 600,
+          height: 600,
+          format: 'image/jpeg' as const,
+          description: 'Universal Square 600×600',
+          marketplace: 'Universal',
+        },
+        {
+          name: 'universal-hd-1200',
+          width: 1200,
+          height: 1200,
+          format: 'image/jpeg' as const,
+          description: 'Universal HD 1200×1200',
+          marketplace: 'Universal',
+        },
+
+        // Social Commerce
+        {
+          name: 'facebook-shop-1024',
+          width: 1024,
+          height: 1024,
+          format: 'image/jpeg' as const,
+          description: 'Facebook Shop 1024×1024',
+          marketplace: 'Facebook',
+        },
+        {
+          name: 'instagram-shop-1080',
+          width: 1080,
+          height: 1080,
+          format: 'image/jpeg' as const,
+          description: 'Instagram Shop 1080×1080',
+          marketplace: 'Instagram',
+        },
+      ];
+
+      setIsProcessing(true);
+      setError(null);
+      setResults([]); // Clear previous results
+      setProgress({ current: 0, total: ecommerceFormats.length });
+
+      const worker = initWorker();
+      tasksRef.current.clear();
+
+      try {
+        // Load original image once
+        const img = await loadImage(productFile);
+
+        // Process all formats in parallel
+        for (let i = 0; i < ecommerceFormats.length; i++) {
+          const ecomFormat = ecommerceFormats[i];
+
+          // E-commerce images are always square - crop to center if needed
+          const targetWidth = ecomFormat.width;
+          const targetHeight = ecomFormat.height;
+
+          // Create ImageData from the image
+          const canvas = document.createElement('canvas');
+          canvas.width = img.naturalWidth;
+          canvas.height = img.naturalHeight;
+          const ctx = canvas.getContext('2d');
+
+          if (!ctx) {
+            throw new Error('Could not get canvas context');
+          }
+
+          ctx.drawImage(img, 0, 0);
+          const imageData = ctx.getImageData(
+            0,
+            0,
+            img.naturalWidth,
+            img.naturalHeight
+          );
+
+          // Create unique task ID with format name
+          const taskId = `ecom-${ecomFormat.name}-${Date.now()}-${Math.random()}`;
+
+          const task: ProcessImageTask = {
+            id: taskId,
+            imageData,
+            targetWidth,
+            targetHeight,
+            format: ecomFormat.format,
+            quality: 0.9, // High quality for product photos
+            usePica: true,
+            upscaling: {
+              method: 'bicubic',
+              quality: 'high',
+              preserveDetails: true,
+            },
+            targetPPI: 72, // Web resolution for e-commerce
+          };
+
+          // Create a renamed file for each format
+          const renamedFile = new File(
+            [productFile],
+            `${ecomFormat.name}_${ecomFormat.marketplace}.${productFile.name.split('.').pop()}`,
+            {
+              type: productFile.type,
+              lastModified: productFile.lastModified,
+            }
+          );
+
+          tasksRef.current.set(taskId, {
+            file: renamedFile,
+            settings: {
+              format: ecomFormat.format,
+              quality: 0.9,
+              width: targetWidth,
+              height: targetHeight,
+              usePica: true,
+              lockAspectRatio: false, // Allow cropping to square
+              upscaling: {
+                method: 'bicubic',
+                quality: 'high',
+                preserveDetails: true,
+              },
+              targetPPI: 72,
+            },
+          });
+
+          // Send task to worker
+          worker.postMessage({
+            type: 'PROCESS_IMAGE',
+            data: task,
+          });
+        }
+      } catch (error) {
+        setError(
+          error instanceof Error
+            ? error.message
+            : 'E-commerce package generation failed'
+        );
+        setIsProcessing(false);
+      }
+    },
+    [initWorker]
+  );
+
+  const generateRealEstatePackage = useCallback(
+    async (propertyFile: File) => {
+      // Real Estate Package - Property photos optimized for MLS and marketing
+      const realEstateFormats = [
+        // MLS Listing Requirements
+        {
+          name: 'mls-listing-1024x768',
+          width: 1024,
+          height: 768,
+          format: 'image/jpeg' as const,
+          description: 'MLS Listing 1024×768',
+          category: 'MLS',
+        },
+        {
+          name: 'mls-thumbnail-300x225',
+          width: 300,
+          height: 225,
+          format: 'image/jpeg' as const,
+          description: 'MLS Thumbnail 300×225',
+          category: 'MLS',
+        },
+
+        // Zillow/Major Portals
+        {
+          name: 'zillow-hero-1200x800',
+          width: 1200,
+          height: 800,
+          format: 'image/jpeg' as const,
+          description: 'Zillow Hero 1200×800',
+          category: 'Portal',
+        },
+        {
+          name: 'realtor-com-1024x768',
+          width: 1024,
+          height: 768,
+          format: 'image/jpeg' as const,
+          description: 'Realtor.com 1024×768',
+          category: 'Portal',
+        },
+
+        // Social Media Marketing
+        {
+          name: 'facebook-post-1200x630',
+          width: 1200,
+          height: 630,
+          format: 'image/jpeg' as const,
+          description: 'Facebook Post 1200×630',
+          category: 'Social',
+        },
+        {
+          name: 'instagram-post-1080x1080',
+          width: 1080,
+          height: 1080,
+          format: 'image/jpeg' as const,
+          description: 'Instagram Post 1080×1080',
+          category: 'Social',
+        },
+        {
+          name: 'instagram-story-1080x1920',
+          width: 1080,
+          height: 1920,
+          format: 'image/jpeg' as const,
+          description: 'Instagram Story 1080×1920',
+          category: 'Social',
+        },
+
+        // Print Marketing Materials
+        {
+          name: 'flyer-letter-2550x3300',
+          width: 2550, // 8.5" × 300 PPI
+          height: 3300, // 11" × 300 PPI
+          format: 'image/jpeg' as const,
+          description: 'Letter Flyer 8.5×11"',
+          category: 'Print',
+        },
+        {
+          name: 'postcard-6x4-1800x1200',
+          width: 1800, // 6" × 300 PPI
+          height: 1200, // 4" × 300 PPI
+          format: 'image/jpeg' as const,
+          description: 'Postcard 6×4"',
+          category: 'Print',
+        },
+
+        // Website/Virtual Tour
+        {
+          name: 'website-hero-1920x1080',
+          width: 1920,
+          height: 1080,
+          format: 'image/jpeg' as const,
+          description: 'Website Hero 1920×1080',
+          category: 'Web',
+        },
+        {
+          name: 'virtual-tour-800x600',
+          width: 800,
+          height: 600,
+          format: 'image/jpeg' as const,
+          description: 'Virtual Tour 800×600',
+          category: 'Web',
+        },
+
+        // Email Marketing
+        {
+          name: 'email-header-600x300',
+          width: 600,
+          height: 300,
+          format: 'image/jpeg' as const,
+          description: 'Email Header 600×300',
+          category: 'Email',
+        },
+      ];
+
+      setIsProcessing(true);
+      setError(null);
+      setResults([]); // Clear previous results
+      setProgress({ current: 0, total: realEstateFormats.length });
+
+      const worker = initWorker();
+      tasksRef.current.clear();
+
+      try {
+        // Load original image once
+        const img = await loadImage(propertyFile);
+
+        // Process all formats in parallel
+        for (let i = 0; i < realEstateFormats.length; i++) {
+          const realEstateFormat = realEstateFormats[i];
+
+          // For real estate, fit image within dimensions (maintain aspect ratio)
+          const originalAspect = img.naturalWidth / img.naturalHeight;
+          const targetAspect = realEstateFormat.width / realEstateFormat.height;
+
+          let targetWidth, targetHeight;
+
+          if (originalAspect > targetAspect) {
+            // Image is wider - fit to width
+            targetWidth = realEstateFormat.width;
+            targetHeight = Math.round(realEstateFormat.width / originalAspect);
+          } else {
+            // Image is taller - fit to height
+            targetHeight = realEstateFormat.height;
+            targetWidth = Math.round(realEstateFormat.height * originalAspect);
+          }
+
+          // Create ImageData from the image
+          const canvas = document.createElement('canvas');
+          canvas.width = img.naturalWidth;
+          canvas.height = img.naturalHeight;
+          const ctx = canvas.getContext('2d');
+
+          if (!ctx) {
+            throw new Error('Could not get canvas context');
+          }
+
+          ctx.drawImage(img, 0, 0);
+          const imageData = ctx.getImageData(
+            0,
+            0,
+            img.naturalWidth,
+            img.naturalHeight
+          );
+
+          // Create unique task ID with format name
+          const taskId = `realestate-${realEstateFormat.name}-${Date.now()}-${Math.random()}`;
+
+          // Use high PPI for print materials, standard for web/social
+          const isPrint = realEstateFormat.category === 'Print';
+          const targetPPI = isPrint ? 300 : 72;
+
+          const task: ProcessImageTask = {
+            id: taskId,
+            imageData,
+            targetWidth,
+            targetHeight,
+            format: realEstateFormat.format,
+            quality: 0.92, // High quality for real estate photos
+            usePica: true,
+            upscaling: {
+              method: 'bicubic',
+              quality: 'high',
+              preserveDetails: true,
+            },
+            targetPPI,
+          };
+
+          // Create a renamed file for each format
+          const renamedFile = new File(
+            [propertyFile],
+            `${realEstateFormat.name}_${realEstateFormat.category}.${propertyFile.name.split('.').pop()}`,
+            {
+              type: propertyFile.type,
+              lastModified: propertyFile.lastModified,
+            }
+          );
+
+          tasksRef.current.set(taskId, {
+            file: renamedFile,
+            settings: {
+              format: realEstateFormat.format,
+              quality: 0.92,
+              width: targetWidth,
+              height: targetHeight,
+              usePica: true,
+              lockAspectRatio: true, // Maintain aspect ratio
+              upscaling: {
+                method: 'bicubic',
+                quality: 'high',
+                preserveDetails: true,
+              },
+              targetPPI,
+            },
+          });
+
+          // Send task to worker
+          worker.postMessage({
+            type: 'PROCESS_IMAGE',
+            data: task,
+          });
+        }
+      } catch (error) {
+        setError(
+          error instanceof Error
+            ? error.message
+            : 'Real estate package generation failed'
+        );
+        setIsProcessing(false);
+      }
+    },
+    [initWorker]
+  );
+
   return {
     processImages,
     generateLogoPackage,
     generatePrintPackage,
+    generateEcommercePackage,
+    generateRealEstatePackage,
     isProcessing,
     progress,
     error,

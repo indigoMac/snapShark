@@ -45,6 +45,8 @@ export default function HomePage() {
     processImages,
     generateLogoPackage,
     generatePrintPackage,
+    generateEcommercePackage,
+    generateRealEstatePackage,
     isProcessing,
     progress,
     error,
@@ -182,6 +184,8 @@ export default function HomePage() {
           selectedFiles={selectedFiles}
           onGenerateLogoPackage={generateLogoPackage}
           onGeneratePrintPackage={generatePrintPackage}
+          onGenerateEcommercePackage={generateEcommercePackage}
+          onGenerateRealEstatePackage={generateRealEstatePackage}
         />
 
         {/* Processing Progress */}

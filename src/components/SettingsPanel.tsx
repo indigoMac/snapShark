@@ -42,6 +42,8 @@ interface SettingsPanelProps {
   selectedFiles?: File[];
   onGenerateLogoPackage?: (logoFile: File) => Promise<void>;
   onGeneratePrintPackage?: (printFile: File) => Promise<void>;
+  onGenerateEcommercePackage?: (productFile: File) => Promise<void>;
+  onGenerateRealEstatePackage?: (propertyFile: File) => Promise<void>;
 }
 
 export function SettingsPanel({
@@ -52,6 +54,8 @@ export function SettingsPanel({
   selectedFiles = [],
   onGenerateLogoPackage,
   onGeneratePrintPackage,
+  onGenerateEcommercePackage,
+  onGenerateRealEstatePackage,
 }: SettingsPanelProps) {
   const { selectedPreset, applyPreset, clearSelection } = usePresets();
   const { isPro, requestFeatureAccess } = usePaywall();
@@ -312,7 +316,7 @@ export function SettingsPanel({
                     requestFeatureAccess('packages', 'Print Package');
                     return;
                   }
-                  
+
                   if (!onGeneratePrintPackage) {
                     alert('Print Package generation not available');
                     return;
@@ -331,7 +335,9 @@ export function SettingsPanel({
                   }
                 }}
                 className="w-full py-2 px-3 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded font-medium transition-colors disabled:opacity-50"
-                disabled={disabled || !selectedFiles || selectedFiles.length === 0}
+                disabled={
+                  disabled || !selectedFiles || selectedFiles.length === 0
+                }
               >
                 {isPro ? 'Generate Print Package' : 'Upgrade for Print Package'}
               </button>
@@ -340,7 +346,7 @@ export function SettingsPanel({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {/* E-commerce Package */}
-            <div className="p-4 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 hover:shadow-md transition-all group opacity-75">
+            <div className="p-4 bg-white dark:bg-gray-900 rounded-lg border border-blue-200 dark:border-blue-700 hover:shadow-md transition-all group">
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-2">
                   <span className="text-lg">🛒</span>
@@ -348,8 +354,8 @@ export function SettingsPanel({
                     E-commerce Package
                   </h4>
                 </div>
-                <span className="text-xs text-gray-500 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
-                  Coming Soon
+                <span className="text-xs text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/50 px-2 py-1 rounded">
+                  12 Formats
                 </span>
               </div>
 
@@ -357,15 +363,55 @@ export function SettingsPanel({
                 Product photos → All marketplace formats
               </p>
 
-              <div className="text-xs text-gray-500 dark:text-gray-500 space-y-1">
+              <div className="text-xs text-gray-500 dark:text-gray-500 space-y-1 mb-4">
                 <div>• Amazon: 1000×1000px, 2000×2000px</div>
                 <div>• eBay: 500×500px, 1600×1600px</div>
-                <div>• Shopify: Multiple thumbnail sizes</div>
+                <div>• Shopify: 160px to 800px squares</div>
+                <div>• Social: Facebook, Instagram commerce</div>
               </div>
+
+              <button
+                onClick={async () => {
+                  if (!isPro) {
+                    requestFeatureAccess('packages', 'E-commerce Package');
+                    return;
+                  }
+
+                  if (!onGenerateEcommercePackage) {
+                    alert('E-commerce Package generation not available');
+                    return;
+                  }
+
+                  if (!selectedFiles || selectedFiles.length === 0) {
+                    alert('Please select a product image first');
+                    return;
+                  }
+
+                  try {
+                    await onGenerateEcommercePackage(selectedFiles[0]);
+                  } catch (error) {
+                    console.error(
+                      'E-commerce package generation failed:',
+                      error
+                    );
+                    alert(
+                      'E-commerce package generation failed. Please try again.'
+                    );
+                  }
+                }}
+                className="w-full py-2 px-3 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded font-medium transition-colors disabled:opacity-50"
+                disabled={
+                  disabled || !selectedFiles || selectedFiles.length === 0
+                }
+              >
+                {isPro
+                  ? 'Generate E-commerce Package'
+                  : 'Upgrade for E-commerce Package'}
+              </button>
             </div>
 
             {/* Real Estate Package */}
-            <div className="p-4 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 hover:shadow-md transition-all group opacity-75">
+            <div className="p-4 bg-white dark:bg-gray-900 rounded-lg border border-blue-200 dark:border-blue-700 hover:shadow-md transition-all group">
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-2">
                   <span className="text-lg">🏠</span>
@@ -373,8 +419,8 @@ export function SettingsPanel({
                     Real Estate Package
                   </h4>
                 </div>
-                <span className="text-xs text-gray-500 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
-                  Coming Soon
+                <span className="text-xs text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/50 px-2 py-1 rounded">
+                  12 Formats
                 </span>
               </div>
 
@@ -382,11 +428,51 @@ export function SettingsPanel({
                 Property photos → MLS + marketing ready
               </p>
 
-              <div className="text-xs text-gray-500 dark:text-gray-500 space-y-1">
-                <div>• MLS listing: 1024×768px</div>
-                <div>• Zillow hero: 1200×800px</div>
-                <div>• Social media + print flyers</div>
+              <div className="text-xs text-gray-500 dark:text-gray-500 space-y-1 mb-4">
+                <div>• MLS: 1024×768px + thumbnail</div>
+                <div>• Portals: Zillow, Realtor.com formats</div>
+                <div>• Social: Facebook, Instagram posts/stories</div>
+                <div>• Print: Flyers, postcards (300 PPI)</div>
               </div>
+
+              <button
+                onClick={async () => {
+                  if (!isPro) {
+                    requestFeatureAccess('packages', 'Real Estate Package');
+                    return;
+                  }
+
+                  if (!onGenerateRealEstatePackage) {
+                    alert('Real Estate Package generation not available');
+                    return;
+                  }
+
+                  if (!selectedFiles || selectedFiles.length === 0) {
+                    alert('Please select a property image first');
+                    return;
+                  }
+
+                  try {
+                    await onGenerateRealEstatePackage(selectedFiles[0]);
+                  } catch (error) {
+                    console.error(
+                      'Real Estate package generation failed:',
+                      error
+                    );
+                    alert(
+                      'Real Estate package generation failed. Please try again.'
+                    );
+                  }
+                }}
+                className="w-full py-2 px-3 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded font-medium transition-colors disabled:opacity-50"
+                disabled={
+                  disabled || !selectedFiles || selectedFiles.length === 0
+                }
+              >
+                {isPro
+                  ? 'Generate Real Estate Package'
+                  : 'Upgrade for Real Estate Package'}
+              </button>
             </div>
           </div>
 
