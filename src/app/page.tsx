@@ -30,6 +30,11 @@ export default function HomePage() {
     lockAspectRatio: true,
     usePica: true,
     stripMetadata: false,
+    upscaling: {
+      method: 'bicubic',
+      quality: 'standard',
+      preserveDetails: true
+    }
   });
   const [originalDimensions, setOriginalDimensions] = useState<
     { width: number; height: number } | undefined

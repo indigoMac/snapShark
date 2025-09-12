@@ -2,7 +2,7 @@ import { useState, useRef, useCallback } from 'react';
 import { OutputFormat, generateFilename } from '@/lib/formats';
 import { loadImage, calculateDimensions } from '@/lib/canvas';
 import { maybeDecodeHEIC } from '@/lib/heic';
-import type { ProcessImageTask, ProcessImageResult, WorkerMessage } from '@/workers/imageWorker';
+import type { ProcessImageTask, ProcessImageResult, WorkerMessage, UpscalingOptions } from '@/workers/imageWorker';
 
 export interface ProcessingSettings {
   format: OutputFormat;
@@ -12,6 +12,7 @@ export interface ProcessingSettings {
   scale?: number;
   lockAspectRatio: boolean;
   usePica: boolean;
+  upscaling?: UpscalingOptions;
 }
 
 export interface ProcessedImage {
@@ -172,7 +173,8 @@ export function useImageProcessor() {
           targetHeight,
           format: settings.format,
           quality: settings.quality,
-          usePica: settings.usePica
+          usePica: settings.usePica,
+          upscaling: settings.upscaling
         };
         
         tasksRef.current.set(taskId, { file, settings });
