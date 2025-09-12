@@ -1,7 +1,7 @@
 {
   "redirects": [
     {
-      "source": "/((?!api|_next|favicon.ico).*)",
+      "source": "/((?!api|_next|favicon\\.ico|.*\\.png|.*\\.svg|.*\\.jpg|.*\\.jpeg|.*\\.gif|.*\\.webp|manifest\\.json).*)",
       "destination": "https://www.snap-shark.com/$1",
       "permanent": true,
       "has": [

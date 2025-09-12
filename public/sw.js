@@ -5,8 +5,9 @@ const STATIC_ASSETS = [
   '/pricing',
   '/account',
   '/manifest.json',
-  '/icon-192.png',
-  '/icon-512.png',
+  '/snapshark-icon-128.png',
+  '/snapshark-icon-256.png',
+  '/snapshark-icon-512.png',
 ];
 
 // Install event - cache static assets
