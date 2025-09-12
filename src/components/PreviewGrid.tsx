@@ -1,7 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Download, Package } from 'lucide-react';
 import { ImageCard } from './ImageCard';
@@ -30,17 +35,20 @@ export function PreviewGrid({ images, onClear }: PreviewGridProps) {
     }
 
     // Check if batch download requires Pro
-    if (!isPro && !requestFeatureAccess('zip-export', 'Batch download as ZIP')) {
+    if (
+      !isPro &&
+      !requestFeatureAccess('zip-export', 'Batch download as ZIP')
+    ) {
       return;
     }
 
     setIsCreatingZip(true);
     try {
-      const zipFiles = images.map(img => ({
+      const zipFiles = images.map((img) => ({
         name: img.filename,
-        blob: img.blob
+        blob: img.blob,
       }));
-      
+
       const zipBlob = await createZip(zipFiles);
       downloadZip(zipBlob, `converted-images-${Date.now()}.zip`);
     } catch (error) {
@@ -62,7 +70,7 @@ export function PreviewGrid({ images, onClear }: PreviewGridProps) {
             Converted Images ({images.length})
           </h3>
           <div className="flex gap-2">
-            <Button 
+            <Button
               onClick={handleDownloadAll}
               disabled={isCreatingZip}
               className="flex items-center gap-2"
@@ -87,13 +95,42 @@ export function PreviewGrid({ images, onClear }: PreviewGridProps) {
           </div>
         </div>
 
+        {/* Show favicon quality disclaimer if small images are present */}
+        {images.some((img) => Math.max(img.width, img.height) <= 64) && (
+          <div className="p-3 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg">
+            <div className="flex items-start gap-2">
+              <div className="text-blue-600 dark:text-blue-400 mt-0.5">
+                <svg
+                  className="w-4 h-4"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
+              <div className="text-sm text-blue-800 dark:text-blue-200">
+                <p className="font-medium mb-1">About Small Favicon Quality</p>
+                <p>
+                  Tiny favicons (16px-48px) may appear blurry in this preview
+                  due to browser scaling. However, they are professionally
+                  optimized for actual use in browser tabs and bookmarks.
+                  <span className="font-medium">
+                    {' '}
+                    The downloaded files are crisp at their intended size.
+                  </span>
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {images.map((image) => (
-            <ImageCard
-              key={image.id}
-              image={image}
-              onPreview={handlePreview}
-            />
+            <ImageCard key={image.id} image={image} onPreview={handlePreview} />
           ))}
         </div>
       </div>
@@ -107,7 +144,7 @@ export function PreviewGrid({ images, onClear }: PreviewGridProps) {
           {previewImage && (
             <div className="space-y-4">
               <div className="flex justify-center">
-                <img 
+                <img
                   src={URL.createObjectURL(previewImage.blob)}
                   alt={previewImage.filename}
                   className="max-w-full max-h-[60vh] object-contain rounded-lg"
@@ -115,24 +152,30 @@ export function PreviewGrid({ images, onClear }: PreviewGridProps) {
               </div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                 <div>
-                  <span className="font-medium">Dimensions:</span><br />
+                  <span className="font-medium">Dimensions:</span>
+                  <br />
                   {previewImage.width} × {previewImage.height}
                 </div>
                 <div>
-                  <span className="font-medium">Format:</span><br />
+                  <span className="font-medium">Format:</span>
+                  <br />
                   {previewImage.actualFormat.split('/')[1].toUpperCase()}
                 </div>
                 <div>
-                  <span className="font-medium">File Size:</span><br />
+                  <span className="font-medium">File Size:</span>
+                  <br />
                   {(previewImage.blob.size / 1024).toFixed(1)} KB
                 </div>
                 <div>
-                  <span className="font-medium">Original Size:</span><br />
+                  <span className="font-medium">Original Size:</span>
+                  <br />
                   {(previewImage.originalFile.size / 1024).toFixed(1)} KB
                 </div>
               </div>
-              <Button 
-                onClick={() => downloadFile(previewImage.blob, previewImage.filename)}
+              <Button
+                onClick={() =>
+                  downloadFile(previewImage.blob, previewImage.filename)
+                }
                 className="w-full"
               >
                 <Download className="h-4 w-4 mr-2" />

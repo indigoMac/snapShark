@@ -30,6 +30,7 @@ export interface ImageSettings {
   lockAspectRatio: boolean;
   usePica: boolean;
   stripMetadata: boolean;
+  targetPPI?: number;
   upscaling?: UpscalingOptions;
 }
 
@@ -38,6 +39,9 @@ interface SettingsPanelProps {
   onSettingsChange: (settings: ImageSettings) => void;
   originalDimensions?: { width: number; height: number };
   disabled?: boolean;
+  selectedFiles?: File[];
+  onGenerateLogoPackage?: (logoFile: File) => Promise<void>;
+  onGeneratePrintPackage?: (printFile: File) => Promise<void>;
 }
 
 export function SettingsPanel({
@@ -45,6 +49,9 @@ export function SettingsPanel({
   onSettingsChange,
   originalDimensions,
   disabled = false,
+  selectedFiles = [],
+  onGenerateLogoPackage,
+  onGeneratePrintPackage,
 }: SettingsPanelProps) {
   const { selectedPreset, applyPreset, clearSelection } = usePresets();
   const { isPro, requestFeatureAccess } = usePaywall();
@@ -202,9 +209,197 @@ export function SettingsPanel({
         <CardTitle>Settings</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Presets */}
+        {/* Professional Packages */}
+        <div className="space-y-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-medium text-blue-900 dark:text-blue-100">
+              Professional Packages
+            </h3>
+            <span className="text-xs text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/50 px-2 py-1 rounded">
+              Multi-Format Output
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {/* Logo Package */}
+            <div className="p-4 bg-white dark:bg-gray-900 rounded-lg border border-blue-200 dark:border-blue-700 hover:shadow-md transition-all group">
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">🌐</span>
+                  <h4 className="font-medium text-gray-900 dark:text-gray-100">
+                    Web Developer Logo Package
+                  </h4>
+                </div>
+                {!isPro && <ProBadge />}
+              </div>
+
+              <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">
+                Upload 1 logo → Get all web-ready formats instantly
+              </p>
+
+              <div className="text-xs text-gray-500 dark:text-gray-500 space-y-1 mb-4">
+                <div>• Favicons: 16px, 32px, 48px PNG (ready)</div>
+                <div>• PWA Icons: 192px, 512px PNG (ready)</div>
+                <div>• Apple Touch: 180px PNG (ready)</div>
+                <div>• Website Logos: 200px, 400px, 800px PNG (ready)</div>
+                <div className="text-blue-600 dark:text-blue-400 font-medium">
+                  • Coming Soon: favicon.ico + SVG formats!
+                </div>
+              </div>
+
+              <button
+                onClick={async () => {
+                  if (!isPro) {
+                    requestFeatureAccess('packages', 'Logo Package');
+                    return;
+                  }
+
+                  if (!onGenerateLogoPackage) {
+                    alert('Logo package function not available');
+                    return;
+                  }
+
+                  if (selectedFiles.length === 0) {
+                    alert('Please select a logo file first');
+                    return;
+                  }
+
+                  // Use the first file as the logo
+                  try {
+                    await onGenerateLogoPackage(selectedFiles[0]);
+                  } catch (error) {
+                    alert(
+                      'Failed to generate logo package: ' +
+                        (error instanceof Error
+                          ? error.message
+                          : 'Unknown error')
+                    );
+                  }
+                }}
+                className="w-full py-2 px-3 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded font-medium transition-colors disabled:opacity-50"
+                disabled={disabled || !isPro}
+              >
+                {isPro ? 'Generate Web Package' : 'Upgrade for Web Package'}
+              </button>
+            </div>
+
+            {/* Print Package */}
+            <div className="p-4 bg-white dark:bg-gray-900 rounded-lg border border-blue-200 dark:border-blue-700 hover:shadow-md transition-all group">
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">🖼️</span>
+                  <h4 className="font-medium text-gray-900 dark:text-gray-100">
+                    Print Package
+                  </h4>
+                </div>
+                {!isPro && <ProBadge />}
+              </div>
+
+              <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">
+                Upload 1 photo → Get all standard print sizes at 300 PPI
+              </p>
+
+              <div className="text-xs text-gray-500 dark:text-gray-500 space-y-1 mb-4">
+                <div>• Standard: 4×6", 5×7", 8×10", 11×14"</div>
+                <div>• Large: 16×20", 20×24", 24×36"</div>
+                <div>• International: A4, A3, A2, A1</div>
+                <div>• All with smart upscaling & 300 PPI</div>
+              </div>
+
+              <button
+                onClick={async () => {
+                  if (!isPro) {
+                    requestFeatureAccess('packages', 'Print Package');
+                    return;
+                  }
+                  
+                  if (!onGeneratePrintPackage) {
+                    alert('Print Package generation not available');
+                    return;
+                  }
+
+                  if (!selectedFiles || selectedFiles.length === 0) {
+                    alert('Please select an image first');
+                    return;
+                  }
+
+                  try {
+                    await onGeneratePrintPackage(selectedFiles[0]);
+                  } catch (error) {
+                    console.error('Print package generation failed:', error);
+                    alert('Print package generation failed. Please try again.');
+                  }
+                }}
+                className="w-full py-2 px-3 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded font-medium transition-colors disabled:opacity-50"
+                disabled={disabled || !selectedFiles || selectedFiles.length === 0}
+              >
+                {isPro ? 'Generate Print Package' : 'Upgrade for Print Package'}
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {/* E-commerce Package */}
+            <div className="p-4 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 hover:shadow-md transition-all group opacity-75">
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">🛒</span>
+                  <h4 className="font-medium text-gray-900 dark:text-gray-100">
+                    E-commerce Package
+                  </h4>
+                </div>
+                <span className="text-xs text-gray-500 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
+                  Coming Soon
+                </span>
+              </div>
+
+              <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">
+                Product photos → All marketplace formats
+              </p>
+
+              <div className="text-xs text-gray-500 dark:text-gray-500 space-y-1">
+                <div>• Amazon: 1000×1000px, 2000×2000px</div>
+                <div>• eBay: 500×500px, 1600×1600px</div>
+                <div>• Shopify: Multiple thumbnail sizes</div>
+              </div>
+            </div>
+
+            {/* Real Estate Package */}
+            <div className="p-4 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 hover:shadow-md transition-all group opacity-75">
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">🏠</span>
+                  <h4 className="font-medium text-gray-900 dark:text-gray-100">
+                    Real Estate Package
+                  </h4>
+                </div>
+                <span className="text-xs text-gray-500 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
+                  Coming Soon
+                </span>
+              </div>
+
+              <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">
+                Property photos → MLS + marketing ready
+              </p>
+
+              <div className="text-xs text-gray-500 dark:text-gray-500 space-y-1">
+                <div>• MLS listing: 1024×768px</div>
+                <div>• Zillow hero: 1200×800px</div>
+                <div>• Social media + print flyers</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-3 border-t border-blue-200 dark:border-blue-700">
+            <p className="text-xs text-blue-600 dark:text-blue-400 font-medium">
+              💡 Need single custom sizes? Use the manual controls below
+            </p>
+          </div>
+        </div>
+
+        {/* Traditional Presets */}
         <div className="space-y-2">
-          <Label>Presets</Label>
+          <Label>Traditional Presets</Label>
           <PresetsSelect
             value={selectedPreset?.id || null}
             onValueChange={handlePresetChange}
@@ -258,7 +453,7 @@ export function SettingsPanel({
             value={[settings.scale ? settings.scale * 100 : 100]}
             onValueChange={handleScaleChange}
             min={5}
-            max={400}
+            max={600}
             step={5}
             disabled={disabled}
           />
@@ -317,6 +512,68 @@ export function SettingsPanel({
               Original: {originalDimensions.width} × {originalDimensions.height}
             </p>
           )}
+
+          {/* PPI/Resolution Section */}
+          <div className="space-y-2 pt-3 border-t">
+            <Label className="text-sm font-medium">Print Resolution</Label>
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                onClick={() => onSettingsChange({ ...settings, targetPPI: 72 })}
+                className={`p-2 text-xs rounded border ${
+                  settings.targetPPI === 72 || !settings.targetPPI
+                    ? 'bg-blue-50 border-blue-200 text-blue-700'
+                    : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
+                }`}
+              >
+                72 PPI
+                <br />
+                <span className="text-xs opacity-75">Web</span>
+              </button>
+              <button
+                onClick={() =>
+                  onSettingsChange({ ...settings, targetPPI: 150 })
+                }
+                className={`p-2 text-xs rounded border ${
+                  settings.targetPPI === 150
+                    ? 'bg-blue-50 border-blue-200 text-blue-700'
+                    : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
+                }`}
+              >
+                150 PPI
+                <br />
+                <span className="text-xs opacity-75">Draft</span>
+              </button>
+              <button
+                onClick={() =>
+                  onSettingsChange({ ...settings, targetPPI: 300 })
+                }
+                className={`p-2 text-xs rounded border ${
+                  settings.targetPPI === 300
+                    ? 'bg-blue-50 border-blue-200 text-blue-700'
+                    : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
+                }`}
+              >
+                300 PPI
+                <br />
+                <span className="text-xs opacity-75">Print</span>
+              </button>
+            </div>
+            {settings.targetPPI &&
+              settings.targetPPI > 72 &&
+              originalDimensions && (
+                <div className="text-xs text-muted-foreground p-2 bg-blue-50 rounded">
+                  For {settings.targetPPI} PPI printing:{' '}
+                  {Math.round(
+                    (originalDimensions.width / 72) * settings.targetPPI
+                  )}{' '}
+                  ×{' '}
+                  {Math.round(
+                    (originalDimensions.height / 72) * settings.targetPPI
+                  )}{' '}
+                  pixels recommended
+                </div>
+              )}
+          </div>
         </div>
 
         {/* Advanced Options */}

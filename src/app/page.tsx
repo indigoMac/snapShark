@@ -33,15 +33,24 @@ export default function HomePage() {
     upscaling: {
       method: 'bicubic',
       quality: 'standard',
-      preserveDetails: true
-    }
+      preserveDetails: true,
+    },
+    targetPPI: 72,
   });
   const [originalDimensions, setOriginalDimensions] = useState<
     { width: number; height: number } | undefined
   >();
 
-  const { processImages, isProcessing, progress, error, results, reset } =
-    useImageProcessor();
+  const {
+    processImages,
+    generateLogoPackage,
+    generatePrintPackage,
+    isProcessing,
+    progress,
+    error,
+    results,
+    reset,
+  } = useImageProcessor();
 
   const {
     isPro,
@@ -170,6 +179,9 @@ export default function HomePage() {
           onSettingsChange={setSettings}
           originalDimensions={originalDimensions}
           disabled={isProcessing}
+          selectedFiles={selectedFiles}
+          onGenerateLogoPackage={generateLogoPackage}
+          onGeneratePrintPackage={generatePrintPackage}
         />
 
         {/* Processing Progress */}

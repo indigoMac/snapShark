@@ -1,0 +1,57 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Favicon Quality Test</title>
+    <style>
+      .favicon-test {
+        display: flex;
+        align-items: center;
+        margin: 20px 0;
+        font-family: Arial, sans-serif;
+      }
+      .favicon-test img {
+        margin-right: 10px;
+        border: 1px solid #ccc;
+        image-rendering: pixelated; /* Prevent browser scaling */
+      }
+      .size-16 {
+        width: 16px;
+        height: 16px;
+      }
+      .size-32 {
+        width: 32px;
+        height: 32px;
+      }
+      .size-48 {
+        width: 48px;
+        height: 48px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Favicon Quality Test - Real Browser Sizes</h1>
+
+    <div class="favicon-test">
+      <img src="" class="size-16" alt="16x16 favicon" />
+      <span>16×16 favicon (actual browser tab size)</span>
+    </div>
+
+    <div class="favicon-test">
+      <img src="" class="size-32" alt="32x32 favicon" />
+      <span>32×32 favicon (retina display size)</span>
+    </div>
+
+    <div class="favicon-test">
+      <img src="" class="size-48" alt="48x48 favicon" />
+      <span>48×48 favicon (bookmark size)</span>
+    </div>
+
+    <h2>Instructions:</h2>
+    <ol>
+      <li>Download your generated favicon files</li>
+      <li>Drag them into this page (replace the empty src="")</li>
+      <li>View at 100% browser zoom to see actual quality</li>
+      <li>These are the EXACT sizes used in real browser tabs!</li>
+    </ol>
+  </body>
+</html>

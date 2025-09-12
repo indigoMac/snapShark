@@ -138,7 +138,12 @@ export function usePaywall() {
 
   const checkFeatureAccess = useCallback(
     (
-      feature: 'batch' | 'presets' | 'advanced-formats' | 'zip-export'
+      feature:
+        | 'batch'
+        | 'presets'
+        | 'advanced-formats'
+        | 'zip-export'
+        | 'packages'
     ): boolean => {
       if (paywallState.isPro) return true;
 
@@ -154,7 +159,12 @@ export function usePaywall() {
 
   const requestFeatureAccess = useCallback(
     (
-      feature: 'batch' | 'presets' | 'advanced-formats' | 'zip-export',
+      feature:
+        | 'batch'
+        | 'presets'
+        | 'advanced-formats'
+        | 'zip-export'
+        | 'packages',
       context?: string
     ) => {
       if (checkFeatureAccess(feature)) {

@@ -1,47 +1,57 @@
 export const SUPPORTED_INPUT_FORMATS = [
   'image/jpeg',
-  'image/jpg', 
+  'image/jpg',
   'image/png',
   'image/webp',
   'image/heic',
-  'image/heif'
+  'image/heif',
 ] as const;
 
 export const SUPPORTED_OUTPUT_FORMATS = [
   'image/jpeg',
-  'image/png', 
+  'image/png',
   'image/webp',
-  'image/avif'
+  'image/avif',
+  'image/x-icon',
+  'image/svg+xml',
 ] as const;
 
-export type InputFormat = typeof SUPPORTED_INPUT_FORMATS[number];
-export type OutputFormat = typeof SUPPORTED_OUTPUT_FORMATS[number];
+export type InputFormat = (typeof SUPPORTED_INPUT_FORMATS)[number];
+export type OutputFormat = (typeof SUPPORTED_OUTPUT_FORMATS)[number];
 
 export const FORMAT_EXTENSIONS: Record<OutputFormat, string> = {
   'image/jpeg': 'jpg',
   'image/png': 'png',
   'image/webp': 'webp',
-  'image/avif': 'avif'
+  'image/avif': 'avif',
+  'image/x-icon': 'ico',
+  'image/svg+xml': 'svg',
 };
 
 export const FORMAT_NAMES: Record<OutputFormat, string> = {
   'image/jpeg': 'JPEG',
-  'image/png': 'PNG', 
+  'image/png': 'PNG',
   'image/webp': 'WebP',
-  'image/avif': 'AVIF'
+  'image/avif': 'AVIF',
+  'image/x-icon': 'ICO',
+  'image/svg+xml': 'SVG',
 };
 
 export const LOSSY_FORMATS: OutputFormat[] = [
   'image/jpeg',
-  'image/webp', 
-  'image/avif'
+  'image/webp',
+  'image/avif',
 ];
 
-export function isInputFormatSupported(mimeType: string): mimeType is InputFormat {
+export function isInputFormatSupported(
+  mimeType: string
+): mimeType is InputFormat {
   return SUPPORTED_INPUT_FORMATS.includes(mimeType as InputFormat);
 }
 
-export function isOutputFormatSupported(mimeType: string): mimeType is OutputFormat {
+export function isOutputFormatSupported(
+  mimeType: string
+): mimeType is OutputFormat {
   return SUPPORTED_OUTPUT_FORMATS.includes(mimeType as OutputFormat);
 }
 
@@ -53,13 +63,22 @@ export function getFileExtension(format: OutputFormat): string {
   return FORMAT_EXTENSIONS[format];
 }
 
-export function getMimeTypeFromExtension(extension: string): OutputFormat | null {
+export function getMimeTypeFromExtension(
+  extension: string
+): OutputFormat | null {
   const ext = extension.toLowerCase().replace('.', '');
-  const entry = Object.entries(FORMAT_EXTENSIONS).find(([, fileExt]) => fileExt === ext);
+  const entry = Object.entries(FORMAT_EXTENSIONS).find(
+    ([, fileExt]) => fileExt === ext
+  );
   return entry ? (entry[0] as OutputFormat) : null;
 }
 
-export function generateFilename(originalName: string, width: number, height: number, format: OutputFormat): string {
+export function generateFilename(
+  originalName: string,
+  width: number,
+  height: number,
+  format: OutputFormat
+): string {
   const baseName = originalName.replace(/\.[^/.]+$/, ''); // Remove extension
   const extension = getFileExtension(format);
   return `${baseName}_${width}x${height}.${extension}`;
