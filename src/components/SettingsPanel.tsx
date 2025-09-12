@@ -281,7 +281,9 @@ export function SettingsPanel({
                   }
                 }}
                 className="w-full py-2 px-3 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded font-medium transition-colors disabled:opacity-50"
-                disabled={disabled || !isPro}
+                disabled={
+                  disabled || !selectedFiles || selectedFiles.length === 0
+                }
               >
                 {isPro ? 'Generate Web Package' : 'Upgrade for Web Package'}
               </button>
