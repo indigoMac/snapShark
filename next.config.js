@@ -18,6 +18,10 @@ const nextConfig = {
   // PWA configuration will be added later
   images: {
     domains: [],
+    unoptimized: false,
+    // Allow optimization but handle edge cases
+    dangerouslyAllowSVG: true,
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
 };
 

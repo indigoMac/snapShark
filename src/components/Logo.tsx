@@ -1,6 +1,6 @@
 'use client';
 
-import Image from 'next/image';
+// import Image from 'next/image'; // Removed to avoid optimization issues with static icons
 import { cn } from '@/lib/utils';
 
 interface LogoProps {
@@ -55,12 +55,12 @@ export function Logo({
 
   return (
     <div className={cn('flex-shrink-0', className)}>
-      <Image
+      {/* Use regular img tag for static icons to avoid Next.js optimization issues */}
+      <img
         src={logoSrc}
         alt="SnapShark Logo"
         width={dimensions.width}
         height={dimensions.height}
-        priority={priority}
         className={cn(
           'object-contain'
           // Note: SVG logos should not be inverted as they have their own colors
