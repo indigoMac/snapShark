@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import { ClerkProvider } from '@clerk/nextjs';
 import { Navigation } from '@/components/Navigation';
+import { SubscriptionAlert } from '@/components/SubscriptionAlert';
 import { LogoIcon } from '@/components/Logo';
 import { ThemeProvider } from '@/components/theme-provider';
 import './globals.css';
@@ -88,6 +89,7 @@ export default function RootLayout({
           >
             <div className="min-h-screen bg-white dark:bg-slate-900 transition-colors">
               <Navigation />
+              <SubscriptionAlert />
 
               <main className="container mx-auto px-4 py-6">{children}</main>
 

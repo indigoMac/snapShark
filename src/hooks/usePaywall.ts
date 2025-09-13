@@ -85,6 +85,9 @@ export function usePaywall() {
   const cancelAtPublic = (user as any)?.publicMetadata?.cancelAt;
   const cancelAt = cancelAtPrivate || cancelAtPublic;
 
+  // Get payment failure info
+  const lastPaymentFailed = (user as any)?.privateMetadata?.lastPaymentFailed;
+
   // Initialize state without localStorage (will be set in useEffect)
   const [paywallState, setPaywallState] = useState<PaywallState>({
     isPro: isProUser,
@@ -312,6 +315,7 @@ export function usePaywall() {
     subscriptionId: paywallState.subscriptionId,
     cancelAtPeriodEnd: paywallState.cancelAtPeriodEnd,
     cancelAt: paywallState.cancelAt,
+    lastPaymentFailed,
 
     // Feature access
     checkFeatureAccess,

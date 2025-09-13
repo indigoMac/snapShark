@@ -26,6 +26,7 @@ import {
   X,
   AlertTriangle,
 } from 'lucide-react';
+import { SubscriptionStatus } from '@/components/SubscriptionStatus';
 import { usePaywall } from '@/hooks/usePaywall';
 import { useUser, RedirectToSignIn } from '@clerk/nextjs';
 import { useEffect, Suspense, useState } from 'react';
@@ -210,85 +211,27 @@ function AccountPageContent() {
               Subscription
             </CardTitle>
             <CardDescription>
-              Manage your SnapShark subscription
+              Manage your SnapShark subscription and payment status
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium">Current Plan:</span>
-                    <Badge
-                      variant={isPro ? 'default' : 'secondary'}
-                      className="flex items-center gap-1"
-                    >
-                      {isPro && <Crown className="w-3 h-3" />}
-                      {user.plan}
-                    </Badge>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    {isPro
-                      ? cancelAtPeriodEnd
-                        ? `Pro access until ${cancelAt ? new Date(cancelAt).toLocaleDateString() : 'end of billing period'} - will not renew`
-                        : 'Access to all Pro features and unlimited batch processing'
-                      : 'Free plan with basic image processing features'}
-                  </p>
-                </div>
-              </div>
+          <CardContent>
+            <SubscriptionStatus
+              onManageSubscription={handleManageSubscription}
+              onUpgrade={handleUpgrade}
+              onRetryPayment={handleManageSubscription} // Use same function to redirect to Stripe portal
+            />
 
-              <div className="flex gap-2">
-                {isPro ? (
-                  <>
-                    <Button
-                      onClick={handleManageSubscription}
-                      variant="outline"
-                    >
-                      <CreditCard className="w-4 h-4 mr-2" />
-                      Manage Subscription
-                    </Button>
-                    <Button
-                      onClick={handleCancelClick}
-                      variant="outline"
-                      className="text-red-600 border-red-200 hover:bg-red-50"
-                      disabled={cancelAtPeriodEnd}
-                    >
-                      <X className="w-4 h-4 mr-2" />
-                      {cancelAtPeriodEnd ? 'Will Cancel' : 'Cancel'}
-                    </Button>
-                  </>
-                ) : (
-                  <Button onClick={handleUpgrade}>
-                    <Crown className="w-4 h-4 mr-2" />
-                    Upgrade to Pro
-                  </Button>
-                )}
-              </div>
-            </div>
-
-            {isPro && (
-              <div className="bg-muted/50 p-4 rounded-lg">
-                <h4 className="font-medium mb-2">Pro Features Active</h4>
-                <div className="grid md:grid-cols-2 gap-2 text-sm text-muted-foreground">
-                  <div>✓ Batch processing (up to 50 files)</div>
-                  <div>✓ Professional presets</div>
-                  <div>✓ AVIF & HEIC support</div>
-                  <div>✓ ZIP download</div>
-                  <div>✓ Metadata stripping</div>
-                  <div>✓ Priority support</div>
-                </div>
-              </div>
-            )}
-
-            {subscriptionStatus === 'canceled' && (
-              <div className="bg-orange-50 border border-orange-200 p-4 rounded-lg">
-                <h4 className="font-medium text-orange-800 mb-2">
-                  Subscription Canceled
-                </h4>
-                <p className="text-sm text-orange-700">
-                  Your subscription has been canceled. You may still have Pro
-                  access until the end of your billing period.
-                </p>
+            {/* Cancel Button for active subscriptions */}
+            {isPro && subscriptionStatus === 'active' && !cancelAtPeriodEnd && (
+              <div className="mt-4 pt-4 border-t">
+                <Button
+                  onClick={handleCancelClick}
+                  variant="outline"
+                  className="text-red-600 border-red-200 hover:bg-red-50"
+                >
+                  <X className="w-4 h-4 mr-2" />
+                  Cancel Subscription
+                </Button>
               </div>
             )}
           </CardContent>
