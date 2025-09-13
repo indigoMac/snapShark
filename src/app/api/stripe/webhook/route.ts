@@ -156,6 +156,19 @@ export async function POST(req: NextRequest) {
               ? new Date(subscription.cancel_at * 1000).toISOString()
               : null;
 
+            // Capture subscription period information for grace period messaging
+            const subscriptionData = subscription as any; // Type assertion for period properties
+            const currentPeriodStart = subscriptionData.current_period_start
+              ? new Date(
+                  subscriptionData.current_period_start * 1000
+                ).toISOString()
+              : null;
+            const currentPeriodEnd = subscriptionData.current_period_end
+              ? new Date(
+                  subscriptionData.current_period_end * 1000
+                ).toISOString()
+              : null;
+
             console.log(
               `[WEBHOOK] Subscription status: ${subscription.status}, cancel_at_period_end: ${willCancel}, cancel_at: ${cancelAt}`
             );
@@ -168,6 +181,8 @@ export async function POST(req: NextRequest) {
                 isProUser: isActive, // Keep Pro until actually canceled
                 cancelAtPeriodEnd: willCancel,
                 cancelAt: cancelAt,
+                currentPeriodStart: currentPeriodStart,
+                currentPeriodEnd: currentPeriodEnd,
                 subscriptionUpdated: new Date().toISOString(),
               },
               // ALSO update public metadata - this syncs immediately to client
@@ -178,6 +193,7 @@ export async function POST(req: NextRequest) {
                 plan: isActive ? 'pro' : 'free',
                 cancelAtPeriodEnd: willCancel,
                 cancelAt: cancelAt,
+                currentPeriodEnd: currentPeriodEnd,
               },
             });
 

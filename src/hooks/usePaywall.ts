@@ -88,6 +88,15 @@ export function usePaywall() {
   // Get payment failure info
   const lastPaymentFailed = (user as any)?.privateMetadata?.lastPaymentFailed;
 
+  // Get subscription period info for grace period messaging
+  const currentPeriodEndPrivate = (user as any)?.privateMetadata
+    ?.currentPeriodEnd;
+  const currentPeriodEndPublic = (user as any)?.publicMetadata
+    ?.currentPeriodEnd;
+  const currentPeriodEnd = currentPeriodEndPrivate || currentPeriodEndPublic;
+
+  const currentPeriodStart = (user as any)?.privateMetadata?.currentPeriodStart;
+
   // Initialize state without localStorage (will be set in useEffect)
   const [paywallState, setPaywallState] = useState<PaywallState>({
     isPro: isProUser,
@@ -316,6 +325,8 @@ export function usePaywall() {
     cancelAtPeriodEnd: paywallState.cancelAtPeriodEnd,
     cancelAt: paywallState.cancelAt,
     lastPaymentFailed,
+    currentPeriodEnd,
+    currentPeriodStart,
 
     // Feature access
     checkFeatureAccess,

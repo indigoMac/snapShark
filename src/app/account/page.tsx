@@ -27,6 +27,7 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 import { SubscriptionStatus } from '@/components/SubscriptionStatus';
+import { GracePeriodMessaging } from '@/components/GracePeriodMessaging';
 import { usePaywall } from '@/hooks/usePaywall';
 import { useUser, RedirectToSignIn } from '@clerk/nextjs';
 import { useEffect, Suspense, useState } from 'react';
@@ -179,6 +180,12 @@ function AccountPageContent() {
           </div>
         </div>
       )}
+
+      {/* Grace Period Messaging */}
+      <GracePeriodMessaging
+        onManageSubscription={handleManageSubscription}
+        onRetryPayment={handleManageSubscription}
+      />
 
       <div className="grid gap-6">
         {/* Account Info */}
