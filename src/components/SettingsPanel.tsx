@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -160,15 +160,26 @@ export function SettingsPanel({
     }
   };
 
-  const handleScaleChange = (values: number[]) => {
-    const scale = values[0] / 100;
-    onSettingsChange({
-      ...settings,
-      scale,
-      width: undefined,
-      height: undefined,
-    });
-  };
+  const handleScaleChange = useCallback(
+    (values: number[]) => {
+      const scale = values[0] / 100;
+      onSettingsChange({
+        ...settings,
+        scale,
+        width: undefined,
+        height: undefined,
+      });
+    },
+    [settings, onSettingsChange]
+  );
+
+  // Debounced quality handler for better mobile performance
+  const handleQualityChange = useCallback(
+    (values: number[]) => {
+      onSettingsChange({ ...settings, quality: values[0] / 100 });
+    },
+    [settings, onSettingsChange]
+  );
 
   const handleMetadataToggle = (enabled: boolean) => {
     if (!isPro && enabled) {
@@ -261,9 +272,7 @@ export function SettingsPanel({
                 </div>
                 <Slider
                   value={[settings.quality * 100]}
-                  onValueChange={(values) =>
-                    onSettingsChange({ ...settings, quality: values[0] / 100 })
-                  }
+                  onValueChange={handleQualityChange}
                   min={1}
                   max={100}
                   step={1}
@@ -341,7 +350,7 @@ export function SettingsPanel({
                     );
                   }
                 }}
-                className="w-full py-2 px-3 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded font-medium transition-colors disabled:opacity-50"
+                className="w-full py-3 sm:py-2 px-3 text-sm sm:text-xs bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded font-medium transition-colors disabled:opacity-50 min-h-[44px] sm:min-h-[auto] touch-manipulation active:scale-95 active:transition-transform active:duration-75"
                 disabled={
                   disabled || !selectedFiles || selectedFiles.length === 0
                 }
@@ -397,7 +406,7 @@ export function SettingsPanel({
                     alert('Print package generation failed. Please try again.');
                   }
                 }}
-                className="w-full py-2 px-3 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded font-medium transition-colors disabled:opacity-50"
+                className="w-full py-3 sm:py-2 px-3 text-sm sm:text-xs bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded font-medium transition-colors disabled:opacity-50 min-h-[44px] sm:min-h-[auto] touch-manipulation active:scale-95 active:transition-transform active:duration-75"
                 disabled={
                   disabled || !selectedFiles || selectedFiles.length === 0
                 }
@@ -462,7 +471,7 @@ export function SettingsPanel({
                     );
                   }
                 }}
-                className="w-full py-2 px-3 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded font-medium transition-colors disabled:opacity-50"
+                className="w-full py-3 sm:py-2 px-3 text-sm sm:text-xs bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded font-medium transition-colors disabled:opacity-50 min-h-[44px] sm:min-h-[auto] touch-manipulation active:scale-95 active:transition-transform active:duration-75"
                 disabled={
                   disabled || !selectedFiles || selectedFiles.length === 0
                 }
@@ -527,7 +536,7 @@ export function SettingsPanel({
                     );
                   }
                 }}
-                className="w-full py-2 px-3 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded font-medium transition-colors disabled:opacity-50"
+                className="w-full py-3 sm:py-2 px-3 text-sm sm:text-xs bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded font-medium transition-colors disabled:opacity-50 min-h-[44px] sm:min-h-[auto] touch-manipulation active:scale-95 active:transition-transform active:duration-75"
                 disabled={
                   disabled || !selectedFiles || selectedFiles.length === 0
                 }
