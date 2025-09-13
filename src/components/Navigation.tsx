@@ -42,7 +42,7 @@ export function Navigation() {
   }, [mobileMenuOpen]);
 
   return (
-    <nav className="relative border-b border-blue-200/50 dark:border-blue-800/50 bg-white/95 dark:bg-slate-900/95 backdrop-blur supports-[backdrop-filter]:bg-white/60 dark:supports-[backdrop-filter]:bg-slate-900/60">
+    <nav className="relative z-50 border-b border-blue-200/50 dark:border-blue-800/50 bg-white/95 dark:bg-slate-900/95 backdrop-blur supports-[backdrop-filter]:bg-white/60 dark:supports-[backdrop-filter]:bg-slate-900/60">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
@@ -162,7 +162,7 @@ export function Navigation() {
 
         {/* Mobile Menu Panel */}
         {mobileMenuOpen && (
-          <div className="md:hidden absolute top-full left-0 right-0 bg-white dark:bg-slate-900 border-b border-blue-200/50 dark:border-blue-800/50 shadow-lg z-50">
+          <div className="md:hidden fixed top-16 left-0 right-0 bg-white dark:bg-slate-900 border-b border-blue-200/50 dark:border-blue-800/50 shadow-xl z-[9999]">
             <div className="container mx-auto px-4 py-4">
               <div className="flex flex-col space-y-4">
                 {/* Navigation Links */}
