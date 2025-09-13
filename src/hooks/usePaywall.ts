@@ -156,6 +156,7 @@ export function usePaywall() {
         | 'advanced-formats'
         | 'zip-export'
         | 'packages'
+        | 'background-removal'
     ): boolean => {
       if (paywallState.isPro) return true;
 
@@ -176,7 +177,8 @@ export function usePaywall() {
         | 'presets'
         | 'advanced-formats'
         | 'zip-export'
-        | 'packages',
+        | 'packages'
+        | 'background-removal',
       context?: string
     ) => {
       if (checkFeatureAccess(feature)) {

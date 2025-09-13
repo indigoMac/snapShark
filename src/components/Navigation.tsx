@@ -59,6 +59,12 @@ export function Navigation() {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-4">
             <Link
+              href="/background-removal"
+              className="text-sm font-medium text-slate-600 hover:text-blue-600 dark:text-slate-300 dark:hover:text-blue-400 transition-colors"
+            >
+              Background Removal
+            </Link>
+            <Link
               href="/underwater"
               className="text-sm font-medium text-slate-600 hover:text-blue-600 dark:text-slate-300 dark:hover:text-blue-400 transition-colors"
             >
@@ -173,6 +179,13 @@ export function Navigation() {
               <div className="px-4 py-4">
                 <div className="flex flex-col space-y-2">
                   {/* Navigation Links */}
+                  <Link
+                    href="/background-removal"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center h-12 px-4 text-base font-medium text-slate-800 hover:text-blue-600 hover:bg-blue-50 dark:text-slate-200 dark:hover:text-blue-400 dark:hover:bg-blue-950/50 rounded-lg transition-colors border border-transparent hover:border-blue-200 dark:hover:border-blue-800"
+                  >
+                    ✂️ Background Removal
+                  </Link>
                   <Link
                     href="/underwater"
                     onClick={() => setMobileMenuOpen(false)}

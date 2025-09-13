@@ -546,6 +546,51 @@ export function SettingsPanel({
                   : 'Upgrade for Real Estate Package'}
               </button>
             </div>
+
+            {/* Background Removal Feature */}
+            <div className="p-4 bg-white dark:bg-gray-900 rounded-lg border border-blue-200 dark:border-blue-700 hover:shadow-md transition-all group">
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">✂️</span>
+                  <h4 className="font-medium text-gray-900 dark:text-gray-100">
+                    AI Background Removal
+                  </h4>
+                </div>
+                <span className="text-xs text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/50 px-2 py-1 rounded">
+                  Pro Feature
+                </span>
+              </div>
+
+              <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">
+                Remove backgrounds with professional AI precision
+              </p>
+
+              <div className="text-xs text-gray-500 dark:text-gray-500 space-y-1 mb-4">
+                <div>• AI-powered subject detection</div>
+                <div>• Edge smoothing & feathering</div>
+                <div>• PNG/WebP transparent output</div>
+                <div>• Professional quality results</div>
+              </div>
+
+              <button
+                onClick={() => {
+                  if (!isPro) {
+                    requestFeatureAccess(
+                      'background-removal',
+                      'AI Background Removal'
+                    );
+                    return;
+                  }
+                  window.location.href = '/background-removal';
+                }}
+                className="w-full py-3 sm:py-2 px-3 text-sm sm:text-xs bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded font-medium transition-colors disabled:opacity-50 min-h-[44px] sm:min-h-[auto] touch-manipulation active:scale-95 active:transition-transform active:duration-75"
+                disabled={disabled}
+              >
+                {isPro
+                  ? 'Open Background Removal'
+                  : 'Upgrade for Background Removal'}
+              </button>
+            </div>
           </div>
 
           <div className="pt-3 border-t border-blue-200 dark:border-blue-700">
