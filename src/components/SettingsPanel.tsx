@@ -285,7 +285,7 @@ export function SettingsPanel({
             </span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {/* Logo Package */}
             <div className="p-4 bg-white dark:bg-gray-900 rounded-lg border border-blue-200 dark:border-blue-700 hover:shadow-md transition-all group">
               <div className="flex items-start justify-between mb-3">

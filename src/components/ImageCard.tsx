@@ -28,56 +28,94 @@ export function ImageCard({ image, onPreview }: ImageCardProps) {
   return (
     <Card className="overflow-hidden">
       <div className="aspect-video bg-muted relative overflow-hidden">
-        <img 
+        <img
           src={previewUrl}
           alt={image.filename}
           className="w-full h-full object-cover"
           onLoad={() => URL.revokeObjectURL(previewUrl)}
         />
-        
-        <div className="absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-          <Button size="sm" variant="secondary" onClick={handlePreview}>
-            <Eye className="h-4 w-4 mr-1" />
+
+        {/* Mobile-optimized overlay - shows on touch devices, hover on desktop */}
+        <div className="absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center gap-2 sm:gap-3">
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={handlePreview}
+            className="text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-2"
+          >
+            <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
             Preview
           </Button>
-          <Button size="sm" onClick={handleDownload}>
-            <Download className="h-4 w-4 mr-1" />
+          <Button
+            size="sm"
+            onClick={handleDownload}
+            className="text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-2"
+          >
+            <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
             Download
           </Button>
         </div>
       </div>
-      
+
       <CardContent className="p-3">
         <div className="space-y-2">
           <div className="flex items-start justify-between gap-2">
-            <h4 className="font-medium text-sm truncate flex-1">{image.filename}</h4>
+            <h4 className="font-medium text-sm truncate flex-1">
+              {image.filename}
+            </h4>
             {image.fallbackUsed && (
               <Badge variant="outline" className="text-xs">
                 Fallback
               </Badge>
             )}
           </div>
-          
+
           <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
             <div>
-              <span className="font-medium">Size:</span> {image.width} × {image.height}
+              <span className="font-medium">Size:</span> {image.width} ×{' '}
+              {image.height}
             </div>
             <div>
-              <span className="font-medium">Format:</span> {FORMAT_NAMES[image.actualFormat]}
+              <span className="font-medium">Format:</span>{' '}
+              {FORMAT_NAMES[image.actualFormat]}
             </div>
             <div>
-              <span className="font-medium">File size:</span> {formatFileSize(image.blob.size)}
+              <span className="font-medium">File size:</span>{' '}
+              {formatFileSize(image.blob.size)}
             </div>
             <div>
-              <span className="font-medium">Original:</span> {formatFileSize(image.originalFile.size)}
+              <span className="font-medium">Original:</span>{' '}
+              {formatFileSize(image.originalFile.size)}
             </div>
           </div>
-          
+
           {image.fallbackUsed && (
             <p className="text-xs text-amber-600 bg-amber-50 p-2 rounded">
-              Format fallback used: your browser doesn't support the requested format
+              Format fallback used: your browser doesn't support the requested
+              format
             </p>
           )}
+
+          {/* Mobile-friendly buttons at bottom */}
+          <div className="flex gap-2 sm:hidden pt-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handlePreview}
+              className="flex-1 text-xs"
+            >
+              <Eye className="h-3 w-3 mr-1" />
+              Preview
+            </Button>
+            <Button
+              size="sm"
+              onClick={handleDownload}
+              className="flex-1 text-xs"
+            >
+              <Download className="h-3 w-3 mr-1" />
+              Download
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>

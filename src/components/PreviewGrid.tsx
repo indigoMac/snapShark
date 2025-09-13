@@ -65,15 +65,16 @@ export function PreviewGrid({ images, onClear }: PreviewGridProps) {
   return (
     <>
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
+        {/* Mobile-optimized header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <h3 className="text-lg font-semibold">
             Converted Images ({images.length})
           </h3>
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
             <Button
               onClick={handleDownloadAll}
               disabled={isCreatingZip}
-              className="flex items-center gap-2"
+              className="flex items-center justify-center gap-2 w-full sm:w-auto"
             >
               {images.length === 1 ? (
                 <>
@@ -88,7 +89,11 @@ export function PreviewGrid({ images, onClear }: PreviewGridProps) {
               )}
             </Button>
             {onClear && (
-              <Button variant="outline" onClick={onClear}>
+              <Button
+                variant="outline"
+                onClick={onClear}
+                className="w-full sm:w-auto"
+              >
                 Clear
               </Button>
             )}
@@ -128,16 +133,17 @@ export function PreviewGrid({ images, onClear }: PreviewGridProps) {
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {/* Responsive grid - optimized for mobile first */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {images.map((image) => (
             <ImageCard key={image.id} image={image} onPreview={handlePreview} />
           ))}
         </div>
       </div>
 
-      {/* Preview Dialog */}
+      {/* Mobile-optimized Preview Dialog */}
       <Dialog open={!!previewImage} onOpenChange={() => setPreviewImage(null)}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-auto">
+        <DialogContent className="max-w-[95vw] sm:max-w-2xl lg:max-w-4xl max-h-[90vh] overflow-auto p-4 sm:p-6">
           <DialogHeader>
             <DialogTitle>{previewImage?.filename}</DialogTitle>
           </DialogHeader>

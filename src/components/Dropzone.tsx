@@ -20,113 +20,129 @@ interface DropzoneProps {
   accept?: string;
 }
 
-export function Dropzone({ 
-  onFilesSelected, 
+export function Dropzone({
+  onFilesSelected,
   maxFiles = 10,
   disabled = false,
-  accept = "image/*"
+  accept = 'image/*',
 }: DropzoneProps) {
   const [dragActive, setDragActive] = useState(false);
   const [files, setFiles] = useState<DroppedFile[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  const processFiles = useCallback((fileList: FileList | File[]) => {
-    const newFiles: DroppedFile[] = [];
-    const validFiles: File[] = [];
-    let errorMessage = '';
+  const processFiles = useCallback(
+    (fileList: FileList | File[]) => {
+      const newFiles: DroppedFile[] = [];
+      const validFiles: File[] = [];
+      let errorMessage = '';
 
-    Array.from(fileList).forEach((file) => {
-      // Check file type
-      if (!isInputFormatSupported(file.type) && !file.name.match(/\.(heic|heif)$/i)) {
-        errorMessage = `${file.name} is not a supported image format`;
-        return;
+      Array.from(fileList).forEach((file) => {
+        // Check file type
+        if (
+          !isInputFormatSupported(file.type) &&
+          !file.name.match(/\.(heic|heif)$/i)
+        ) {
+          errorMessage = `${file.name} is not a supported image format`;
+          return;
+        }
+
+        // Check file size (50MB limit)
+        if (file.size > 50 * 1024 * 1024) {
+          errorMessage = `${file.name} is too large (max 50MB)`;
+          return;
+        }
+
+        const droppedFile: DroppedFile = {
+          file,
+          id: `${file.name}-${Date.now()}-${Math.random()}`,
+        };
+
+        // Create preview for supported formats
+        if (
+          file.type.startsWith('image/') &&
+          file.type !== 'image/heic' &&
+          file.type !== 'image/heif'
+        ) {
+          droppedFile.preview = URL.createObjectURL(file);
+        }
+
+        newFiles.push(droppedFile);
+        validFiles.push(file);
+      });
+
+      if (errorMessage) {
+        setError(errorMessage);
+        setTimeout(() => setError(null), 5000);
       }
 
-      // Check file size (50MB limit)
-      if (file.size > 50 * 1024 * 1024) {
-        errorMessage = `${file.name} is too large (max 50MB)`;
-        return;
+      if (newFiles.length > 0) {
+        const totalFiles = files.length + newFiles.length;
+        if (totalFiles > maxFiles) {
+          setError(`Maximum ${maxFiles} files allowed`);
+          return;
+        }
+
+        setFiles((prev) => [...prev, ...newFiles]);
+        onFilesSelected(validFiles);
       }
-
-      const droppedFile: DroppedFile = {
-        file,
-        id: `${file.name}-${Date.now()}-${Math.random()}`
-      };
-
-      // Create preview for supported formats
-      if (file.type.startsWith('image/') && file.type !== 'image/heic' && file.type !== 'image/heif') {
-        droppedFile.preview = URL.createObjectURL(file);
-      }
-
-      newFiles.push(droppedFile);
-      validFiles.push(file);
-    });
-
-    if (errorMessage) {
-      setError(errorMessage);
-      setTimeout(() => setError(null), 5000);
-    }
-
-    if (newFiles.length > 0) {
-      const totalFiles = files.length + newFiles.length;
-      if (totalFiles > maxFiles) {
-        setError(`Maximum ${maxFiles} files allowed`);
-        return;
-      }
-
-      setFiles(prev => [...prev, ...newFiles]);
-      onFilesSelected(validFiles);
-    }
-  }, [files.length, maxFiles, onFilesSelected]);
+    },
+    [files.length, maxFiles, onFilesSelected]
+  );
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (e.type === "dragenter" || e.type === "dragover") {
+    if (e.type === 'dragenter' || e.type === 'dragover') {
       setDragActive(true);
-    } else if (e.type === "dragleave") {
+    } else if (e.type === 'dragleave') {
       setDragActive(false);
     }
   }, []);
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setDragActive(false);
 
-    if (disabled) return;
+      if (disabled) return;
 
-    const droppedFiles = e.dataTransfer.files;
-    if (droppedFiles && droppedFiles.length > 0) {
-      processFiles(droppedFiles);
-    }
-  }, [disabled, processFiles]);
+      const droppedFiles = e.dataTransfer.files;
+      if (droppedFiles && droppedFiles.length > 0) {
+        processFiles(droppedFiles);
+      }
+    },
+    [disabled, processFiles]
+  );
 
-  const handleFileInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    if (disabled) return;
-    
-    const selectedFiles = e.target.files;
-    if (selectedFiles && selectedFiles.length > 0) {
-      processFiles(selectedFiles);
-    }
-  }, [disabled, processFiles]);
+  const handleFileInput = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (disabled) return;
+
+      const selectedFiles = e.target.files;
+      if (selectedFiles && selectedFiles.length > 0) {
+        processFiles(selectedFiles);
+      }
+    },
+    [disabled, processFiles]
+  );
 
   const removeFile = useCallback((id: string) => {
-    setFiles(prev => {
-      const updated = prev.filter(f => f.id !== id);
-      const fileToRemove = prev.find(f => f.id === id);
-      
+    setFiles((prev) => {
+      const updated = prev.filter((f) => f.id !== id);
+      const fileToRemove = prev.find((f) => f.id === id);
+
       // Revoke preview URL
       if (fileToRemove?.preview) {
         URL.revokeObjectURL(fileToRemove.preview);
       }
-      
+
       return updated;
     });
   }, []);
 
   const clearAll = useCallback(() => {
-    files.forEach(file => {
+    files.forEach((file) => {
       if (file.preview) {
         URL.revokeObjectURL(file.preview);
       }
@@ -136,11 +152,11 @@ export function Dropzone({
 
   return (
     <div className="space-y-4">
-      <Card 
+      <Card
         className={cn(
-          "relative border-2 border-dashed transition-colors cursor-pointer",
-          dragActive && !disabled ? "dropzone-active" : "",
-          disabled ? "opacity-50 cursor-not-allowed" : "hover:border-primary/50"
+          'relative border-2 border-dashed transition-colors cursor-pointer',
+          dragActive && !disabled ? 'dropzone-active' : '',
+          disabled ? 'opacity-50 cursor-not-allowed' : 'hover:border-primary/50'
         )}
         onDragEnter={handleDrag}
         onDragLeave={handleDrag}
@@ -155,17 +171,18 @@ export function Dropzone({
           disabled={disabled}
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
         />
-        
-        <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
-          <Upload className="h-12 w-12 text-muted-foreground mb-4" />
-          <h3 className="text-lg font-semibold mb-2">
-            Drop images here or click to browse
+
+        <div className="flex flex-col items-center justify-center py-8 sm:py-12 px-4 sm:px-6 text-center">
+          <Upload className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground mb-3 sm:mb-4" />
+          <h3 className="text-base sm:text-lg font-semibold mb-2">
+            Drop images here or tap to browse
           </h3>
           <p className="text-sm text-muted-foreground mb-2">
             Supports PNG, JPG, WebP, and HEIC formats
           </p>
-          <p className="text-xs text-muted-foreground">
-            Max {maxFiles} files, 50MB each • Privacy-first: files never leave your browser
+          <p className="text-xs text-muted-foreground px-2">
+            Max {maxFiles} files, 50MB each • Privacy-first: files never leave
+            your device
           </p>
         </div>
       </Card>
@@ -178,21 +195,26 @@ export function Dropzone({
 
       {files.length > 0 && (
         <div className="space-y-3">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <h4 className="font-medium">Selected Files ({files.length})</h4>
-            <Button variant="outline" size="sm" onClick={clearAll}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={clearAll}
+              className="w-full sm:w-auto"
+            >
               Clear All
             </Button>
           </div>
-          
+
           <div className="grid gap-2">
             {files.map((file) => (
               <Card key={file.id} className="p-3">
                 <div className="flex items-center gap-3">
                   <div className="flex-shrink-0">
                     {file.preview ? (
-                      <img 
-                        src={file.preview} 
+                      <img
+                        src={file.preview}
                         alt={file.file.name}
                         className="w-12 h-12 object-cover rounded"
                       />
@@ -202,14 +224,16 @@ export function Dropzone({
                       </div>
                     )}
                   </div>
-                  
+
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{file.file.name}</p>
+                    <p className="text-sm font-medium truncate">
+                      {file.file.name}
+                    </p>
                     <p className="text-xs text-muted-foreground">
                       {formatFileSize(file.file.size)}
                     </p>
                   </div>
-                  
+
                   <Button
                     variant="ghost"
                     size="sm"
