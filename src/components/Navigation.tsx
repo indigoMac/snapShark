@@ -162,81 +162,89 @@ export function Navigation() {
 
         {/* Mobile Menu Panel */}
         {mobileMenuOpen && (
-          <div className="md:hidden fixed top-16 left-0 right-0 bg-white dark:bg-slate-900 border-b border-blue-200/50 dark:border-blue-800/50 shadow-xl z-[9999]">
-            <div className="container mx-auto px-4 py-4">
-              <div className="flex flex-col space-y-4">
-                {/* Navigation Links */}
-                <Link
-                  href="/underwater"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center h-12 px-3 text-base font-medium text-slate-700 hover:text-blue-600 hover:bg-blue-50 dark:text-slate-300 dark:hover:text-blue-400 dark:hover:bg-blue-950/50 rounded-lg transition-colors"
-                >
-                  🌊 Underwater
-                </Link>
-                <Link
-                  href="/pricing"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center h-12 px-3 text-base font-medium text-slate-700 hover:text-blue-600 hover:bg-blue-50 dark:text-slate-300 dark:hover:text-blue-400 dark:hover:bg-blue-950/50 rounded-lg transition-colors"
-                >
-                  💰 Pricing
-                </Link>
-
-                {isSignedIn ? (
+          <>
+            {/* Backdrop */}
+            <div
+              className="md:hidden fixed inset-0 bg-black/20 z-[9998]"
+              onClick={() => setMobileMenuOpen(false)}
+            />
+            {/* Menu Content */}
+            <div className="md:hidden fixed top-16 left-0 right-0 bg-white dark:bg-slate-900 border-b border-blue-200/50 dark:border-blue-800/50 shadow-xl z-[9999] max-h-[calc(100vh-4rem)] overflow-y-auto">
+              <div className="px-4 py-4">
+                <div className="flex flex-col space-y-2">
+                  {/* Navigation Links */}
                   <Link
-                    href="/account"
+                    href="/underwater"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center h-12 px-3 text-base font-medium text-slate-700 hover:text-blue-600 hover:bg-blue-50 dark:text-slate-300 dark:hover:text-blue-400 dark:hover:bg-blue-950/50 rounded-lg transition-colors"
+                    className="flex items-center h-12 px-4 text-base font-medium text-slate-800 hover:text-blue-600 hover:bg-blue-50 dark:text-slate-200 dark:hover:text-blue-400 dark:hover:bg-blue-950/50 rounded-lg transition-colors border border-transparent hover:border-blue-200 dark:hover:border-blue-800"
                   >
-                    👤 Account
+                    🌊 Underwater
                   </Link>
-                ) : (
-                  <>
-                    <SignInButton mode="modal">
-                      <button
-                        onClick={() => setMobileMenuOpen(false)}
-                        className="flex items-center h-12 px-3 w-full text-left text-base font-medium text-slate-700 hover:text-blue-600 hover:bg-blue-50 dark:text-slate-300 dark:hover:text-blue-400 dark:hover:bg-blue-950/50 rounded-lg transition-colors"
-                      >
-                        🔐 Sign In
-                      </button>
-                    </SignInButton>
-                    <SignInButton mode="modal">
-                      <button
-                        onClick={() => setMobileMenuOpen(false)}
-                        className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-4 py-3 rounded-lg text-base font-medium transition-all duration-200 shadow-lg hover:shadow-xl"
-                      >
-                        🚀 Get Started
-                      </button>
-                    </SignInButton>
-                  </>
-                )}
+                  <Link
+                    href="/pricing"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center h-12 px-4 text-base font-medium text-slate-800 hover:text-blue-600 hover:bg-blue-50 dark:text-slate-200 dark:hover:text-blue-400 dark:hover:bg-blue-950/50 rounded-lg transition-colors border border-transparent hover:border-blue-200 dark:hover:border-blue-800"
+                  >
+                    💰 Pricing
+                  </Link>
 
-                {/* User info for signed-in users */}
-                {isSignedIn && (
-                  <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
-                    <div className="flex items-center gap-3 px-3">
-                      <UserButton
-                        afterSignOutUrl="/"
-                        appearance={{
-                          elements: {
-                            avatarBox: 'w-10 h-10',
-                          },
-                        }}
-                      />
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
-                          {user?.firstName ||
-                            user?.emailAddresses[0]?.emailAddress}
-                        </p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400">
-                          Signed in
-                        </p>
+                  {isSignedIn ? (
+                    <Link
+                      href="/account"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center h-12 px-4 text-base font-medium text-slate-800 hover:text-blue-600 hover:bg-blue-50 dark:text-slate-200 dark:hover:text-blue-400 dark:hover:bg-blue-950/50 rounded-lg transition-colors border border-transparent hover:border-blue-200 dark:hover:border-blue-800"
+                    >
+                      👤 Account
+                    </Link>
+                  ) : (
+                    <>
+                      <SignInButton mode="modal">
+                        <button
+                          onClick={() => setMobileMenuOpen(false)}
+                          className="flex items-center h-12 px-3 w-full text-left text-base font-medium text-slate-700 hover:text-blue-600 hover:bg-blue-50 dark:text-slate-300 dark:hover:text-blue-400 dark:hover:bg-blue-950/50 rounded-lg transition-colors"
+                        >
+                          🔐 Sign In
+                        </button>
+                      </SignInButton>
+                      <SignInButton mode="modal">
+                        <button
+                          onClick={() => setMobileMenuOpen(false)}
+                          className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-4 py-3 rounded-lg text-base font-medium transition-all duration-200 shadow-lg hover:shadow-xl"
+                        >
+                          🚀 Get Started
+                        </button>
+                      </SignInButton>
+                    </>
+                  )}
+
+                  {/* User info for signed-in users */}
+                  {isSignedIn && (
+                    <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
+                      <div className="flex items-center gap-3 px-3">
+                        <UserButton
+                          afterSignOutUrl="/"
+                          appearance={{
+                            elements: {
+                              avatarBox: 'w-10 h-10',
+                            },
+                          }}
+                        />
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                            {user?.firstName ||
+                              user?.emailAddresses[0]?.emailAddress}
+                          </p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400">
+                            Signed in
+                          </p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             </div>
-          </div>
+          </>
         )}
       </div>
     </nav>
