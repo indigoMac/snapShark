@@ -210,9 +210,70 @@ export function SettingsPanel({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Settings</CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle>Image Settings</CardTitle>
+          <div className="text-xs text-slate-500 dark:text-slate-400">
+            🔒 Files stay on your device
+          </div>
+        </div>
       </CardHeader>
       <CardContent className="space-y-6">
+        {/* Quick Settings - Most Used */}
+        <div className="space-y-4 p-4 bg-gradient-to-r from-slate-50 to-gray-50 dark:from-slate-800/30 dark:to-gray-800/30 rounded-lg border border-slate-200 dark:border-slate-700">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-medium text-slate-900 dark:text-slate-100">
+              Quick Settings
+            </h3>
+            <span className="text-xs text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800/50 px-2 py-1 rounded">
+              Most Used
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Quick Presets */}
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Presets</Label>
+              <PresetsSelect
+                value={selectedPreset?.id || null}
+                onValueChange={handlePresetChange}
+                disabled={disabled}
+              />
+            </div>
+
+            {/* Format */}
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Format</Label>
+              <FormatSelect
+                value={settings.format}
+                onValueChange={handleFormatChange}
+                disabled={disabled}
+              />
+            </div>
+
+            {/* Quality */}
+            {isLossyFormat(settings.format) && (
+              <div className="space-y-2 md:col-span-2">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-medium">Quality</Label>
+                  <span className="text-sm text-slate-500">
+                    {Math.round(settings.quality * 100)}%
+                  </span>
+                </div>
+                <Slider
+                  value={[settings.quality * 100]}
+                  onValueChange={(values) =>
+                    onSettingsChange({ ...settings, quality: values[0] / 100 })
+                  }
+                  min={1}
+                  max={100}
+                  step={1}
+                  disabled={disabled}
+                />
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* Professional Packages */}
         <div className="space-y-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
           <div className="flex items-center justify-between">
@@ -485,273 +546,248 @@ export function SettingsPanel({
           </div>
         </div>
 
-        {/* Traditional Presets */}
-        <div className="space-y-2">
-          <Label>Traditional Presets</Label>
-          <PresetsSelect
-            value={selectedPreset?.id || null}
-            onValueChange={handlePresetChange}
-            disabled={disabled}
-          />
-        </div>
+        {/* Advanced Controls */}
+        <div className="space-y-4 p-4 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 rounded-lg border border-amber-200 dark:border-amber-800">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-medium text-amber-900 dark:text-amber-100">
+              Advanced Controls
+            </h3>
+            <span className="text-xs text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/50 px-2 py-1 rounded">
+              Manual Settings
+            </span>
+          </div>
 
-        {/* Format */}
-        <div className="space-y-2">
-          <Label>Output Format</Label>
-          <FormatSelect
-            value={settings.format}
-            onValueChange={handleFormatChange}
-            disabled={disabled}
-          />
-        </div>
-
-        {/* Quality */}
-        {isLossyFormat(settings.format) && (
+          {/* Scale */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <Label>Quality</Label>
+              <Label>Scale</Label>
               <span className="text-sm text-muted-foreground">
-                {Math.round(settings.quality * 100)}%
+                {settings.scale
+                  ? `${Math.round(settings.scale * 100)}%`
+                  : 'Custom'}
               </span>
             </div>
             <Slider
-              value={[settings.quality * 100]}
-              onValueChange={(values) =>
-                onSettingsChange({ ...settings, quality: values[0] / 100 })
-              }
-              min={1}
-              max={100}
-              step={1}
-              disabled={disabled}
-            />
-          </div>
-        )}
-
-        {/* Scale */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <Label>Scale</Label>
-            <span className="text-sm text-muted-foreground">
-              {settings.scale
-                ? `${Math.round(settings.scale * 100)}%`
-                : 'Custom'}
-            </span>
-          </div>
-          <Slider
-            value={[settings.scale ? settings.scale * 100 : 100]}
-            onValueChange={handleScaleChange}
-            min={5}
-            max={600}
-            step={5}
-            disabled={disabled}
-          />
-        </div>
-
-        {/* Dimensions */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <Label>Dimensions</Label>
-            <div className="flex items-center space-x-2">
-              <Label htmlFor="lock-aspect" className="text-sm">
-                Lock aspect
-              </Label>
-              <Switch
-                id="lock-aspect"
-                checked={settings.lockAspectRatio}
-                onCheckedChange={(checked) =>
-                  onSettingsChange({ ...settings, lockAspectRatio: checked })
-                }
-                disabled={disabled}
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <Label htmlFor="width" className="text-xs">
-                Width (px)
-              </Label>
-              <Input
-                id="width"
-                type="number"
-                value={localWidth}
-                onChange={(e) => handleWidthChange(e.target.value)}
-                placeholder="Auto"
-                disabled={disabled}
-              />
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="height" className="text-xs">
-                Height (px)
-              </Label>
-              <Input
-                id="height"
-                type="number"
-                value={localHeight}
-                onChange={(e) => handleHeightChange(e.target.value)}
-                placeholder="Auto"
-                disabled={disabled}
-              />
-            </div>
-          </div>
-
-          {originalDimensions && (
-            <p className="text-xs text-muted-foreground">
-              Original: {originalDimensions.width} × {originalDimensions.height}
-            </p>
-          )}
-
-          {/* PPI/Resolution Section */}
-          <div className="space-y-2 pt-3 border-t">
-            <Label className="text-sm font-medium">Print Resolution</Label>
-            <div className="grid grid-cols-3 gap-2">
-              <button
-                onClick={() => onSettingsChange({ ...settings, targetPPI: 72 })}
-                className={`p-2 text-xs rounded border ${
-                  settings.targetPPI === 72 || !settings.targetPPI
-                    ? 'bg-blue-50 border-blue-200 text-blue-700'
-                    : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
-                }`}
-              >
-                72 PPI
-                <br />
-                <span className="text-xs opacity-75">Web</span>
-              </button>
-              <button
-                onClick={() =>
-                  onSettingsChange({ ...settings, targetPPI: 150 })
-                }
-                className={`p-2 text-xs rounded border ${
-                  settings.targetPPI === 150
-                    ? 'bg-blue-50 border-blue-200 text-blue-700'
-                    : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
-                }`}
-              >
-                150 PPI
-                <br />
-                <span className="text-xs opacity-75">Draft</span>
-              </button>
-              <button
-                onClick={() =>
-                  onSettingsChange({ ...settings, targetPPI: 300 })
-                }
-                className={`p-2 text-xs rounded border ${
-                  settings.targetPPI === 300
-                    ? 'bg-blue-50 border-blue-200 text-blue-700'
-                    : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
-                }`}
-              >
-                300 PPI
-                <br />
-                <span className="text-xs opacity-75">Print</span>
-              </button>
-            </div>
-            {settings.targetPPI &&
-              settings.targetPPI > 72 &&
-              originalDimensions && (
-                <div className="text-xs text-muted-foreground p-2 bg-blue-50 rounded">
-                  For {settings.targetPPI} PPI printing:{' '}
-                  {Math.round(
-                    (originalDimensions.width / 72) * settings.targetPPI
-                  )}{' '}
-                  ×{' '}
-                  {Math.round(
-                    (originalDimensions.height / 72) * settings.targetPPI
-                  )}{' '}
-                  pixels recommended
-                </div>
-              )}
-          </div>
-        </div>
-
-        {/* Advanced Options */}
-        <div className="space-y-3 pt-3 border-t">
-          <Label className="text-sm font-medium">Advanced Options</Label>
-
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label className="text-sm">High-quality resize</Label>
-              <p className="text-xs text-muted-foreground">
-                Use Pica for better image quality
-              </p>
-            </div>
-            <Switch
-              checked={settings.usePica}
-              onCheckedChange={(checked) =>
-                onSettingsChange({ ...settings, usePica: checked })
-              }
+              value={[settings.scale ? settings.scale * 100 : 100]}
+              onValueChange={handleScaleChange}
+              min={5}
+              max={600}
+              step={5}
               disabled={disabled}
             />
           </div>
 
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5 flex-1">
-              <div className="flex items-center gap-2">
-                <Label className="text-sm">Strip metadata</Label>
-                {!isPro && <ProBadge />}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Remove EXIF data for privacy
-              </p>
-            </div>
-            <Switch
-              checked={settings.stripMetadata}
-              onCheckedChange={handleMetadataToggle}
-              disabled={disabled || (!isPro && !settings.stripMetadata)}
-            />
-          </div>
-
-          {/* Simple Upscaling Section */}
-          <div className="space-y-4 pt-4 border-t">
+          {/* Dimensions */}
+          <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <h4 className="text-sm font-medium">Advanced Upscaling</h4>
-                {!isPro && <ProBadge />}
+              <Label>Dimensions</Label>
+              <div className="flex items-center space-x-2">
+                <Label htmlFor="lock-aspect" className="text-sm">
+                  Lock aspect
+                </Label>
+                <Switch
+                  id="lock-aspect"
+                  checked={settings.lockAspectRatio}
+                  onCheckedChange={(checked) =>
+                    onSettingsChange({ ...settings, lockAspectRatio: checked })
+                  }
+                  disabled={disabled}
+                />
               </div>
-              {!isUpscaling && (
-                <div className="text-xs text-muted-foreground">
-                  Scale above 100% to activate
-                </div>
-              )}
             </div>
 
-            {isUpscaling && (
-              <div className="space-y-3 p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
-                <div className="flex items-center gap-2 text-blue-700 dark:text-blue-300">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                  <span className="text-xs font-medium">
-                    Upscaling detected
-                  </span>
-                </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label htmlFor="width" className="text-xs">
+                  Width (px)
+                </Label>
+                <Input
+                  id="width"
+                  type="number"
+                  value={localWidth}
+                  onChange={(e) => handleWidthChange(e.target.value)}
+                  placeholder="Auto"
+                  disabled={disabled}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="height" className="text-xs">
+                  Height (px)
+                </Label>
+                <Input
+                  id="height"
+                  type="number"
+                  value={localHeight}
+                  onChange={(e) => handleHeightChange(e.target.value)}
+                  placeholder="Auto"
+                  disabled={disabled}
+                />
+              </div>
+            </div>
 
-                <div className="space-y-3">
-                  <div>
-                    <Label htmlFor="upscaling-method" className="text-xs">
-                      Method
-                    </Label>
-                    <Select
-                      value={settings.upscaling?.method || 'bicubic'}
-                      onValueChange={(value: UpscalingOptions['method']) =>
-                        handleUpscalingChange({ method: value })
-                      }
-                    >
-                      <SelectTrigger className="h-8">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="bicubic">Bicubic (Free)</SelectItem>
-                        <SelectItem value="lanczos" disabled={!isPro}>
-                          Lanczos (Pro)
-                        </SelectItem>
-                        <SelectItem value="ai-enhanced" disabled={!isPro}>
-                          AI Enhanced (Pro)
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
+            {originalDimensions && (
+              <p className="text-xs text-muted-foreground">
+                Original: {originalDimensions.width} ×{' '}
+                {originalDimensions.height}
+              </p>
+            )}
+
+            {/* PPI/Resolution Section */}
+            <div className="space-y-2 pt-3 border-t">
+              <Label className="text-sm font-medium">Print Resolution</Label>
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  onClick={() =>
+                    onSettingsChange({ ...settings, targetPPI: 72 })
+                  }
+                  className={`p-2 text-xs rounded border ${
+                    settings.targetPPI === 72 || !settings.targetPPI
+                      ? 'bg-blue-50 border-blue-200 text-blue-700'
+                      : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
+                  }`}
+                >
+                  72 PPI
+                  <br />
+                  <span className="text-xs opacity-75">Web</span>
+                </button>
+                <button
+                  onClick={() =>
+                    onSettingsChange({ ...settings, targetPPI: 150 })
+                  }
+                  className={`p-2 text-xs rounded border ${
+                    settings.targetPPI === 150
+                      ? 'bg-blue-50 border-blue-200 text-blue-700'
+                      : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
+                  }`}
+                >
+                  150 PPI
+                  <br />
+                  <span className="text-xs opacity-75">Draft</span>
+                </button>
+                <button
+                  onClick={() =>
+                    onSettingsChange({ ...settings, targetPPI: 300 })
+                  }
+                  className={`p-2 text-xs rounded border ${
+                    settings.targetPPI === 300
+                      ? 'bg-blue-50 border-blue-200 text-blue-700'
+                      : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
+                  }`}
+                >
+                  300 PPI
+                  <br />
+                  <span className="text-xs opacity-75">Print</span>
+                </button>
+              </div>
+              {settings.targetPPI &&
+                settings.targetPPI > 72 &&
+                originalDimensions && (
+                  <div className="text-xs text-muted-foreground p-2 bg-blue-50 rounded">
+                    For {settings.targetPPI} PPI printing:{' '}
+                    {Math.round(
+                      (originalDimensions.width / 72) * settings.targetPPI
+                    )}{' '}
+                    ×{' '}
+                    {Math.round(
+                      (originalDimensions.height / 72) * settings.targetPPI
+                    )}{' '}
+                    pixels recommended
+                  </div>
+                )}
+            </div>
+          </div>
+
+          {/* Advanced Options */}
+          <div className="space-y-3 pt-3 border-t">
+            <Label className="text-sm font-medium">Advanced Options</Label>
+
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label className="text-sm">High-quality resize</Label>
+                <p className="text-xs text-muted-foreground">
+                  Use Pica for better image quality
+                </p>
+              </div>
+              <Switch
+                checked={settings.usePica}
+                onCheckedChange={(checked) =>
+                  onSettingsChange({ ...settings, usePica: checked })
+                }
+                disabled={disabled}
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5 flex-1">
+                <div className="flex items-center gap-2">
+                  <Label className="text-sm">Strip metadata</Label>
+                  {!isPro && <ProBadge />}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Remove EXIF data for privacy
+                </p>
+              </div>
+              <Switch
+                checked={settings.stripMetadata}
+                onCheckedChange={handleMetadataToggle}
+                disabled={disabled || (!isPro && !settings.stripMetadata)}
+              />
+            </div>
+
+            {/* Simple Upscaling Section */}
+            <div className="space-y-4 pt-4 border-t">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <h4 className="text-sm font-medium">Advanced Upscaling</h4>
+                  {!isPro && <ProBadge />}
+                </div>
+                {!isUpscaling && (
+                  <div className="text-xs text-muted-foreground">
+                    Scale above 100% to activate
+                  </div>
+                )}
+              </div>
+
+              {isUpscaling && (
+                <div className="space-y-3 p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
+                  <div className="flex items-center gap-2 text-blue-700 dark:text-blue-300">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                    <span className="text-xs font-medium">
+                      Upscaling detected
+                    </span>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div>
+                      <Label htmlFor="upscaling-method" className="text-xs">
+                        Method
+                      </Label>
+                      <Select
+                        value={settings.upscaling?.method || 'bicubic'}
+                        onValueChange={(value: UpscalingOptions['method']) =>
+                          handleUpscalingChange({ method: value })
+                        }
+                      >
+                        <SelectTrigger className="h-8">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="bicubic">
+                            Bicubic (Free)
+                          </SelectItem>
+                          <SelectItem value="lanczos" disabled={!isPro}>
+                            Lanczos (Pro)
+                          </SelectItem>
+                          <SelectItem value="ai-enhanced" disabled={!isPro}>
+                            AI Enhanced (Pro)
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       </CardContent>
