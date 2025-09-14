@@ -358,7 +358,7 @@ class AdvancedBackgroundRemovalProcessor {
   private createGaussianKernel(radius: number): number[][] {
     const size = 2 * radius + 1;
     const kernel = Array(size)
-      .fill()
+      .fill(0)
       .map(() => Array(size).fill(0));
     const sigma = radius / 3;
     const twoSigmaSquare = 2 * sigma * sigma;
@@ -501,42 +501,52 @@ class AdvancedBackgroundRemovalProcessor {
     height: number,
     options: AdvancedBackgroundRemovalOptions
   ): Uint8ClampedArray {
-    let refined = new Uint8ClampedArray(mask);
+    let refined = new Uint8ClampedArray(mask.length);
+    refined.set(mask);
 
     // Morphological operations
     if (options.morphologyKernelSize > 0) {
-      refined = this.morphologicalClose(
+      const closed = this.morphologicalClose(
         refined,
         width,
         height,
         options.morphologyKernelSize
       );
-      refined = this.morphologicalOpen(
+      refined = new Uint8ClampedArray(closed.length);
+      refined.set(closed);
+
+      const opened = this.morphologicalOpen(
         refined,
         width,
         height,
         options.morphologyKernelSize
       );
+      refined = new Uint8ClampedArray(opened.length);
+      refined.set(opened);
     }
 
     // Gaussian blur for smooth edges
     if (options.gaussianBlurRadius > 0) {
-      refined = this.gaussianBlur(
+      const blurred = this.gaussianBlur(
         refined,
         width,
         height,
         options.gaussianBlurRadius
       );
+      refined = new Uint8ClampedArray(blurred.length);
+      refined.set(blurred);
     }
 
     // Gradient feathering
     if (options.gradientFeathering > 0) {
-      refined = this.applyGradientFeathering(
+      const feathered = this.applyGradientFeathering(
         refined,
         width,
         height,
         options.gradientFeathering
       );
+      refined = new Uint8ClampedArray(feathered.length);
+      refined.set(feathered);
     }
 
     return refined;
@@ -630,7 +640,8 @@ class AdvancedBackgroundRemovalProcessor {
     height: number,
     radius: number
   ): Uint8ClampedArray {
-    const result = new Uint8ClampedArray(mask);
+    const result = new Uint8ClampedArray(mask.length);
+    result.set(mask);
 
     // Create distance field for smooth gradients
     const distanceField = this.createDistanceField(mask, width, height);

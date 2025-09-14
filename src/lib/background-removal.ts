@@ -20,6 +20,7 @@ export interface BackgroundRemovalResult {
   height: number;
   processingTime: number;
   confidence: number; // Average confidence of the segmentation
+  method?: string;
 }
 
 class BackgroundRemovalProcessor {
@@ -81,9 +82,9 @@ class BackgroundRemovalProcessor {
         this.canvas.height = imageElement.naturalHeight;
 
         // Process the image
-        this.selfieSegmentation!.onResults((results) => {
+        this.selfieSegmentation!.onResults(async (results) => {
           try {
-            const result = this.processSegmentationResults(
+            const result = await this.processSegmentationResults(
               imageElement,
               results,
               options,
@@ -103,12 +104,12 @@ class BackgroundRemovalProcessor {
     });
   }
 
-  private processSegmentationResults(
+  private async processSegmentationResults(
     originalImage: HTMLImageElement,
     results: any,
     options: BackgroundRemovalOptions,
     startTime: number
-  ): BackgroundRemovalResult {
+  ): Promise<BackgroundRemovalResult> {
     const { width, height } = this.canvas;
 
     // Clear canvas
@@ -186,17 +187,11 @@ class BackgroundRemovalProcessor {
     const processingTime = performance.now() - startTime;
     const averageConfidence = totalConfidence / pixelCount;
 
-    return new Promise((resolve, reject) => {
+    const blob = await new Promise<Blob>((resolve, reject) => {
       this.canvas.toBlob(
         (blob) => {
           if (blob) {
-            resolve({
-              blob,
-              width,
-              height,
-              processingTime,
-              confidence: averageConfidence,
-            });
+            resolve(blob);
           } else {
             reject(new Error('Failed to create output blob'));
           }
@@ -205,6 +200,15 @@ class BackgroundRemovalProcessor {
         options.quality
       );
     });
+
+    return {
+      blob,
+      width,
+      height,
+      processingTime,
+      confidence: averageConfidence,
+      method: 'AI Segmentation',
+    };
   }
 
   private applyAdvancedEdgeProcessing(
