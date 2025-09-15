@@ -22,6 +22,7 @@ import {
   Crown,
   Settings,
   RefreshCcw,
+  ArrowRight,
 } from 'lucide-react';
 import {
   removeBackground,
@@ -36,6 +37,7 @@ import {
 import { downloadFile } from '@/lib/zip';
 import { usePaywall } from '@/hooks/usePaywall';
 import { formatFileSize } from '@/lib/utils';
+import { useRouter } from 'next/navigation';
 
 interface BackgroundRemovalProps {
   selectedFile?: File;
@@ -47,6 +49,7 @@ export function BackgroundRemoval({
   onFileSelect,
 }: BackgroundRemovalProps) {
   const { isPro, requestFeatureAccess } = usePaywall();
+  const router = useRouter();
 
   // Processing state
   const [isProcessing, setIsProcessing] = useState(false);
@@ -93,15 +96,19 @@ export function BackgroundRemoval({
   // Get the current file to process
   const currentFile = selectedFile || internalFile;
 
+  // Handle Pro upgrade redirect
+  const handleUpgradeClick = useCallback(() => {
+    router.push('/pricing');
+  }, [router]);
+
   // Process background removal
   const handleRemoveBackground = useCallback(async () => {
     if (!currentFile) return;
 
-    // Check Pro access
+    // Check Pro access - redirect to pricing instead of showing paywall
     if (!isPro) {
-      if (!requestFeatureAccess('background-removal', 'Background Removal')) {
-        return;
-      }
+      router.push('/pricing');
+      return;
     }
 
     setIsProcessing(true);
@@ -158,7 +165,7 @@ export function BackgroundRemoval({
     } finally {
       setIsProcessing(false);
     }
-  }, [currentFile, options, isPro, requestFeatureAccess]);
+  }, [currentFile, options, isPro, router, useAdvancedMode]);
 
   // Download result
   const handleDownload = useCallback(() => {
@@ -224,11 +231,22 @@ export function BackgroundRemoval({
                 className="hidden"
                 id="bg-removal-upload"
               />
-              <label htmlFor="bg-removal-upload">
-                <Button asChild>
-                  <span>Choose Image</span>
+              {isPro ? (
+                <label htmlFor="bg-removal-upload">
+                  <Button asChild>
+                    <span>Choose Image</span>
+                  </Button>
+                </label>
+              ) : (
+                <Button
+                  onClick={handleUpgradeClick}
+                  className="bg-amber-600 hover:bg-amber-700"
+                >
+                  <Crown className="w-4 h-4 mr-2" />
+                  Get Pro to Upload
+                  <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
-              </label>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -570,15 +588,21 @@ export function BackgroundRemoval({
             {/* Action Buttons */}
             <div className="space-y-3">
               <Button
-                onClick={handleRemoveBackground}
-                disabled={!currentFile || isProcessing}
-                className="w-full"
+                onClick={!isPro ? handleUpgradeClick : handleRemoveBackground}
+                disabled={isPro && (!currentFile || isProcessing)}
+                className={`w-full ${!isPro ? 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700' : ''}`}
                 size="lg"
               >
-                {isProcessing ? (
+                {isProcessing && isPro ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                     Processing...
+                  </>
+                ) : !isPro ? (
+                  <>
+                    <Crown className="w-4 h-4 mr-2" />
+                    Get Pro to Remove Backgrounds
+                    <ArrowRight className="w-4 h-4 ml-2" />
                   </>
                 ) : (
                   <>
