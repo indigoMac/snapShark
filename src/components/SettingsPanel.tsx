@@ -609,14 +609,21 @@ export function SettingsPanel({
                   )}
                 </div>
                 <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">
-                  Complete logo set: 16×16 to 512×512 PNG, Apple Touch icons,
-                  and responsive website logos
+                  Complete web-ready package: favicons, PWA icons, responsive
+                  logos, and scalable SVG - everything for modern websites (11
+                  files total)
                 </p>
+                <div className="text-xs text-green-600 dark:text-green-400 mb-3 p-2 bg-green-50 dark:bg-green-900/30 rounded border border-green-200 dark:border-green-800">
+                  ✨ <strong>Smart processing:</strong> Automatically crops
+                  whitespace and generates proper ICO format
+                </div>
                 <ul className="text-xs text-gray-500 dark:text-gray-400 mb-3 space-y-1">
-                  <li>• 16×16, 32×32, 48×48 favicons</li>
-                  <li>• 128×128, 256×256, 512×512 PWA icons</li>
-                  <li>• Apple Touch icons (180×180)</li>
-                  <li>• Responsive website logos</li>
+                  <li>• favicon.ico + PNG favicons (16×16, 32×32, 48×48)</li>
+                  <li>
+                    • Apple Touch (180×180) + PWA icons (192×192, 512×512)
+                  </li>
+                  <li>• Responsive logos (200px, 400px, 800px)</li>
+                  <li>• Scalable SVG for perfect quality at any size</li>
                 </ul>
                 <button
                   onClick={() => {

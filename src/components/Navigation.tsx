@@ -71,6 +71,18 @@ export function Navigation() {
               Underwater
             </Link>
             <Link
+              href="/examples"
+              className="text-sm font-medium text-slate-600 hover:text-blue-600 dark:text-slate-300 dark:hover:text-blue-400 transition-colors"
+            >
+              Examples
+            </Link>
+            <Link
+              href="/about"
+              className="text-sm font-medium text-slate-600 hover:text-blue-600 dark:text-slate-300 dark:hover:text-blue-400 transition-colors"
+            >
+              About
+            </Link>
+            <Link
               href="/pricing"
               className="text-sm font-medium text-slate-600 hover:text-blue-600 dark:text-slate-300 dark:hover:text-blue-400 transition-colors"
             >
@@ -192,6 +204,20 @@ export function Navigation() {
                     className="flex items-center h-12 px-4 text-base font-medium text-slate-800 hover:text-blue-600 hover:bg-blue-50 dark:text-slate-200 dark:hover:text-blue-400 dark:hover:bg-blue-950/50 rounded-lg transition-colors border border-transparent hover:border-blue-200 dark:hover:border-blue-800"
                   >
                     🌊 Underwater
+                  </Link>
+                  <Link
+                    href="/examples"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center h-12 px-4 text-base font-medium text-slate-800 hover:text-blue-600 hover:bg-blue-50 dark:text-slate-200 dark:hover:text-blue-400 dark:hover:bg-blue-950/50 rounded-lg transition-colors border border-transparent hover:border-blue-200 dark:hover:border-blue-800"
+                  >
+                    📸 Examples
+                  </Link>
+                  <Link
+                    href="/about"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center h-12 px-4 text-base font-medium text-slate-800 hover:text-blue-600 hover:bg-blue-50 dark:text-slate-200 dark:hover:text-blue-400 dark:hover:bg-blue-950/50 rounded-lg transition-colors border border-transparent hover:border-blue-200 dark:hover:border-blue-800"
+                  >
+                    ℹ️ About
                   </Link>
                   <Link
                     href="/pricing"

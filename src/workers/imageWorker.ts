@@ -18,6 +18,8 @@ export interface ProcessImageTask {
   usePica?: boolean;
   upscaling?: UpscalingOptions;
   targetPPI?: number;
+  autoCrop?: boolean;
+  preserveAspectRatio?: boolean;
 }
 
 export interface ProcessImageResult {
@@ -426,6 +428,61 @@ async function canEncode(mimeType: OutputFormat): Promise<boolean> {
   }
 }
 
+// Auto-crop function to trim whitespace/transparent areas around logos
+function autoCropImage(imageData: ImageData): {
+  cropX: number;
+  cropY: number;
+  cropWidth: number;
+  cropHeight: number;
+} {
+  const { data, width, height } = imageData;
+
+  let minX = width;
+  let minY = height;
+  let maxX = 0;
+  let maxY = 0;
+
+  // Scan all pixels to find content boundaries
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const i = (y * width + x) * 4;
+      const r = data[i];
+      const g = data[i + 1];
+      const b = data[i + 2];
+      const a = data[i + 3];
+
+      // Check if pixel is not transparent and not white/near-white
+      const isTransparent = a < 10;
+      const isWhite = r > 240 && g > 240 && b > 240;
+
+      if (!isTransparent && !isWhite) {
+        minX = Math.min(minX, x);
+        minY = Math.min(minY, y);
+        maxX = Math.max(maxX, x);
+        maxY = Math.max(maxY, y);
+      }
+    }
+  }
+
+  // If no content found, return full image
+  if (minX >= maxX || minY >= maxY) {
+    return { cropX: 0, cropY: 0, cropWidth: width, cropHeight: height };
+  }
+
+  // Add 10% padding around content
+  const contentWidth = maxX - minX + 1;
+  const contentHeight = maxY - minY + 1;
+  const paddingX = Math.max(2, Math.floor(contentWidth * 0.1));
+  const paddingY = Math.max(2, Math.floor(contentHeight * 0.1));
+
+  const cropX = Math.max(0, minX - paddingX);
+  const cropY = Math.max(0, minY - paddingY);
+  const cropWidth = Math.min(width - cropX, maxX - cropX + 1 + paddingX * 2);
+  const cropHeight = Math.min(height - cropY, maxY - cropY + 1 + paddingY * 2);
+
+  return { cropX, cropY, cropWidth, cropHeight };
+}
+
 // Helper function to inject DPI/PPI metadata into JPEG images
 function injectDPI(arrayBuffer: ArrayBuffer, dpi: number): ArrayBuffer {
   const bytes = new Uint8Array(arrayBuffer);
@@ -494,6 +551,95 @@ async function convertToBlob(
   quality?: number,
   targetPPI?: number
 ): Promise<{ blob: Blob; actualFormat: OutputFormat; fallbackUsed: boolean }> {
+  // Handle special formats that can't use canvas.convertToBlob()
+  if (format === 'image/svg+xml') {
+    // Create SVG with embedded PNG (industry standard approach)
+    const width = canvas.width;
+    const height = canvas.height;
+
+    // Convert canvas to compressed PNG for embedding
+    const pngBlob = await canvas.convertToBlob({
+      type: 'image/png',
+      quality: quality || 0.85,
+    });
+    const arrayBuffer = await pngBlob.arrayBuffer();
+    const bytes = new Uint8Array(arrayBuffer);
+
+    // Convert to base64
+    let binary = '';
+    for (let i = 0; i < bytes.byteLength; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    const base64 = btoa(binary);
+
+    // Create SVG with embedded PNG
+    const svgContent = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" 
+     width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+  <image width="${width}" height="${height}" xlink:href="data:image/png;base64,${base64}"/>
+</svg>`;
+
+    const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+    return { blob, actualFormat: 'image/svg+xml', fallbackUsed: false };
+  }
+
+  if (format === 'image/x-icon') {
+    // Convert canvas to proper ICO format
+    const size = Math.min(canvas.width, canvas.height); // ICO works best with square images
+
+    // Create a square canvas for ICO
+    const icoCanvas = new OffscreenCanvas(size, size);
+    const icoCtx = icoCanvas.getContext('2d');
+
+    if (!icoCtx) {
+      throw new Error('Could not get ICO canvas context');
+    }
+
+    // Draw image centered and scaled to fit
+    const scale = size / Math.max(canvas.width, canvas.height);
+    const scaledWidth = canvas.width * scale;
+    const scaledHeight = canvas.height * scale;
+    const offsetX = (size - scaledWidth) / 2;
+    const offsetY = (size - scaledHeight) / 2;
+
+    icoCtx.drawImage(canvas, offsetX, offsetY, scaledWidth, scaledHeight);
+
+    // Get PNG data
+    const pngBlob = await icoCanvas.convertToBlob({ type: 'image/png' });
+    const pngArrayBuffer = await pngBlob.arrayBuffer();
+    const pngBytes = new Uint8Array(pngArrayBuffer);
+
+    // Create ICO header and directory entry
+    const icoData = new ArrayBuffer(6 + 16 + pngBytes.length);
+    const view = new DataView(icoData);
+    const bytes = new Uint8Array(icoData);
+
+    let offset = 0;
+
+    // ICO header (6 bytes)
+    view.setUint16(offset, 0, true); // Reserved (0)
+    view.setUint16(offset + 2, 1, true); // Type (1 = ICO)
+    view.setUint16(offset + 4, 1, true); // Number of images
+    offset += 6;
+
+    // Directory entry (16 bytes)
+    view.setUint8(offset, size === 256 ? 0 : size); // Width (0 = 256)
+    view.setUint8(offset + 1, size === 256 ? 0 : size); // Height (0 = 256)
+    view.setUint8(offset + 2, 0); // Color palette
+    view.setUint8(offset + 3, 0); // Reserved
+    view.setUint16(offset + 4, 1, true); // Color planes
+    view.setUint16(offset + 6, 32, true); // Bits per pixel
+    view.setUint32(offset + 8, pngBytes.length, true); // Image size
+    view.setUint32(offset + 12, 22, true); // Image offset
+    offset += 16;
+
+    // PNG data
+    bytes.set(pngBytes, offset);
+
+    const blob = new Blob([icoData], { type: 'image/x-icon' });
+    return { blob, actualFormat: 'image/x-icon', fallbackUsed: false };
+  }
+
   const canEncodeTo = await canEncode(format);
 
   let targetFormat = format;
@@ -717,11 +863,13 @@ async function processImage(
     usePica,
     upscaling,
     targetPPI,
+    autoCrop,
+    preserveAspectRatio,
   } = task;
 
   // Create source canvas from ImageData
-  const sourceCanvas = new OffscreenCanvas(imageData.width, imageData.height);
-  const sourceCtx = sourceCanvas.getContext('2d');
+  let sourceCanvas = new OffscreenCanvas(imageData.width, imageData.height);
+  let sourceCtx = sourceCanvas.getContext('2d');
 
   if (!sourceCtx) {
     throw new Error('Could not get source canvas context');
@@ -729,13 +877,126 @@ async function processImage(
 
   sourceCtx.putImageData(imageData, 0, 0);
 
-  // Resize if dimensions changed
+  // Apply auto-crop if requested (for logo processing)
+  if (autoCrop) {
+    const cropData = autoCropImage(imageData);
+
+    if (cropData.cropWidth > 0 && cropData.cropHeight > 0) {
+      // Create cropped canvas
+      const croppedCanvas = new OffscreenCanvas(
+        cropData.cropWidth,
+        cropData.cropHeight
+      );
+      const croppedCtx = croppedCanvas.getContext('2d');
+
+      if (!croppedCtx) {
+        throw new Error('Could not get cropped canvas context');
+      }
+
+      // Draw cropped portion
+      croppedCtx.drawImage(
+        sourceCanvas,
+        cropData.cropX,
+        cropData.cropY,
+        cropData.cropWidth,
+        cropData.cropHeight,
+        0,
+        0,
+        cropData.cropWidth,
+        cropData.cropHeight
+      );
+
+      // Update source canvas to cropped version
+      sourceCanvas = croppedCanvas;
+      sourceCtx = croppedCtx;
+
+      console.log(
+        `Auto-cropped from ${imageData.width}×${imageData.height} to ${cropData.cropWidth}×${cropData.cropHeight}`
+      );
+    }
+  }
+
+  // Handle square format requirements (favicons/icons) vs aspect-preserving formats
   let targetCanvas = sourceCanvas;
-  if (targetWidth !== imageData.width || targetHeight !== imageData.height) {
-    const scaleX = targetWidth / imageData.width;
-    const scaleY = targetHeight / imageData.height;
+
+  // Recalculate target dimensions if preserving aspect ratio (after auto-crop)
+  let finalTargetWidth = targetWidth;
+  let finalTargetHeight = targetHeight;
+
+  if (preserveAspectRatio) {
+    // Use the cropped canvas dimensions to calculate proper aspect ratio
+    const aspectRatio = sourceCanvas.height / sourceCanvas.width;
+    finalTargetWidth = targetWidth;
+    finalTargetHeight = Math.round(targetWidth * aspectRatio);
+
+    console.log(
+      `Aspect ratio preserved: ${sourceCanvas.width}×${sourceCanvas.height} → ${finalTargetWidth}×${finalTargetHeight}`
+    );
+  }
+
+  // For square formats, we need to add transparent padding instead of distorting
+  const needsSquarePadding =
+    finalTargetWidth === finalTargetHeight &&
+    sourceCanvas.width !== sourceCanvas.height;
+
+  if (needsSquarePadding) {
+    // Create square canvas with transparent background
+    const squareSize = Math.max(targetWidth, targetHeight);
+    const paddedCanvas = new OffscreenCanvas(squareSize, squareSize);
+    const paddedCtx = paddedCanvas.getContext('2d');
+
+    if (!paddedCtx) {
+      throw new Error('Could not get padded canvas context');
+    }
+
+    // Clear to transparent
+    paddedCtx.clearRect(0, 0, squareSize, squareSize);
+
+    // Calculate scaling to fit within square while preserving aspect ratio
+    const scale = Math.min(
+      squareSize / sourceCanvas.width,
+      squareSize / sourceCanvas.height
+    );
+    const scaledWidth = sourceCanvas.width * scale;
+    const scaledHeight = sourceCanvas.height * scale;
+
+    // Center the logo in the square
+    const offsetX = (squareSize - scaledWidth) / 2;
+    const offsetY = (squareSize - scaledHeight) / 2;
+
+    paddedCtx.drawImage(
+      sourceCanvas,
+      offsetX,
+      offsetY,
+      scaledWidth,
+      scaledHeight
+    );
+
+    // Now resize the padded square to target size
+    if (squareSize !== finalTargetWidth) {
+      targetCanvas = usePica
+        ? await resizeWithPica(
+            paddedCanvas,
+            finalTargetWidth,
+            finalTargetHeight
+          )
+        : resizeWithCanvas(paddedCanvas, finalTargetWidth, finalTargetHeight);
+    } else {
+      targetCanvas = paddedCanvas;
+    }
+
+    console.log(
+      `Square padding applied: ${sourceCanvas.width}×${sourceCanvas.height} → ${squareSize}×${squareSize} → ${finalTargetWidth}×${finalTargetHeight}`
+    );
+  } else if (
+    finalTargetWidth !== sourceCanvas.width ||
+    finalTargetHeight !== sourceCanvas.height
+  ) {
+    // Regular resize for non-square or already-square images
+    const scaleX = finalTargetWidth / sourceCanvas.width;
+    const scaleY = finalTargetHeight / sourceCanvas.height;
     const isUpscaling = scaleX > 1.0 || scaleY > 1.0;
-    const isSmallIcon = targetWidth <= 64 && targetHeight <= 64;
+    const isSmallIcon = finalTargetWidth <= 64 && finalTargetHeight <= 64;
 
     if (upscaling && isUpscaling) {
       // Use advanced upscaling algorithms
@@ -743,52 +1004,60 @@ async function processImage(
         case 'ai-enhanced':
           targetCanvas = await aiEnhancedUpscale(
             sourceCanvas,
-            targetWidth,
-            targetHeight,
+            finalTargetWidth,
+            finalTargetHeight,
             upscaling
           );
           break;
         case 'lanczos':
           targetCanvas = await lanczosUpscale(
             sourceCanvas,
-            targetWidth,
-            targetHeight,
+            finalTargetWidth,
+            finalTargetHeight,
             upscaling
           );
           break;
         case 'bicubic':
           targetCanvas = await bicubicUpscale(
             sourceCanvas,
-            targetWidth,
-            targetHeight,
+            finalTargetWidth,
+            finalTargetHeight,
             upscaling
           );
           break;
         default:
           targetCanvas = usePica
-            ? await resizeWithPica(sourceCanvas, targetWidth, targetHeight)
-            : resizeWithCanvas(sourceCanvas, targetWidth, targetHeight);
+            ? await resizeWithPica(
+                sourceCanvas,
+                finalTargetWidth,
+                finalTargetHeight
+              )
+            : resizeWithCanvas(
+                sourceCanvas,
+                finalTargetWidth,
+                finalTargetHeight
+              );
       }
     } else if (isSmallIcon) {
       // Use favicon-optimized algorithm for small icons
       targetCanvas = await faviconOptimizedResize(
         sourceCanvas,
-        targetWidth,
-        targetHeight
+        finalTargetWidth,
+        finalTargetHeight
       );
     } else {
       // Use existing algorithms for regular downscaling
       if (usePica) {
         targetCanvas = await resizeWithPica(
           sourceCanvas,
-          targetWidth,
-          targetHeight
+          finalTargetWidth,
+          finalTargetHeight
         );
       } else {
         targetCanvas = resizeWithCanvas(
           sourceCanvas,
-          targetWidth,
-          targetHeight
+          finalTargetWidth,
+          finalTargetHeight
         );
       }
     }

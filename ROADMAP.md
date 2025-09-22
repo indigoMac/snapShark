@@ -26,7 +26,7 @@
 
 ### Game-Changing Pro Features
 
-- [ ] **Background removal** - Key differentiator, instant Pro upgrade trigger
+- [x] **Background removal** - Key differentiator, instant Pro upgrade trigger
 - [ ] **Watermark removal** - Premium feature for content creators
 - [ ] **One-off payment system** - Alternative to subscriptions (£2 for 50 images)
 - [ ] **Enhanced metadata control** - Advanced privacy features

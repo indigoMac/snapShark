@@ -238,8 +238,17 @@ export function useImageProcessor() {
 
   const generateLogoPackage = useCallback(
     async (logoFile: File) => {
-      // Web Developer Logo Package - PNG formats (ICO/SVG coming soon)
+      // Web Developer Logo Package - Complete web-ready formats
+      // First, validate and prepare the input image
       const logoFormats = [
+        // Classic favicon.ico (for legacy support)
+        {
+          name: 'favicon',
+          width: 32,
+          height: 32,
+          format: 'image/x-icon' as const,
+        },
+
         // Favicon PNGs (for modern browsers)
         {
           name: 'favicon-16',
@@ -301,6 +310,14 @@ export function useImageProcessor() {
           height: undefined,
           format: 'image/png' as const,
         },
+
+        // Scalable SVG (industry standard - Adobe Express does this)
+        {
+          name: 'logo',
+          width: 800,
+          height: undefined,
+          format: 'image/svg+xml' as const,
+        },
       ];
 
       setIsProcessing(true);
@@ -314,6 +331,22 @@ export function useImageProcessor() {
       try {
         // Load original image once
         const img = await loadImage(logoFile);
+
+        // Validate input size - warn if too small for good results
+        const minRecommendedSize = 200;
+        const maxDimension = Math.max(img.naturalWidth, img.naturalHeight);
+
+        if (maxDimension < minRecommendedSize) {
+          console.warn(
+            `Logo image is quite small (${img.naturalWidth}×${img.naturalHeight}). For best results, use an image at least ${minRecommendedSize}px on the largest side.`
+          );
+        }
+
+        // TODO: Add auto-cropping logic here
+        // For now, we'll use the full image but this could be enhanced to:
+        // 1. Detect transparent/white boundaries and crop
+        // 2. Find the logo content and crop tight
+        // 3. Add padding for proper favicon appearance
 
         // Process all formats in parallel
         for (let i = 0; i < logoFormats.length; i++) {
@@ -361,8 +394,10 @@ export function useImageProcessor() {
             targetWidth,
             targetHeight,
             format: logoFormat.format,
-            quality: 1.0, // Maximum quality for logos
+            quality: 0.85, // Web-optimized quality for logos
             usePica: true,
+            autoCrop: true, // Enable auto-cropping for logo package
+            preserveAspectRatio: logoFormat.height === undefined, // Preserve aspect for website logos
             upscaling: {
               method: 'bicubic',
               quality: 'high',
@@ -370,12 +405,23 @@ export function useImageProcessor() {
             },
           };
 
-          // Create a renamed file for each format
+          // Create a renamed file for each format with correct extension
+          const targetExtension =
+            logoFormat.format === 'image/x-icon'
+              ? 'ico'
+              : logoFormat.format === 'image/svg+xml'
+                ? 'svg'
+                : logoFormat.format === 'image/png'
+                  ? 'png'
+                  : logoFormat.format === 'image/jpeg'
+                    ? 'jpg'
+                    : 'png'; // fallback
+
           const renamedFile = new File(
             [logoFile],
-            `${logoFormat.name}.${logoFile.name.split('.').pop()}`,
+            `${logoFormat.name}.${targetExtension}`,
             {
-              type: logoFile.type,
+              type: logoFormat.format,
               lastModified: logoFile.lastModified,
             }
           );
@@ -384,7 +430,7 @@ export function useImageProcessor() {
             file: renamedFile,
             settings: {
               format: logoFormat.format,
-              quality: 1.0,
+              quality: 0.85,
               width: targetWidth,
               height: targetHeight,
               usePica: true,
