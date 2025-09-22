@@ -406,16 +406,14 @@ export function useImageProcessor() {
           };
 
           // Create a renamed file for each format with correct extension
-          const targetExtension =
-            logoFormat.format === 'image/x-icon'
-              ? 'ico'
-              : logoFormat.format === 'image/svg+xml'
-                ? 'svg'
-                : logoFormat.format === 'image/png'
-                  ? 'png'
-                  : logoFormat.format === 'image/jpeg'
-                    ? 'jpg'
-                    : 'png'; // fallback
+          let targetExtension = 'png'; // fallback
+          if (logoFormat.format === 'image/x-icon') {
+            targetExtension = 'ico';
+          } else if (logoFormat.format === 'image/svg+xml') {
+            targetExtension = 'svg';
+          } else if (logoFormat.format === 'image/png') {
+            targetExtension = 'png';
+          }
 
           const renamedFile = new File(
             [logoFile],
