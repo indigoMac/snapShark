@@ -137,7 +137,7 @@ class VTracerProcessor {
   }
 
   dispose(): void {
-    this.wasmModule = null;
+    this.imageTracer = null;
     this.isInitialized = false;
   }
 }
