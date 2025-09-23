@@ -13,6 +13,21 @@ const nextConfig = {
       asyncWebAssembly: true,
     };
 
+    // Handle vtracer-wasm WASM files
+    config.module.rules.push({
+      test: /\.wasm$/,
+      type: 'webassembly/async',
+    });
+
+    // Copy WASM files to public directory
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        path: false,
+      };
+    }
+
     return config;
   },
   // PWA configuration will be added later

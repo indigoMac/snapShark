@@ -37,6 +37,7 @@
     "stripe": "^18.5.0",
     "tailwind-merge": "^2.0.0",
     "tailwindcss-animate": "^1.0.7",
+    "imagetracerjs": "^1.2.6",
     "zustand": "^4.4.7"
   },
   "devDependencies": {

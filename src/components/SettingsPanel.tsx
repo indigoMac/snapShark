@@ -623,7 +623,7 @@ export function SettingsPanel({
                     • Apple Touch (180×180) + PWA icons (192×192, 512×512)
                   </li>
                   <li>• Responsive logos (200px, 400px, 800px)</li>
-                  <li>• Scalable SVG for perfect quality at any size</li>
+                  <li>• True vectorized SVG (automatically falls back if needed)</li>
                 </ul>
                 <button
                   onClick={() => {

@@ -2,6 +2,22 @@
 
 import { OutputFormat } from '../lib/formats';
 
+// Dynamically import vtracer to avoid build issues
+let vtracerModule: any = null;
+
+async function loadVTracer() {
+  if (!vtracerModule) {
+    try {
+      vtracerModule = await import('../lib/vtracer');
+      return vtracerModule;
+    } catch (error) {
+      console.warn('VTracer module not available:', error);
+      return null;
+    }
+  }
+  return vtracerModule;
+}
+
 export interface UpscalingOptions {
   method: 'bicubic' | 'lanczos' | 'ai-enhanced';
   quality: 'standard' | 'high' | 'ultra';
@@ -545,6 +561,49 @@ function injectDPI(arrayBuffer: ArrayBuffer, dpi: number): ArrayBuffer {
   }
 }
 
+async function convertCanvasToTrueSvg(
+  canvas: OffscreenCanvas,
+  quality?: number
+): Promise<{ blob: Blob; width: number; height: number }> {
+  try {
+    // Load VTracer module dynamically
+    const vtracer = await loadVTracer();
+    if (!vtracer) {
+      throw new Error('VTracer module not available');
+    }
+
+    // Get ImageData from the canvas
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      throw new Error('Could not get canvas context');
+    }
+
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+    // Use high-quality settings for logo conversion
+    const options = vtracer.VTRACER_PRESETS.logo;
+
+    // Convert to SVG using VTracer
+    const result = await vtracer.convertImageToSvg(imageData, options);
+
+    // Create blob from SVG string
+    const blob = new Blob([result.svg], { type: 'image/svg+xml' });
+
+    console.log(
+      `✅ True SVG conversion completed: ${canvas.width}×${canvas.height} -> ${result.svg.length} chars`
+    );
+
+    return {
+      blob,
+      width: result.width,
+      height: result.height,
+    };
+  } catch (error) {
+    console.error('❌ VTracer conversion failed:', error);
+    throw error;
+  }
+}
+
 async function convertToBlob(
   canvas: OffscreenCanvas,
   format: OutputFormat,
@@ -553,34 +612,49 @@ async function convertToBlob(
 ): Promise<{ blob: Blob; actualFormat: OutputFormat; fallbackUsed: boolean }> {
   // Handle special formats that can't use canvas.convertToBlob()
   if (format === 'image/svg+xml') {
-    // Create SVG with embedded PNG (industry standard approach)
-    const width = canvas.width;
-    const height = canvas.height;
+    try {
+      // Try to use VTracer for true SVG vectorization
+      const result = await convertCanvasToTrueSvg(canvas, quality);
+      return {
+        blob: result.blob,
+        actualFormat: 'image/svg+xml',
+        fallbackUsed: false,
+      };
+    } catch (error) {
+      console.warn(
+        'VTracer conversion failed, falling back to embedded PNG:',
+        error
+      );
 
-    // Convert canvas to compressed PNG for embedding
-    const pngBlob = await canvas.convertToBlob({
-      type: 'image/png',
-      quality: quality || 0.85,
-    });
-    const arrayBuffer = await pngBlob.arrayBuffer();
-    const bytes = new Uint8Array(arrayBuffer);
+      // Fallback to embedded PNG approach
+      const width = canvas.width;
+      const height = canvas.height;
 
-    // Convert to base64
-    let binary = '';
-    for (let i = 0; i < bytes.byteLength; i++) {
-      binary += String.fromCharCode(bytes[i]);
-    }
-    const base64 = btoa(binary);
+      // Convert canvas to compressed PNG for embedding
+      const pngBlob = await canvas.convertToBlob({
+        type: 'image/png',
+        quality: quality || 0.85,
+      });
+      const arrayBuffer = await pngBlob.arrayBuffer();
+      const bytes = new Uint8Array(arrayBuffer);
 
-    // Create SVG with embedded PNG
-    const svgContent = `<?xml version="1.0" encoding="UTF-8"?>
+      // Convert to base64
+      let binary = '';
+      for (let i = 0; i < bytes.byteLength; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+      const base64 = btoa(binary);
+
+      // Create SVG with embedded PNG
+      const svgContent = `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" 
      width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
   <image width="${width}" height="${height}" xlink:href="data:image/png;base64,${base64}"/>
 </svg>`;
 
-    const blob = new Blob([svgContent], { type: 'image/svg+xml' });
-    return { blob, actualFormat: 'image/svg+xml', fallbackUsed: false };
+      const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+      return { blob, actualFormat: 'image/svg+xml', fallbackUsed: true };
+    }
   }
 
   if (format === 'image/x-icon') {

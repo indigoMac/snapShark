@@ -63,7 +63,23 @@ export function ImageCard({ image, onPreview }: ImageCardProps) {
             <h4 className="font-medium text-sm truncate flex-1">
               {image.filename}
             </h4>
-            {image.fallbackUsed && (
+            {image.fallbackUsed && image.actualFormat === 'image/svg+xml' && (
+              <Badge
+                variant="outline"
+                className="text-xs bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800"
+              >
+                PNG Embedded
+              </Badge>
+            )}
+            {!image.fallbackUsed && image.actualFormat === 'image/svg+xml' && (
+              <Badge
+                variant="outline"
+                className="text-xs bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800"
+              >
+                True Vector
+              </Badge>
+            )}
+            {image.fallbackUsed && image.actualFormat !== 'image/svg+xml' && (
               <Badge variant="outline" className="text-xs">
                 Fallback
               </Badge>

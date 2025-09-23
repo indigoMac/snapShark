@@ -77,9 +77,14 @@ export function generateFilename(
   originalName: string,
   width: number,
   height: number,
-  format: OutputFormat
+  format: OutputFormat,
+  fallbackUsed?: boolean
 ): string {
   const baseName = originalName.replace(/\.[^/.]+$/, ''); // Remove extension
   const extension = getFileExtension(format);
-  return `${baseName}_${width}x${height}.${extension}`;
+  
+  // Add fallback indicator for SVG files when true vectorization failed
+  const fallbackSuffix = fallbackUsed && format === 'image/svg+xml' ? '_embedded' : '';
+  
+  return `${baseName}_${width}x${height}${fallbackSuffix}.${extension}`;
 }

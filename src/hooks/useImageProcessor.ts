@@ -88,7 +88,8 @@ export function useImageProcessor() {
         task.file.name,
         result.width,
         result.height,
-        result.actualFormat
+        result.actualFormat,
+        result.fallbackUsed
       ),
       width: result.width,
       height: result.height,
