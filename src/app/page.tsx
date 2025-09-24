@@ -250,7 +250,7 @@ export default function HomePage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-1.5 h-1.5 bg-blue-600 dark:bg-blue-400 rounded-full" />
-                  <span>Professional presets & templates</span>
+                  <span>Smart print packages (7-10+ sizes)</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-1.5 h-1.5 bg-blue-600 dark:bg-blue-400 rounded-full" />

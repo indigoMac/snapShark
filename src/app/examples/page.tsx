@@ -365,6 +365,275 @@ export default function ExamplesPage() {
             </CardContent>
           </Card>
 
+          {/* Print Package Tutorial */}
+          <Card className="border-purple-200 dark:border-purple-800">
+            <CardContent className="p-8">
+              <h2 className="text-3xl font-semibold text-slate-900 dark:text-white mb-6 flex items-center gap-3">
+                🖨️ Professional Print Package
+              </h2>
+
+              <div className="mb-6">
+                <p className="text-lg text-slate-700 dark:text-slate-300 mb-4">
+                  Automatically generate 7-10+ print-ready sizes from any photo
+                  with professional 300 PPI resolution and intelligent
+                  upscaling.
+                </p>
+              </div>
+
+              {/* Before/After Demonstration */}
+              <div className="grid md:grid-cols-2 gap-8 mb-8">
+                <div>
+                  <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-4">
+                    📥 Input: Any Image (Any Size)
+                  </h3>
+                  <div className="bg-slate-100 dark:bg-slate-800 rounded-lg p-4 mb-4">
+                    <Image
+                      src="/examples/artwork-landscape.png"
+                      alt="Landscape artwork before print package processing"
+                      width={400}
+                      height={300}
+                      className="w-full h-48 object-contain rounded"
+                    />
+                  </div>
+                  <div className="bg-yellow-50 dark:bg-yellow-900/30 p-3 rounded-lg text-sm">
+                    <p className="text-yellow-800 dark:text-yellow-200">
+                      <strong>Example Input:</strong> Landscape artwork at web
+                      resolution
+                    </p>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-4">
+                    📦 Output: Complete Print Collection
+                  </h3>
+                  <div className="bg-slate-100 dark:bg-slate-800 rounded-lg p-4 mb-4">
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="bg-white dark:bg-slate-700 rounded p-2 text-center">
+                        <div className="w-full h-12 bg-gradient-to-br from-purple-400 to-purple-600 rounded mb-1"></div>
+                        <span className="text-xs">4×6" Print</span>
+                      </div>
+                      <div className="bg-white dark:bg-slate-700 rounded p-2 text-center">
+                        <div className="w-full h-16 bg-gradient-to-br from-purple-400 to-purple-600 rounded mb-1"></div>
+                        <span className="text-xs">8×10" Print</span>
+                      </div>
+                      <div className="bg-white dark:bg-slate-700 rounded p-2 text-center">
+                        <div className="w-full h-14 bg-gradient-to-br from-purple-400 to-purple-600 rounded mb-1"></div>
+                        <span className="text-xs">11×14" Print</span>
+                      </div>
+                      <div className="bg-white dark:bg-slate-700 rounded p-2 text-center">
+                        <div className="w-full h-20 bg-gradient-to-br from-purple-400 to-purple-600 rounded mb-1"></div>
+                        <span className="text-xs">16×20" Print</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="bg-green-50 dark:bg-green-900/30 p-3 rounded-lg text-sm">
+                    <p className="text-green-800 dark:text-green-200">
+                      <strong>Smart Output:</strong> 7+ sizes at 300 PPI,
+                      perfectly sized for printing
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* What Makes It Special */}
+              <div className="bg-purple-50 dark:bg-purple-950/30 rounded-lg p-6 mb-6">
+                <h3 className="text-xl font-semibold text-purple-900 dark:text-purple-100 mb-4">
+                  🎯 AI-Powered Smart Sizing
+                </h3>
+
+                <div className="grid md:grid-cols-3 gap-6 mb-6">
+                  <div>
+                    <h4 className="font-semibold text-purple-800 dark:text-purple-200 mb-3">
+                      🔍 Aspect Ratio Detection
+                    </h4>
+                    <div className="space-y-2 text-sm text-purple-700 dark:text-purple-300">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 bg-purple-500 rounded"></div>
+                        <span>Square (1:1) → 4×4" to 24×24"</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-4 bg-purple-500 rounded"></div>
+                        <span>Portrait (3:4) → 6×8" to 18×24"</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-3 bg-purple-500 rounded"></div>
+                        <span>Landscape (3:2) → 6×4" to 30×20"</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-5 h-3 bg-purple-500 rounded"></div>
+                        <span>Wide (16:9) → 8×4.5" to 32×18"</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="font-semibold text-purple-800 dark:text-purple-200 mb-3">
+                      ⚡ Advanced Upscaling
+                    </h4>
+                    <div className="space-y-2 text-sm text-purple-700 dark:text-purple-300">
+                      <div>
+                        • <strong>Bicubic interpolation</strong> for smooth
+                        scaling
+                      </div>
+                      <div>
+                        • <strong>Edge enhancement</strong> to preserve details
+                      </div>
+                      <div>
+                        • <strong>Quality preservation</strong> during size
+                        changes
+                      </div>
+                      <div>
+                        • <strong>300 PPI injection</strong> for professional
+                        printing
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="font-semibold text-purple-800 dark:text-purple-200 mb-3">
+                      📐 Perfect Print Dimensions
+                    </h4>
+                    <div className="space-y-2 text-sm text-purple-700 dark:text-purple-300">
+                      <div>
+                        • <strong>Standard sizes:</strong> 4×6", 5×7", 8×10"
+                      </div>
+                      <div>
+                        • <strong>Large format:</strong> 11×14", 16×20", 20×30"
+                      </div>
+                      <div>
+                        • <strong>Poster sizes:</strong> 24×36", 30×40"
+                      </div>
+                      <div>
+                        • <strong>International:</strong> A4, A3 standards
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white dark:bg-purple-900/50 rounded-lg p-4">
+                  <h4 className="font-semibold text-purple-900 dark:text-purple-100 mb-3">
+                    📊 Try Our Sample Images - See Both Aspect Ratios:
+                  </h4>
+
+                  <div className="grid md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <h5 className="font-medium text-purple-800 dark:text-purple-200 mb-2">
+                        🖼️ Landscape Artwork (3:2 ratio):
+                      </h5>
+                      <div className="grid grid-cols-1 gap-2 text-xs">
+                        <div className="bg-purple-100 dark:bg-purple-800/50 p-2 rounded">
+                          <div className="font-medium">
+                            landscape-6x4.jpg → 1800×1200px @ 300 PPI
+                          </div>
+                        </div>
+                        <div className="bg-purple-100 dark:bg-purple-800/50 p-2 rounded">
+                          <div className="font-medium">
+                            landscape-12x8.jpg → 3600×2400px @ 300 PPI
+                          </div>
+                        </div>
+                        <div className="bg-purple-100 dark:bg-purple-800/50 p-2 rounded">
+                          <div className="font-medium">
+                            landscape-18x12.jpg → 5400×3600px @ 300 PPI
+                          </div>
+                        </div>
+                        <div className="bg-purple-100 dark:bg-purple-800/50 p-2 rounded">
+                          <div className="font-medium">
+                            + 4 more sizes up to 30×20"
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h5 className="font-medium text-purple-800 dark:text-purple-200 mb-2">
+                        📐 Portrait Artwork (3:4 ratio):
+                      </h5>
+                      <div className="grid grid-cols-1 gap-2 text-xs">
+                        <div className="bg-purple-100 dark:bg-purple-800/50 p-2 rounded">
+                          <div className="font-medium">
+                            portrait-6x8.jpg → 1800×2400px @ 300 PPI
+                          </div>
+                        </div>
+                        <div className="bg-purple-100 dark:bg-purple-800/50 p-2 rounded">
+                          <div className="font-medium">
+                            portrait-9x12.jpg → 2700×3600px @ 300 PPI
+                          </div>
+                        </div>
+                        <div className="bg-purple-100 dark:bg-purple-800/50 p-2 rounded">
+                          <div className="font-medium">
+                            portrait-12x16.jpg → 3600×4800px @ 300 PPI
+                          </div>
+                        </div>
+                        <div className="bg-purple-100 dark:bg-purple-800/50 p-2 rounded">
+                          <div className="font-medium">
+                            + 4 more sizes up to 18×24"
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="text-center text-sm text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-900/30 rounded p-2">
+                    💡 Download our sample artworks below to test both aspect
+                    ratios!
+                  </div>
+                </div>
+              </div>
+
+              {/* Value Proposition */}
+              <div className="bg-gradient-to-r from-purple-100 to-indigo-100 dark:from-purple-900/30 dark:to-indigo-900/30 rounded-lg p-6 mb-6">
+                <h3 className="text-xl font-semibold text-purple-900 dark:text-purple-100 mb-4">
+                  💰 Replaces Expensive Software
+                </h3>
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div>
+                    <h4 className="font-semibold text-purple-800 dark:text-purple-200 mb-2">
+                      This Feature Normally Costs:
+                    </h4>
+                    <ul className="space-y-1 text-sm text-purple-700 dark:text-purple-300">
+                      <li>• Adobe Photoshop: $20.99/month</li>
+                      <li>• Canva Pro: $12.99/month</li>
+                      <li>• PrintShop: $49.99 one-time</li>
+                      <li>• Professional design services: $50-200 per batch</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-purple-800 dark:text-purple-200 mb-2">
+                      SnapShark Pro:
+                    </h4>
+                    <div className="bg-white dark:bg-purple-900/50 rounded p-3">
+                      <div className="text-2xl font-bold text-purple-900 dark:text-purple-100">
+                        £3/month
+                      </div>
+                      <div className="text-sm text-purple-600 dark:text-purple-300">
+                        + All other pro features
+                        <br />
+                        + Unlimited print packages
+                        <br />+ No per-use charges
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-4">
+                <a
+                  href="/"
+                  className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-medium transition-colors text-center"
+                >
+                  Try Print Package
+                </a>
+                <a
+                  href="/pricing"
+                  className="bg-slate-600 hover:bg-slate-700 text-white px-6 py-3 rounded-lg font-medium transition-colors text-center"
+                >
+                  Get Pro Access
+                </a>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Underwater Photo Correction */}
           <Card className="border-cyan-200 dark:border-cyan-800">
             <CardContent className="p-8">
@@ -549,7 +818,58 @@ export default function ExamplesPage() {
                 </p>
               </div>
 
-              <div className="grid md:grid-cols-3 gap-6">
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+                <div className="text-center">
+                  <div className="bg-white dark:bg-slate-800 rounded-lg p-4 mb-4 border">
+                    <Image
+                      src="/examples/artwork-landscape.png"
+                      alt="Landscape artwork sample"
+                      width={200}
+                      height={150}
+                      className="w-full h-32 object-contain rounded"
+                    />
+                  </div>
+                  <h3 className="font-semibold text-slate-900 dark:text-white mb-2">
+                    Landscape Artwork
+                  </h3>
+                  <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">
+                    Perfect for testing print package generation (landscape
+                    sizes)
+                  </p>
+                  <a
+                    href="/examples/artwork-landscape.png"
+                    download
+                    className="inline-block bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded text-sm transition-colors"
+                  >
+                    Download Sample
+                  </a>
+                </div>
+
+                <div className="text-center">
+                  <div className="bg-white dark:bg-slate-800 rounded-lg p-4 mb-4 border">
+                    <Image
+                      src="/examples/artwork-portrait.png"
+                      alt="Portrait artwork sample"
+                      width={200}
+                      height={150}
+                      className="w-full h-32 object-contain rounded"
+                    />
+                  </div>
+                  <h3 className="font-semibold text-slate-900 dark:text-white mb-2">
+                    Portrait Artwork
+                  </h3>
+                  <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">
+                    Ideal for testing print package generation (portrait sizes)
+                  </p>
+                  <a
+                    href="/examples/artwork-portrait.png"
+                    download
+                    className="inline-block bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded text-sm transition-colors"
+                  >
+                    Download Sample
+                  </a>
+                </div>
+
                 <div className="text-center">
                   <div className="bg-white dark:bg-slate-800 rounded-lg p-4 mb-4 border">
                     <Image
@@ -578,6 +898,32 @@ export default function ExamplesPage() {
                 <div className="text-center">
                   <div className="bg-white dark:bg-slate-800 rounded-lg p-4 mb-4 border">
                     <Image
+                      src="/examples/sample-photo.jpg"
+                      alt="Sample photography"
+                      width={200}
+                      height={150}
+                      className="w-full h-32 object-cover rounded"
+                    />
+                  </div>
+                  <h3 className="font-semibold text-slate-900 dark:text-white mb-2">
+                    Photography Sample
+                  </h3>
+                  <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">
+                    Real photograph perfect for general image processing and
+                    resizing
+                  </p>
+                  <a
+                    href="/examples/sample-photo.jpg"
+                    download
+                    className="inline-block bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded text-sm transition-colors"
+                  >
+                    Download Sample
+                  </a>
+                </div>
+
+                <div className="text-center">
+                  <div className="bg-white dark:bg-slate-800 rounded-lg p-4 mb-4 border">
+                    <Image
                       src="/examples/underwater-before.jpeg"
                       alt="Sample underwater photo"
                       width={200}
@@ -594,32 +940,6 @@ export default function ExamplesPage() {
                   </p>
                   <a
                     href="/examples/underwater-before.jpeg"
-                    download
-                    className="inline-block bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded text-sm transition-colors"
-                  >
-                    Download Sample
-                  </a>
-                </div>
-
-                <div className="text-center">
-                  <div className="bg-white dark:bg-slate-800 rounded-lg p-4 mb-4 border">
-                    <Image
-                      src="/examples/sample-photo.jpg"
-                      alt="Sample general photo"
-                      width={200}
-                      height={150}
-                      className="w-full h-32 object-cover rounded"
-                    />
-                  </div>
-                  <h3 className="font-semibold text-slate-900 dark:text-white mb-2">
-                    General Photo
-                  </h3>
-                  <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">
-                    For testing resizing, format conversion, and basic
-                    processing
-                  </p>
-                  <a
-                    href="/examples/sample-photo.jpg"
                     download
                     className="inline-block bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded text-sm transition-colors"
                   >

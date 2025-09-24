@@ -681,14 +681,20 @@ export function SettingsPanel({
                   )}
                 </div>
                 <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">
-                  Smart print sizes based on your image's aspect ratio,
-                  optimized for poster printing at 300 PPI
+                  AI-powered print optimization: automatically generates 7-10+
+                  professional print sizes (4"×6" to 24"×30") with 300 PPI
+                  resolution and upscaling
                 </p>
+                <div className="text-xs text-blue-600 dark:text-blue-400 mb-3 p-2 bg-blue-50 dark:bg-blue-900/30 rounded border border-blue-200 dark:border-blue-800">
+                  ✨ <strong>Smart sizing:</strong> Detects aspect ratio and
+                  generates optimal print dimensions automatically
+                </div>
                 <ul className="text-xs text-gray-500 dark:text-gray-400 mb-3 space-y-1">
-                  <li>• Auto-detects best print sizes</li>
-                  <li>• 300 PPI for sharp printing</li>
-                  <li>• 95% JPEG quality</li>
-                  <li>• Maintains aspect ratio</li>
+                  <li>• Auto-detects best print sizes (7-10+ variants)</li>
+                  <li>• Professional 300 PPI resolution</li>
+                  <li>• Advanced upscaling with quality preservation</li>
+                  <li>• 95% JPEG quality for crisp prints</li>
+                  <li>• Perfect aspect ratio maintenance</li>
                 </ul>
                 <button
                   onClick={() => {

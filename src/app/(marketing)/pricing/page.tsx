@@ -23,7 +23,9 @@ export default function PricingPage() {
         : STRIPE_CONFIG.PRO_PRICE_ID;
 
     if (!priceId) {
-      alert('Pricing configuration error. Please try again or contact support.');
+      alert(
+        'Pricing configuration error. Please try again or contact support.'
+      );
       return;
     }
 
@@ -143,7 +145,7 @@ export default function PricingPage() {
               <div className="flex items-center gap-2">
                 <Check className="w-4 h-4 text-primary" />
                 <span className="text-sm">
-                  Professional presets & templates
+                  Smart print packages (auto-generates 7-10+ sizes)
                 </span>
               </div>
               <div className="flex items-center gap-2">
