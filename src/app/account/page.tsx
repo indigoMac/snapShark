@@ -64,9 +64,8 @@ function AccountPageContent() {
       const refreshUserData = async () => {
         try {
           await clerkUser.reload();
-          console.log('✅ Clerk user data refreshed');
         } catch (error) {
-          console.error('❌ Failed to refresh user data:', error);
+          console.error('Failed to refresh user data:', error);
         }
       };
 

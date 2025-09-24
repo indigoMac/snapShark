@@ -56,9 +56,7 @@ class BackgroundRemovalProcessor {
       });
 
       this.isInitialized = true;
-      console.log('✅ Background removal initialized');
     } catch (error) {
-      console.error('❌ Failed to initialize background removal:', error);
       throw new Error(
         'Failed to initialize background removal engine. Please check your internet connection and try again.'
       );
@@ -426,7 +424,7 @@ export async function removeBackground(
   try {
     return await processor.removeBackground(imageElement, finalOptions);
   } catch (error) {
-    console.error('Background removal failed:', error);
+    // Background removal failed
     throw error;
   }
 }

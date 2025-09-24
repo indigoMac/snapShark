@@ -112,10 +112,7 @@ export function useImageProcessor() {
     (errorData: { id: string; error: string }) => {
       const task = tasksRef.current.get(errorData.id);
       if (task) {
-        console.error(
-          `Processing failed for ${task.file.name}:`,
-          errorData.error
-        );
+        // Processing failed for file
         tasksRef.current.delete(errorData.id);
       }
 
@@ -150,10 +147,7 @@ export function useImageProcessor() {
           try {
             imageSource = await maybeDecodeHEIC(file);
           } catch (heicError) {
-            console.error(
-              `HEIC processing failed for ${file.name}:`,
-              heicError
-            );
+            // HEIC processing failed
             setError(`HEIC format not supported: ${file.name}`);
             continue;
           }
@@ -338,9 +332,7 @@ export function useImageProcessor() {
         const maxDimension = Math.max(img.naturalWidth, img.naturalHeight);
 
         if (maxDimension < minRecommendedSize) {
-          console.warn(
-            `Logo image is quite small (${img.naturalWidth}×${img.naturalHeight}). For best results, use an image at least ${minRecommendedSize}px on the largest side.`
-          );
+          // Logo image is quite small, but processing will continue
         }
 
         // TODO: Add auto-cropping logic here
@@ -494,10 +486,6 @@ export function useImageProcessor() {
         closestMatch = aspect;
       }
     }
-
-    console.log(
-      `Original aspect: ${originalAspect.toFixed(3)}, Closest match: ${closestMatch.name} (${closestMatch.ratio})`
-    );
 
     // Generate primary sizes (70% of output) - matching original aspect ratio
     if (originalAspect >= 0.95 && originalAspect <= 1.05) {

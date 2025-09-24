@@ -52,7 +52,7 @@ export function PreviewGrid({ images, onClear }: PreviewGridProps) {
       const zipBlob = await createZip(zipFiles);
       downloadZip(zipBlob, `converted-images-${Date.now()}.zip`);
     } catch (error) {
-      console.error('Failed to create ZIP:', error);
+      // Failed to create ZIP
     } finally {
       setIsCreatingZip(false);
     }

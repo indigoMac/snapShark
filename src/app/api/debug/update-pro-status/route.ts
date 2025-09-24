@@ -21,13 +21,10 @@ export async function POST(req: NextRequest) {
         stripeCustomerId: 'manual_update', // Placeholder
       },
     });
-
-    console.log(`[DEBUG] Manually updated Pro status for user: ${userId}`);
-
-    return NextResponse.json({ 
-      success: true, 
+    return NextResponse.json({
+      success: true,
       message: 'Pro status updated manually',
-      userId 
+      userId,
     });
   } catch (error) {
     console.error('[DEBUG] Manual update error:', error);

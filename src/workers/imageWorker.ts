@@ -11,7 +11,7 @@ async function loadVTracer() {
       vtracerModule = await import('../lib/vtracer');
       return vtracerModule;
     } catch (error) {
-      console.warn('VTracer module not available:', error);
+      // VTracer module not available, fallback will be used
       return null;
     }
   }
@@ -64,10 +64,7 @@ async function loadPica() {
       const picaModule = await import('pica');
       pica = picaModule.default();
     } catch (error) {
-      console.warn(
-        'Failed to load pica, falling back to canvas resize:',
-        error
-      );
+      // Failed to load pica, falling back to canvas resize
     }
   }
   return pica;
@@ -97,7 +94,7 @@ async function resizeWithPica(
     });
     return targetCanvas;
   } catch (error) {
-    console.warn('Pica resize failed, falling back to canvas:', error);
+    // Pica resize failed, falling back to canvas
     return resizeWithCanvas(sourceCanvas, targetWidth, targetHeight);
   }
 }
@@ -589,17 +586,13 @@ async function convertCanvasToTrueSvg(
     // Create blob from SVG string
     const blob = new Blob([result.svg], { type: 'image/svg+xml' });
 
-    console.log(
-      `✅ True SVG conversion completed: ${canvas.width}×${canvas.height} -> ${result.svg.length} chars`
-    );
-
     return {
       blob,
       width: result.width,
       height: result.height,
     };
   } catch (error) {
-    console.error('❌ VTracer conversion failed:', error);
+    // VTracer conversion failed, falling back
     throw error;
   }
 }
@@ -621,10 +614,7 @@ async function convertToBlob(
         fallbackUsed: false,
       };
     } catch (error) {
-      console.warn(
-        'VTracer conversion failed, falling back to embedded PNG:',
-        error
-      );
+      // VTracer conversion failed, falling back to embedded PNG
 
       // Fallback to embedded PNG approach
       const width = canvas.width;
@@ -742,7 +732,7 @@ async function convertToBlob(
       const modifiedBuffer = injectDPI(arrayBuffer, targetPPI);
       blob = new Blob([modifiedBuffer], { type: targetFormat });
     } catch (error) {
-      console.warn('Failed to inject DPI metadata:', error);
+      // Failed to inject DPI metadata
       // Continue with original blob if DPI injection fails
     }
   }
@@ -756,10 +746,6 @@ async function faviconOptimizedResize(
   targetWidth: number,
   targetHeight: number
 ): Promise<OffscreenCanvas> {
-  console.log(
-    `FAVICON RESIZE: ${sourceCanvas.width}×${sourceCanvas.height} → ${targetWidth}×${targetHeight}`
-  );
-
   const sourceCtx = sourceCanvas.getContext('2d');
   if (!sourceCtx) throw new Error('Could not get source context');
 
@@ -983,10 +969,6 @@ async function processImage(
       // Update source canvas to cropped version
       sourceCanvas = croppedCanvas;
       sourceCtx = croppedCtx;
-
-      console.log(
-        `Auto-cropped from ${imageData.width}×${imageData.height} to ${cropData.cropWidth}×${cropData.cropHeight}`
-      );
     }
   }
 
@@ -1002,10 +984,6 @@ async function processImage(
     const aspectRatio = sourceCanvas.height / sourceCanvas.width;
     finalTargetWidth = targetWidth;
     finalTargetHeight = Math.round(targetWidth * aspectRatio);
-
-    console.log(
-      `Aspect ratio preserved: ${sourceCanvas.width}×${sourceCanvas.height} → ${finalTargetWidth}×${finalTargetHeight}`
-    );
   }
 
   // For square formats, we need to add transparent padding instead of distorting
@@ -1058,10 +1036,6 @@ async function processImage(
     } else {
       targetCanvas = paddedCanvas;
     }
-
-    console.log(
-      `Square padding applied: ${sourceCanvas.width}×${sourceCanvas.height} → ${squareSize}×${squareSize} → ${finalTargetWidth}×${finalTargetHeight}`
-    );
   } else if (
     finalTargetWidth !== sourceCanvas.width ||
     finalTargetHeight !== sourceCanvas.height

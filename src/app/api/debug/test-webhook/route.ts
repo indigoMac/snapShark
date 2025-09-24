@@ -13,18 +13,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    console.log(`[TEST] Testing webhook operations for user: ${userId}`);
-
     const client = await clerkClient();
 
     // First, verify the user exists
     try {
       const user = await client.users.getUser(userId);
-      console.log(`[TEST] User found: ${user.id}`);
-      console.log(`[TEST] Current metadata:`, {
-        private: user.privateMetadata,
-        public: user.publicMetadata,
-      });
 
       // Test updating metadata (similar to webhook)
       await client.users.updateUserMetadata(userId, {
@@ -59,7 +52,6 @@ export async function POST(req: NextRequest) {
         },
       });
     } catch (userError: any) {
-      console.error(`[TEST] User lookup error:`, userError.message);
       return NextResponse.json(
         {
           error: 'User not found or access denied',
@@ -70,7 +62,7 @@ export async function POST(req: NextRequest) {
       );
     }
   } catch (error: any) {
-    console.error('[TEST] Error:', error);
+    console.error('Error:', error);
     return NextResponse.json(
       { error: 'Test failed', details: error.message },
       { status: 500 }

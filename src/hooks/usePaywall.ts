@@ -24,9 +24,7 @@ export function usePaywall() {
       !(user as any)?.publicMetadata &&
       !(user as any)?.privateMetadata
     ) {
-      console.warn(
-        '[PAYWALL] No user metadata found - user may need to refresh'
-      );
+      // No user metadata found - user may need to refresh
     }
   }, [user, isLoaded]);
 
@@ -43,18 +41,7 @@ export function usePaywall() {
     subscriptionStatusPrivate || subscriptionStatusPublic;
 
   // Debug logging
-  useEffect(() => {
-    if (user && isLoaded) {
-      console.log('[PAYWALL DEBUG] User metadata:', {
-        privateMetadata: (user as any)?.privateMetadata,
-        publicMetadata: (user as any)?.publicMetadata,
-        isProUserPrivate,
-        isProUserPublic,
-        finalIsProUser: isProUser,
-        subscriptionStatus,
-      });
-    }
-  }, [
+  useEffect(() => {}, [
     user,
     isLoaded,
     isProUserPrivate,
@@ -231,7 +218,7 @@ export function usePaywall() {
 
         if (!response.ok) {
           const errorData = await response.json();
-          console.error('Checkout error:', errorData);
+          // Checkout error occurred
 
           if (response.status === 401) {
             alert('Please sign in first to upgrade to Pro');
@@ -249,11 +236,11 @@ export function usePaywall() {
         if (url) {
           window.location.href = url;
         } else {
-          console.error('No checkout URL received');
+          // No checkout URL received
           alert('Failed to create checkout session');
         }
       } catch (error) {
-        console.error('Upgrade error:', error);
+        // Upgrade error occurred
         alert('Network error. Please try again.');
       }
     },
@@ -278,7 +265,7 @@ export function usePaywall() {
         window.location.href = url;
       }
     } catch (error) {
-      console.error('Portal error:', error);
+      // Portal error occurred
     }
   }, [customerId]);
 
@@ -295,12 +282,11 @@ export function usePaywall() {
 
         if (!response.ok) {
           const errorData = await response.json();
-          console.error('Cancel subscription error:', errorData);
+          // Cancel subscription error occurred
           throw new Error(errorData.error || 'Failed to cancel subscription');
         }
 
         const result = await response.json();
-        console.log('Subscription cancellation result:', result);
 
         // Refresh user data to update the UI immediately
         if (user) {
@@ -309,7 +295,7 @@ export function usePaywall() {
 
         return result;
       } catch (error) {
-        console.error('Cancel subscription error:', error);
+        // Cancel subscription error occurred
         throw error;
       }
     },

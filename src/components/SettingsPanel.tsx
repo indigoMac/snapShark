@@ -623,7 +623,9 @@ export function SettingsPanel({
                     • Apple Touch (180×180) + PWA icons (192×192, 512×512)
                   </li>
                   <li>• Responsive logos (200px, 400px, 800px)</li>
-                  <li>• True vectorized SVG (automatically falls back if needed)</li>
+                  <li>
+                    • True vectorized SVG (automatically falls back if needed)
+                  </li>
                 </ul>
                 <button
                   onClick={() => {
@@ -706,7 +708,7 @@ export function SettingsPanel({
                     }
 
                     onGeneratePrintPackage(selectedFiles[0]).catch((error) => {
-                      console.error('Print package generation failed:', error);
+                      // Print package generation failed
                       alert(
                         'Print package generation failed. Please try again.'
                       );
@@ -769,10 +771,7 @@ export function SettingsPanel({
 
                     onGenerateEcommercePackage(selectedFiles[0]).catch(
                       (error) => {
-                        console.error(
-                          'E-commerce package generation failed:',
-                          error
-                        );
+                        // E-commerce package generation failed
                         alert(
                           'E-commerce package generation failed. Please try again.'
                         );
@@ -836,10 +835,7 @@ export function SettingsPanel({
 
                     onGenerateRealEstatePackage(selectedFiles[0]).catch(
                       (error) => {
-                        console.error(
-                          'Real Estate package generation failed:',
-                          error
-                        );
+                        // Real Estate package generation failed
                         alert(
                           'Real Estate package generation failed. Please try again.'
                         );

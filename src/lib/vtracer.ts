@@ -52,10 +52,7 @@ class VTracerProcessor {
       const ImageTracer = await import('imagetracerjs');
       this.imageTracer = ImageTracer.default || ImageTracer;
       this.isInitialized = true;
-
-      console.log('✅ ImageTracer initialized successfully');
     } catch (error) {
-      console.error('❌ Failed to initialize ImageTracer:', error);
       throw new Error(
         'ImageTracer initialization failed. This feature requires the imagetracer module.'
       );

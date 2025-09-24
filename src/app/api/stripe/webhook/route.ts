@@ -12,10 +12,7 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
   try {
-    console.log('[WEBHOOK] 🚀 Webhook request received');
-
     if (!stripe) {
-      console.log('[WEBHOOK] ❌ Stripe not configured');
       return NextResponse.json(
         { error: 'Stripe not configured' },
         { status: 500 }
@@ -23,7 +20,6 @@ export async function POST(req: NextRequest) {
     }
 
     if (!webhookSecret) {
-      console.log('[WEBHOOK] ❌ Webhook secret not configured');
       return NextResponse.json(
         { error: 'Webhook secret not configured' },
         { status: 500 }
@@ -34,7 +30,6 @@ export async function POST(req: NextRequest) {
     const sig = headers().get('stripe-signature') as string;
 
     if (!sig) {
-      console.log('[WEBHOOK] ❌ No stripe-signature header');
       return NextResponse.json(
         { error: 'No stripe-signature header' },
         { status: 400 }
@@ -47,39 +42,18 @@ export async function POST(req: NextRequest) {
       // Method 1: Read as text (most common approach)
       const body = await req.text();
 
-      console.log('[WEBHOOK] 📝 Body length:', body.length);
-      console.log('[WEBHOOK] 🔑 Signature:', sig.substring(0, 20) + '...');
-      console.log(
-        '[WEBHOOK] 📋 Webhook secret prefix:',
-        webhookSecret.substring(0, 12) + '...'
-      );
-      console.log('[WEBHOOK] 🔧 Body first 100 chars:', body.substring(0, 100));
-
       event = stripe.webhooks.constructEvent(body, sig, webhookSecret);
-      console.log('[WEBHOOK] ✅ Signature verified successfully');
     } catch (err: any) {
-      console.log('[WEBHOOK] ❌ Signature verification failed:', err.message);
-      console.log('[WEBHOOK] ❌ Error type:', err.constructor.name);
-      console.log('[WEBHOOK] ❌ Full error:', err);
       return NextResponse.json(
         { error: `Webhook signature verification failed: ${err.message}` },
         { status: 400 }
       );
     }
 
-    console.log(`[WEBHOOK] Event: ${event.type}`);
-
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
         const userId = session.metadata?.userId;
-
-        console.log(
-          `[WEBHOOK] Processing checkout.session.completed for user: ${userId}`
-        );
-        console.log(
-          `[WEBHOOK] Customer: ${session.customer}, Subscription: ${session.subscription}`
-        );
 
         if (userId && session.subscription) {
           try {
@@ -88,7 +62,6 @@ export async function POST(req: NextRequest) {
 
             // First, verify the user exists
             const user = await client.users.getUser(userId);
-            console.log(`[WEBHOOK] User found: ${user.id}`);
 
             await client.users.updateUserMetadata(userId, {
               privateMetadata: {
@@ -109,22 +82,11 @@ export async function POST(req: NextRequest) {
                 stripeSubscriptionId: session.subscription,
               },
             });
-
-            console.log(
-              `[WEBHOOK] ✅ Subscription activated for user ${userId}`
-            );
           } catch (clerkError: any) {
-            console.error(
-              `[WEBHOOK] ❌ Clerk error for user ${userId}:`,
-              clerkError.message
-            );
             console.error(`[WEBHOOK] Full Clerk error:`, clerkError);
             // Don't throw - let Stripe know we received the webhook but had an issue
           }
         } else {
-          console.log(
-            `[WEBHOOK] ❌ Missing data - userId: ${userId}, subscription: ${session.subscription}`
-          );
         }
         break;
       }
@@ -132,11 +94,6 @@ export async function POST(req: NextRequest) {
       case 'customer.subscription.updated': {
         const subscription = event.data.object as Stripe.Subscription;
         const customerId = subscription.customer as string;
-
-        console.log(
-          `[WEBHOOK] Processing subscription update for customer: ${customerId}`
-        );
-        console.log(`[WEBHOOK] Subscription status: ${subscription.status}`);
 
         try {
           // Find user by customer ID
@@ -169,10 +126,6 @@ export async function POST(req: NextRequest) {
                 ).toISOString()
               : null;
 
-            console.log(
-              `[WEBHOOK] Subscription status: ${subscription.status}, cancel_at_period_end: ${willCancel}, cancel_at: ${cancelAt}`
-            );
-
             // Update metadata in BOTH private and public for immediate sync
             await client.users.updateUserMetadata(user.id, {
               privateMetadata: {
@@ -196,14 +149,7 @@ export async function POST(req: NextRequest) {
                 currentPeriodEnd: currentPeriodEnd,
               },
             });
-
-            console.log(
-              `[WEBHOOK] ✅ Subscription ${subscription.status} for user ${user.id} (will cancel: ${willCancel})`
-            );
           } else {
-            console.log(
-              `[WEBHOOK] ❌ User not found for customer: ${customerId}`
-            );
           }
         } catch (clerkError: any) {
           console.error(
@@ -218,10 +164,6 @@ export async function POST(req: NextRequest) {
       case 'customer.subscription.deleted': {
         const subscription = event.data.object as Stripe.Subscription;
         const customerId = subscription.customer as string;
-
-        console.log(
-          `[WEBHOOK] Processing subscription deletion for customer: ${customerId}`
-        );
 
         try {
           // Find user by customer ID
@@ -251,32 +193,15 @@ export async function POST(req: NextRequest) {
                 plan: 'free',
               },
             });
-
-            console.log(
-              `[WEBHOOK] ✅ Subscription canceled for user ${user.id}`
-            );
           } else {
-            console.log(
-              `[WEBHOOK] ❌ User not found for customer: ${customerId}`
-            );
           }
-        } catch (clerkError: any) {
-          console.error(
-            `[WEBHOOK] ❌ Clerk error in subscription.deleted:`,
-            clerkError.message
-          );
-          console.error(`[WEBHOOK] Full error:`, clerkError);
-        }
+        } catch (clerkError: any) {}
         break;
       }
 
       case 'invoice.payment_failed': {
         const invoice = event.data.object as Stripe.Invoice;
         const customerId = invoice.customer as string;
-
-        console.log(
-          `[WEBHOOK] Processing payment failure for customer: ${customerId}`
-        );
 
         try {
           // Find user by customer ID and notify of payment failure
@@ -296,33 +221,17 @@ export async function POST(req: NextRequest) {
                 lastPaymentFailed: new Date().toISOString(),
               },
             });
-
-            console.log(
-              `[WEBHOOK] ✅ Payment failed recorded for user ${user.id}`
-            );
           } else {
-            console.log(
-              `[WEBHOOK] ❌ User not found for customer: ${customerId}`
-            );
           }
-        } catch (clerkError: any) {
-          console.error(
-            `[WEBHOOK] ❌ Clerk error in payment_failed:`,
-            clerkError.message
-          );
-          console.error(`[WEBHOOK] Full error:`, clerkError);
-        }
+        } catch (clerkError: any) {}
         break;
       }
 
       default:
-        console.log(`Unhandled event type: ${event.type}`);
     }
 
     return NextResponse.json({ received: true });
   } catch (error: any) {
-    console.error('[WEBHOOK] 🚨 Webhook error:', error.message || error);
-    console.error('[WEBHOOK] 🚨 Full error:', error);
     return NextResponse.json(
       { error: 'Webhook handler failed', details: error.message },
       { status: 400 }
