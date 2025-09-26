@@ -7,6 +7,7 @@ import { GlobalGracePeriodAlert } from '@/components/GlobalGracePeriodAlert';
 import { LogoIcon } from '@/components/Logo';
 import { ThemeProvider } from '@/components/theme-provider';
 import { ErrorTrackingProvider } from '@/components/ErrorTrackingProvider';
+import { Analytics } from '@vercel/analytics/react';
 import './globals.css';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -152,6 +153,7 @@ export default function RootLayout({
               </footer>
             </div>
           </ThemeProvider>
+          <Analytics />
         </body>
       </html>
     </ClerkProvider>

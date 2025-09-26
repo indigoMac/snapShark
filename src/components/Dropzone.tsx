@@ -52,6 +52,16 @@ export function Dropzone({
           return;
         }
 
+        // Warn about large files on mobile (performance)
+        if (
+          file.size > 10 * 1024 * 1024 &&
+          /Mobile|Android|iPhone|iPad/.test(navigator.userAgent)
+        ) {
+          console.warn(
+            `Large file on mobile device: ${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB). Processing may be slow.`
+          );
+        }
+
         const droppedFile: DroppedFile = {
           file,
           id: `${file.name}-${Date.now()}-${Math.random()}`,
