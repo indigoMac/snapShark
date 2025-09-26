@@ -194,7 +194,7 @@ export function Dropzone({
       )}
 
       {files.length > 0 && (
-        <div className="space-y-3">
+        <div className="space-y-3 w-full max-w-full overflow-hidden">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <h4 className="font-medium">Selected Files ({files.length})</h4>
             <Button
@@ -209,8 +209,8 @@ export function Dropzone({
 
           <div className="grid gap-2 w-full">
             {files.map((file) => (
-              <Card key={file.id} className="p-3 w-full">
-                <div className="flex items-center gap-3 w-full min-w-0">
+              <Card key={file.id} className="p-3 w-full max-w-full box-border">
+                <div className="flex items-center gap-2 w-full min-w-0">
                   <div className="flex-shrink-0">
                     {file.preview ? (
                       <img
@@ -226,7 +226,7 @@ export function Dropzone({
                   </div>
 
                   <div className="flex-1 min-w-0 overflow-hidden">
-                    <p className="text-sm font-medium truncate">
+                    <p className="text-sm font-medium truncate break-all">
                       {file.file.name}
                     </p>
                     <p className="text-xs text-muted-foreground">
