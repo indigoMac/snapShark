@@ -15,8 +15,8 @@ interface ImageCardProps {
 }
 
 export function ImageCard({ image, onPreview }: ImageCardProps) {
-  const handleDownload = () => {
-    downloadFile(image.blob, image.filename);
+  const handleDownload = async () => {
+    await downloadFile(image.blob, image.filename);
   };
 
   const handlePreview = () => {

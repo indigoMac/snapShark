@@ -155,14 +155,14 @@ export function BackgroundRemoval({
   }, [currentFile, options, isPro, router, useAdvancedMode]);
 
   // Download result
-  const handleDownload = useCallback(() => {
+  const handleDownload = useCallback(async () => {
     if (!result || !currentFile) return;
 
     const filename =
       currentFile.name.replace(/\.[^/.]+$/, '') +
       '_no_bg.' +
       options.outputFormat;
-    downloadFile(result.blob, filename);
+    await downloadFile(result.blob, filename);
   }, [result, currentFile, options.outputFormat]);
 
   // Reset processing

@@ -30,7 +30,7 @@ export function PreviewGrid({ images, onClear }: PreviewGridProps) {
 
   const handleDownloadAll = async () => {
     if (images.length === 1) {
-      downloadFile(images[0].blob, images[0].filename);
+      await downloadFile(images[0].blob, images[0].filename);
       return;
     }
 
@@ -179,8 +179,8 @@ export function PreviewGrid({ images, onClear }: PreviewGridProps) {
                 </div>
               </div>
               <Button
-                onClick={() =>
-                  downloadFile(previewImage.blob, previewImage.filename)
+                onClick={async () =>
+                  await downloadFile(previewImage.blob, previewImage.filename)
                 }
                 className="w-full"
               >
