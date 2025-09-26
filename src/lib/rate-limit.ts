@@ -106,7 +106,9 @@ function getClientIdentifier(req: NextRequest): string {
  * Clean up expired entries from the store
  */
 function cleanupExpiredEntries(cutoff: number) {
-  for (const [key, entry] of rateLimitStore.entries()) {
+  // Convert to array to avoid iterator issues
+  const entries = Array.from(rateLimitStore.entries());
+  for (const [key, entry] of entries) {
     if (entry.resetTime <= cutoff) {
       rateLimitStore.delete(key);
     }
