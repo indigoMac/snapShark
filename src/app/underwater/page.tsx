@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Download, Upload, RotateCcw, Waves } from 'lucide-react';
+import { downloadFile } from '@/lib/zip';
 
 interface ProcessedResult {
   original: string;
@@ -372,15 +373,26 @@ export default function UnderwaterPage() {
     [selectedFile, debouncedProcessImage]
   );
 
-  const handleDownload = useCallback(() => {
+  const handleDownload = useCallback(async () => {
     if (!result) return;
 
-    const link = document.createElement('a');
-    link.href = result.corrected;
-    link.download = result.filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    try {
+      // Convert data URL to blob for proper mobile sharing
+      const response = await fetch(result.corrected);
+      const blob = await response.blob();
+
+      // Use enhanced download function with mobile sharing support
+      await downloadFile(blob, result.filename);
+    } catch (error) {
+      console.error('Download failed:', error);
+      // Fallback to traditional download
+      const link = document.createElement('a');
+      link.href = result.corrected;
+      link.download = result.filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
   }, [result]);
 
   const handleReset = useCallback(() => {
