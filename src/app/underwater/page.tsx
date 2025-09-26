@@ -460,13 +460,14 @@ export default function UnderwaterPage() {
               </div>
             ) : (
               <div className="space-y-6">
-                {/* Controls */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <span className="text-white font-medium">
+                {/* Controls - Mobile Responsive */}
+                <div className="space-y-4">
+                  {/* Intensity Control */}
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                    <span className="text-white font-medium text-sm sm:text-base">
                       Correction Intensity:
                     </span>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-1">
                       <span className="text-blue-300 text-sm">0%</span>
                       <Slider
                         value={intensity}
@@ -474,22 +475,33 @@ export default function UnderwaterPage() {
                         max={150}
                         min={0}
                         step={5}
-                        className="w-32"
+                        className="flex-1 min-w-0"
                         disabled={isProcessing}
                       />
                       <span className="text-blue-300 text-sm">150%</span>
+                      <span className="text-blue-400 font-mono text-sm ml-2">
+                        {intensity[0]}%
+                      </span>
                     </div>
-                    <span className="text-blue-400 font-mono">
-                      {intensity[0]}%
-                    </span>
                   </div>
-                  <div className="flex gap-2">
-                    <Button variant="outline" onClick={handleReset} size="sm">
+
+                  {/* Action Buttons */}
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={handleReset}
+                      size="sm"
+                      className="w-full sm:w-auto"
+                    >
                       <RotateCcw className="w-4 h-4 mr-2" />
                       Reset
                     </Button>
                     {result && (
-                      <Button onClick={handleDownload} size="sm">
+                      <Button
+                        onClick={handleDownload}
+                        size="sm"
+                        className="w-full sm:w-auto"
+                      >
                         <Download className="w-4 h-4 mr-2" />
                         Download
                       </Button>

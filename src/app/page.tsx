@@ -161,7 +161,7 @@ export default function HomePage() {
       </div>
 
       {/* Centered Main Upload Section */}
-      <div className="max-w-4xl mx-auto px-4">
+      <div className="max-w-4xl mx-auto px-4 w-full">
         <Card className="shadow-lg border border-blue-200/50 dark:border-blue-800/50 bg-white dark:bg-slate-800">
           <CardHeader className="text-center pb-4">
             <CardTitle className="text-2xl text-slate-800 dark:text-slate-100">
@@ -183,7 +183,7 @@ export default function HomePage() {
       </div>
 
       {/* Horizontal Settings Layout */}
-      <div className="max-w-6xl mx-auto px-4 space-y-6">
+      <div className="max-w-6xl mx-auto px-4 space-y-6 w-full overflow-hidden">
         <SettingsPanel
           settings={settings}
           onSettingsChange={setSettings}

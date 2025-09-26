@@ -151,7 +151,7 @@ export function Dropzone({
   }, [files]);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 w-full">
       <Card
         className={cn(
           'relative border-2 border-dashed transition-colors cursor-pointer',
@@ -207,10 +207,10 @@ export function Dropzone({
             </Button>
           </div>
 
-          <div className="grid gap-2">
+          <div className="grid gap-2 w-full">
             {files.map((file) => (
-              <Card key={file.id} className="p-3">
-                <div className="flex items-center gap-3">
+              <Card key={file.id} className="p-3 w-full">
+                <div className="flex items-center gap-3 w-full min-w-0">
                   <div className="flex-shrink-0">
                     {file.preview ? (
                       <img
@@ -225,7 +225,7 @@ export function Dropzone({
                     )}
                   </div>
 
-                  <div className="flex-1 min-w-0">
+                  <div className="flex-1 min-w-0 overflow-hidden">
                     <p className="text-sm font-medium truncate">
                       {file.file.name}
                     </p>
@@ -238,7 +238,7 @@ export function Dropzone({
                     variant="ghost"
                     size="sm"
                     onClick={() => removeFile(file.id)}
-                    className="flex-shrink-0"
+                    className="flex-shrink-0 h-8 w-8 p-0"
                   >
                     <X className="h-4 w-4" />
                   </Button>
