@@ -863,52 +863,6 @@ export function SettingsPanel({
                     : 'Get Pro for Real Estate Package'}
                 </button>
               </div>
-
-              {/* Background Removal Feature */}
-              <div className="bg-white dark:bg-slate-800 p-4 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm sm:col-span-2">
-                <div className="flex items-start justify-between mb-2">
-                  <h4 className="font-medium text-slate-900 dark:text-slate-100">
-                    Background Removal Feature
-                  </h4>
-                  {!isPro && (
-                    <span className="text-xs bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300 px-2 py-1 rounded-full">
-                      Pro
-                    </span>
-                  )}
-                </div>
-
-                <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">
-                  Remove backgrounds with professional AI precision - Perfect
-                  for Logo Creation from an image
-                </p>
-
-                <ul className="text-xs text-gray-500 dark:text-gray-400 mb-3 space-y-1">
-                  <li>• Advanced computer vision algorithms</li>
-                  <li>• Professional edge refinement</li>
-                  <li>• Perfect for logo creation</li>
-                  <li>• High-quality transparent PNGs</li>
-                </ul>
-
-                <button
-                  onClick={() => {
-                    if (!isPro) {
-                      window.location.href = '/pricing';
-                      return;
-                    }
-                    window.location.href = '/background-removal';
-                  }}
-                  className={`w-full py-3 sm:py-2 px-3 text-sm sm:text-xs rounded font-medium transition-colors disabled:opacity-50 min-h-[44px] sm:min-h-[auto] touch-manipulation active:scale-95 active:transition-transform active:duration-75 ${
-                    !isPro
-                      ? 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white'
-                      : 'bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white'
-                  }`}
-                  disabled={disabled}
-                >
-                  {isPro
-                    ? 'Open Background Removal'
-                    : 'Get Pro for Background Removal'}
-                </button>
-              </div>
             </div>
           </div>
         )}

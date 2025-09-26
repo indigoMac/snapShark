@@ -577,8 +577,8 @@ async function convertCanvasToTrueSvg(
 
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
-    // Use high-quality settings for logo conversion
-    const options = vtracer.VTRACER_PRESETS.logo;
+    // Use web-optimized settings for logo conversion (smaller files, good quality)
+    const options = vtracer.VTRACER_PRESETS.balanced;
 
     // Convert to SVG using VTracer
     const result = await vtracer.convertImageToSvg(imageData, options);

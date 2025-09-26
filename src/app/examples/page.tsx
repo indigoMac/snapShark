@@ -74,6 +74,7 @@ export default function ExamplesPage() {
                       width={300}
                       height={200}
                       className="w-full h-48 object-contain rounded"
+                      loading="lazy"
                     />
                   </div>
                   <p className="text-sm text-slate-600 dark:text-slate-400">
@@ -93,6 +94,7 @@ export default function ExamplesPage() {
                       width={300}
                       height={200}
                       className="w-full h-48 object-contain rounded"
+                      loading="lazy"
                     />
                   </div>
                   <p className="text-sm text-slate-600 dark:text-slate-400">
@@ -199,152 +201,144 @@ export default function ExamplesPage() {
                       </div>
                       <div className="flex items-center gap-2">
                         <div className="w-8 h-4 bg-gradient-to-r from-blue-500 to-blue-600 rounded border border-blue-600"></div>
-                        <span>logo.svg</span>
+                        <span>logo.svg (optimized)</span>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Actual Output Examples */}
+              {/* MUCH LIGHTER Output Examples - Only 3 key examples */}
               <div className="bg-slate-50 dark:bg-slate-900/50 rounded-lg p-6">
                 <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-4">
-                  📸 Real Output Examples
+                  📸 Key Output Examples
                 </h3>
                 <p className="text-slate-600 dark:text-slate-400 mb-6">
-                  Here's what the actual generated files look like:
+                  Here are 6 key examples showing the diverse range of formats:
                 </p>
 
-                {/* Favicons & Icons */}
-                <div className="mb-8">
-                  <h4 className="font-semibold text-slate-800 dark:text-slate-200 mb-4">
-                    🌐 Favicons & Icons (Square formats with transparent
-                    padding)
-                  </h4>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="text-center">
-                      <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 mb-2">
-                        <img
-                          src="/examples/logo-package-output/favicon-16_16x16.png"
-                          alt="16x16 favicon"
-                          className="mx-auto"
-                          style={{ imageRendering: 'pixelated' }}
-                        />
-                      </div>
-                      <p className="text-xs text-slate-600 dark:text-slate-400">
-                        favicon-16.png
-                        <br />
-                        16×16
-                      </p>
+                {/* Key Examples - 6 diverse files showing the full range */}
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+                  <div className="text-center">
+                    <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-4 mb-2">
+                      <Image
+                        src="/examples/logo-package-output/favicon-32_32x32.png"
+                        alt="32x32 favicon"
+                        width={32}
+                        height={32}
+                        className="mx-auto"
+                        loading="lazy"
+                        priority={false}
+                      />
                     </div>
-                    <div className="text-center">
-                      <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 mb-2">
-                        <img
-                          src="/examples/logo-package-output/favicon-32_32x32.png"
-                          alt="32x32 favicon"
-                          className="mx-auto"
-                        />
-                      </div>
-                      <p className="text-xs text-slate-600 dark:text-slate-400">
-                        favicon-32.png
-                        <br />
-                        32×32
-                      </p>
+                    <p className="text-xs text-slate-600 dark:text-slate-400">
+                      <strong>favicon-32.png</strong>
+                      <br />
+                      Browser tabs
+                    </p>
+                  </div>
+
+                  <div className="text-center">
+                    <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-4 mb-2">
+                      <Image
+                        src="/examples/logo-package-output/apple-touch-icon-180_180x180.png"
+                        alt="180x180 apple touch icon"
+                        width={48}
+                        height={48}
+                        className="mx-auto"
+                        loading="lazy"
+                        priority={false}
+                      />
                     </div>
-                    <div className="text-center">
-                      <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 mb-2">
-                        <img
-                          src="/examples/logo-package-output/icon-192_192x192.png"
-                          alt="192x192 icon"
-                          className="mx-auto w-8 h-8"
-                        />
-                      </div>
-                      <p className="text-xs text-slate-600 dark:text-slate-400">
-                        icon-192.png
-                        <br />
-                        192×192
-                      </p>
+                    <p className="text-xs text-slate-600 dark:text-slate-400">
+                      <strong>apple-touch-icon.png</strong>
+                      <br />
+                      iOS home screen
+                    </p>
+                  </div>
+
+                  <div className="text-center">
+                    <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-4 mb-2">
+                      <Image
+                        src="/examples/logo-package-output/icon-192_192x192.png"
+                        alt="192x192 PWA icon"
+                        width={48}
+                        height={48}
+                        className="mx-auto"
+                        loading="lazy"
+                        priority={false}
+                      />
                     </div>
-                    <div className="text-center">
-                      <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 mb-2">
-                        <img
-                          src="/examples/logo-package-output/apple-touch-icon-180_180x180.png"
-                          alt="180x180 apple touch icon"
-                          className="mx-auto w-8 h-8"
-                        />
-                      </div>
-                      <p className="text-xs text-slate-600 dark:text-slate-400">
-                        apple-touch-icon.png
-                        <br />
-                        180×180
-                      </p>
+                    <p className="text-xs text-slate-600 dark:text-slate-400">
+                      <strong>icon-192.png</strong>
+                      <br />
+                      PWA small icon
+                    </p>
+                  </div>
+
+                  <div className="text-center">
+                    <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-4 mb-2">
+                      <Image
+                        src="/examples/logo-package-output/icon-512_512x512.png"
+                        alt="512x512 PWA icon"
+                        width={64}
+                        height={64}
+                        className="mx-auto"
+                        loading="lazy"
+                        priority={false}
+                      />
                     </div>
+                    <p className="text-xs text-slate-600 dark:text-slate-400">
+                      <strong>icon-512.png</strong>
+                      <br />
+                      PWA large icon
+                    </p>
+                  </div>
+
+                  <div className="text-center">
+                    <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-4 mb-2">
+                      <Image
+                        src="/examples/logo-package-output/logo-400_400x531.png"
+                        alt="Website logo 400px"
+                        width={400}
+                        height={531}
+                        className="mx-auto object-contain h-16 w-auto"
+                        loading="lazy"
+                        priority={false}
+                      />
+                    </div>
+                    <p className="text-xs text-slate-600 dark:text-slate-400">
+                      <strong>logo-400.png</strong>
+                      <br />
+                      Website header
+                    </p>
+                  </div>
+
+                  <div className="text-center">
+                    <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-4 mb-2">
+                      <Image
+                        src="/examples/logo-package-output/logo_800x1062.svg"
+                        alt="Optimized SVG logo"
+                        width={800}
+                        height={1062}
+                        className="mx-auto object-contain h-16 w-auto"
+                        loading="lazy"
+                        priority={false}
+                      />
+                    </div>
+                    <p className="text-xs text-slate-600 dark:text-slate-400">
+                      <strong>logo.svg</strong>
+                      <br />
+                      Scalable vector (169KB)
+                    </p>
                   </div>
                 </div>
 
-                {/* Website Logos */}
-                <div className="mb-6">
-                  <h4 className="font-semibold text-slate-800 dark:text-slate-200 mb-4">
-                    🖼️ Website Logos (Aspect ratio preserved)
-                  </h4>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="text-center">
-                      <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 mb-2">
-                        <img
-                          src="/examples/logo-package-output/logo-200_200x266.png"
-                          alt="Website logo 200px"
-                          className="mx-auto h-16 w-auto"
-                        />
-                      </div>
-                      <p className="text-xs text-slate-600 dark:text-slate-400">
-                        logo-200.png
-                        <br />
-                        200×266
-                      </p>
-                    </div>
-                    <div className="text-center">
-                      <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 mb-2">
-                        <img
-                          src="/examples/logo-package-output/logo-400_400x531.png"
-                          alt="Website logo 400px"
-                          className="mx-auto h-16 w-auto"
-                        />
-                      </div>
-                      <p className="text-xs text-slate-600 dark:text-slate-400">
-                        logo-400.png
-                        <br />
-                        400×531
-                      </p>
-                    </div>
-                    <div className="text-center">
-                      <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 mb-2">
-                        <img
-                          src="/examples/logo-package-output/logo-800_800x1062.png"
-                          alt="Website logo 800px"
-                          className="mx-auto h-16 w-auto"
-                        />
-                      </div>
-                      <p className="text-xs text-slate-600 dark:text-slate-400">
-                        logo-800.png
-                        <br />
-                        800×1062
-                      </p>
-                    </div>
-                    <div className="text-center">
-                      <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 mb-2">
-                        <img
-                          src="/examples/logo-package-output/logo_800x1062.svg"
-                          alt="Scalable SVG logo"
-                          className="mx-auto h-16 w-auto"
-                        />
-                      </div>
-                      <p className="text-xs text-slate-600 dark:text-slate-400">
-                        logo.svg
-                        <br />
-                        800×1062
-                      </p>
-                    </div>
-                  </div>
+                <div className="mt-6 text-center bg-blue-50 dark:bg-blue-900/30 rounded-lg p-4">
+                  <p className="text-sm text-slate-600 dark:text-slate-400">
+                    <strong>+ 5 more optimized formats</strong> including
+                    additional favicon sizes, high-res logos, and ICO files
+                  </p>
                 </div>
               </div>
 
@@ -393,6 +387,7 @@ export default function ExamplesPage() {
                       width={400}
                       height={300}
                       className="w-full h-48 object-contain rounded"
+                      loading="lazy"
                     />
                   </div>
                   <div className="bg-yellow-50 dark:bg-yellow-900/30 p-3 rounded-lg text-sm">
@@ -660,6 +655,7 @@ export default function ExamplesPage() {
                       width={400}
                       height={300}
                       className="w-full h-64 object-cover rounded"
+                      loading="lazy"
                     />
                   </div>
                   <p className="text-sm text-slate-600 dark:text-slate-400">
@@ -678,6 +674,7 @@ export default function ExamplesPage() {
                       width={400}
                       height={300}
                       className="w-full h-64 object-cover rounded"
+                      loading="lazy"
                     />
                   </div>
                   <p className="text-sm text-slate-600 dark:text-slate-400">
@@ -827,6 +824,7 @@ export default function ExamplesPage() {
                       width={200}
                       height={150}
                       className="w-full h-32 object-contain rounded"
+                      loading="lazy"
                     />
                   </div>
                   <h3 className="font-semibold text-slate-900 dark:text-white mb-2">
@@ -853,6 +851,7 @@ export default function ExamplesPage() {
                       width={200}
                       height={150}
                       className="w-full h-32 object-contain rounded"
+                      loading="lazy"
                     />
                   </div>
                   <h3 className="font-semibold text-slate-900 dark:text-white mb-2">
@@ -878,6 +877,7 @@ export default function ExamplesPage() {
                       width={200}
                       height={150}
                       className="w-full h-32 object-contain rounded"
+                      loading="lazy"
                     />
                   </div>
                   <h3 className="font-semibold text-slate-900 dark:text-white mb-2">
@@ -903,6 +903,7 @@ export default function ExamplesPage() {
                       width={200}
                       height={150}
                       className="w-full h-32 object-cover rounded"
+                      loading="lazy"
                     />
                   </div>
                   <h3 className="font-semibold text-slate-900 dark:text-white mb-2">
@@ -929,6 +930,7 @@ export default function ExamplesPage() {
                       width={200}
                       height={150}
                       className="w-full h-32 object-cover rounded"
+                      loading="lazy"
                     />
                   </div>
                   <h3 className="font-semibold text-slate-900 dark:text-white mb-2">

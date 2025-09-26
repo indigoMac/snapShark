@@ -16,7 +16,15 @@ import { ProgressBar } from '@/components/ProgressBar';
 import { PaywallDialog } from '@/components/PaywallDialog';
 import { Badge } from '@/components/ui/badge';
 // Removed logo imports since we no longer show logo on homepage
-import { Zap, Shield, Cpu, Sparkles } from 'lucide-react';
+import {
+  Zap,
+  Shield,
+  Cpu,
+  Sparkles,
+  Scissors,
+  Waves,
+  ArrowRight,
+} from 'lucide-react';
 import { useImageProcessor } from '@/hooks/useImageProcessor';
 import { usePaywall } from '@/hooks/usePaywall';
 import { loadImage } from '@/lib/canvas';
@@ -229,6 +237,80 @@ export default function HomePage() {
         {results.length > 0 && (
           <PreviewGrid images={results} onClear={handleClearResults} />
         )}
+
+        {/* Other Specialized Tools */}
+        <Card className="border border-slate-200 dark:border-slate-700 max-w-2xl mx-auto">
+          <CardHeader className="text-center">
+            <CardTitle className="flex items-center justify-center gap-2 text-slate-800 dark:text-slate-100">
+              🔧 Specialized Tools
+            </CardTitle>
+            <CardDescription className="text-slate-600 dark:text-slate-300">
+              Try our dedicated tools for specific image processing needs
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Background Removal Tool */}
+              <div className="border border-purple-200 dark:border-purple-700 rounded-lg p-4 bg-purple-50/50 dark:bg-purple-950/20">
+                <div className="flex items-center gap-3 mb-2">
+                  <Scissors className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                  <h3 className="font-medium text-slate-900 dark:text-slate-100">
+                    Background Removal
+                  </h3>
+                </div>
+                <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">
+                  AI-powered background removal with professional precision.
+                  Perfect for logos and transparent PNGs.
+                </p>
+                <Button
+                  asChild
+                  className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+                >
+                  <a href="/background-removal">
+                    Try Background Removal
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </a>
+                </Button>
+              </div>
+
+              {/* Underwater Correction Tool */}
+              <div className="border border-cyan-200 dark:border-cyan-700 rounded-lg p-4 bg-cyan-50/50 dark:bg-cyan-950/20">
+                <div className="flex items-center gap-3 mb-2">
+                  <Waves className="w-5 h-5 text-cyan-600 dark:text-cyan-400" />
+                  <h3 className="font-medium text-slate-900 dark:text-slate-100">
+                    Underwater Color Fix
+                  </h3>
+                </div>
+                <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">
+                  Fix green/blue tints in underwater photos. Restore natural
+                  colors with adjustable intensity.
+                </p>
+                <Button
+                  asChild
+                  className="w-full bg-cyan-600 hover:bg-cyan-700 text-white"
+                >
+                  <a href="/underwater">
+                    Try Underwater Fix
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </a>
+                </Button>
+              </div>
+            </div>
+
+            {/* Examples Link */}
+            <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700 text-center">
+              <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">
+                Want to see examples and tutorials?
+              </p>
+              <Button variant="outline" asChild>
+                <a href="/examples">
+                  View Examples & Tutorials
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </a>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Clean Pro Features Card */}
         {!isPro && (

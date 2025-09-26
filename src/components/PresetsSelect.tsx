@@ -45,40 +45,6 @@ export function PresetsSelect({
       <SelectContent>
         <SelectItem value="none">None</SelectItem>
 
-        {socialPresets.length > 0 && (
-          <>
-            <SelectSeparator />
-            <SelectGroup>
-              <SelectLabel>Social Media</SelectLabel>
-              {socialPresets.map((preset) => {
-                const isProPreset = 'isPro' in preset && preset.isPro;
-                const isDisabled = isProPreset && !isPro;
-
-                return (
-                  <SelectItem
-                    key={preset.id}
-                    value={preset.id}
-                    disabled={isDisabled}
-                    className={isDisabled ? 'opacity-50' : ''}
-                  >
-                    <div className="flex items-center justify-between w-full">
-                      <div className="flex flex-col">
-                        <span>{preset.name}</span>
-                        {preset.description && (
-                          <span className="text-xs text-muted-foreground">
-                            {preset.description}
-                          </span>
-                        )}
-                      </div>
-                      {isProPreset && !isPro && <ProBadge />}
-                    </div>
-                  </SelectItem>
-                );
-              })}
-            </SelectGroup>
-          </>
-        )}
-
         {webPresets.length > 0 && (
           <>
             <SelectSeparator />
@@ -164,6 +130,40 @@ export function PresetsSelect({
                   </div>
                 </SelectItem>
               ))}
+            </SelectGroup>
+          </>
+        )}
+
+        {socialPresets.length > 0 && (
+          <>
+            <SelectSeparator />
+            <SelectGroup>
+              <SelectLabel>Social Media</SelectLabel>
+              {socialPresets.map((preset) => {
+                const isProPreset = 'isPro' in preset && preset.isPro;
+                const isDisabled = isProPreset && !isPro;
+
+                return (
+                  <SelectItem
+                    key={preset.id}
+                    value={preset.id}
+                    disabled={isDisabled}
+                    className={isDisabled ? 'opacity-50' : ''}
+                  >
+                    <div className="flex items-center justify-between w-full">
+                      <div className="flex flex-col">
+                        <span>{preset.name}</span>
+                        {preset.description && (
+                          <span className="text-xs text-muted-foreground">
+                            {preset.description}
+                          </span>
+                        )}
+                      </div>
+                      {isProPreset && !isPro && <ProBadge />}
+                    </div>
+                  </SelectItem>
+                );
+              })}
             </SelectGroup>
           </>
         )}

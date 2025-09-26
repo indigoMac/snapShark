@@ -70,23 +70,23 @@ class VTracerProcessor {
     const startTime = performance.now();
 
     try {
-      // Set default ImageTracer options optimized for logos
+      // Set default ImageTracer options optimized for web-friendly logos
       const tracerOptions = {
-        // Color quantization
-        numberofcolors: options.numberofcolors ?? 16,
+        // Color quantization - Reduced for smaller file sizes
+        numberofcolors: options.numberofcolors ?? 8,
         colorsampling: options.colorsampling ?? 2,
         colorquantcycles: options.colorquantcycles ?? 3,
-        mincolorration: options.mincolorration ?? 0.02,
+        mincolorration: options.mincolorration ?? 0.05,
 
-        // Tracing
+        // Tracing - More aggressive simplification
         corsenabled: options.corsenabled ?? true,
-        ltres: options.ltres ?? 1,
-        qtres: options.qtres ?? 1,
-        pathomit: options.pathomit ?? 8,
+        ltres: options.ltres ?? 1.5,
+        qtres: options.qtres ?? 1.5,
+        pathomit: options.pathomit ?? 20,
 
-        // SVG rendering
+        // SVG rendering - Better path simplification
         scale: options.scale ?? 1,
-        simplifytolerance: options.simplifytolerance ?? 0,
+        simplifytolerance: options.simplifytolerance ?? 1,
         roundcoords: options.roundcoords ?? 1,
         lcpr: options.lcpr ?? 0,
         qcpr: options.qcpr ?? 0,
@@ -98,14 +98,6 @@ class VTracerProcessor {
         blurdelta: options.blurdelta ?? 20,
       };
 
-      console.log(
-        '🎨 Converting to SVG with ImageTracer options:',
-        tracerOptions
-      );
-      console.log(
-        `📐 Image dimensions: ${imageData.width}×${imageData.height}`
-      );
-
       // Convert ImageData to SVG using ImageTracer
       const svgString = this.imageTracer.imagedataToSVG(
         imageData,
@@ -114,11 +106,6 @@ class VTracerProcessor {
 
       const processingTime = performance.now() - startTime;
 
-      console.log(
-        `✅ SVG conversion completed in ${processingTime.toFixed(2)}ms`
-      );
-      console.log(`📄 SVG size: ${svgString.length} characters`);
-
       return {
         svg: svgString,
         width: imageData.width,
@@ -126,7 +113,6 @@ class VTracerProcessor {
         processingTime,
       };
     } catch (error) {
-      console.error('❌ ImageTracer conversion failed:', error);
       throw new Error(
         `SVG conversion failed: ${error instanceof Error ? error.message : 'Unknown error'}`
       );
@@ -227,15 +213,33 @@ export const VTRACER_PRESETS = {
     blurradius: 0,
   } as VTracerOptions,
 
-  // Balanced settings for general use
+  // Balanced settings for general use - Web optimized
   balanced: {
-    numberofcolors: 16,
+    numberofcolors: 8,
     colorsampling: 2,
     colorquantcycles: 3,
+    mincolorration: 0.05,
     corsenabled: true,
-    ltres: 1,
-    qtres: 1,
-    pathomit: 8,
+    ltres: 1.5,
+    qtres: 1.5,
+    pathomit: 20,
+    simplifytolerance: 1,
+    roundcoords: 1,
+    viewbox: true,
+    blurradius: 0,
+  } as VTracerOptions,
+
+  // Web optimized for smaller file sizes with good quality
+  web_optimized: {
+    numberofcolors: 6,
+    colorsampling: 2,
+    colorquantcycles: 3,
+    mincolorration: 0.08,
+    corsenabled: true,
+    ltres: 2,
+    qtres: 2,
+    pathomit: 24,
+    simplifytolerance: 1.5,
     roundcoords: 1,
     viewbox: true,
     blurradius: 0,

@@ -114,11 +114,8 @@ export function BackgroundRemoval({
     setIsProcessing(true);
 
     try {
-      console.log('🎯 Starting background removal...');
-
       let result;
       if (useAdvancedMode) {
-        console.log('🚀 Using advanced computer vision algorithm...');
         result = await removeBackgroundAdvanced(currentFile, {
           useAI: false,
           useEdgeDetection: true,
@@ -131,24 +128,14 @@ export function BackgroundRemoval({
           quality: options.quality,
         });
       } else {
-        console.log('🤖 Using AI-based algorithm...');
         result = await removeBackground(currentFile, options);
       }
-
-      console.log(
-        `✅ Background removal completed in ${result.processingTime.toFixed(0)}ms`
-      );
-      console.log(`📊 Method: ${result.method || 'AI Segmentation'}`);
-      console.log(
-        `📊 Average confidence: ${(result.confidence * 100).toFixed(1)}%`
-      );
 
       // Create preview URL
       const previewUrl = URL.createObjectURL(result.blob);
       setProcessedPreview(previewUrl);
       setResult(result);
     } catch (error) {
-      console.error('❌ Background removal failed:', error);
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown error occurred';
 

@@ -27,10 +27,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    console.log(
-      `[CANCEL] Canceling subscription ${subscriptionId} for user ${userId}`
-    );
-
     // Cancel the subscription
     let subscription: Stripe.Subscription;
     if (cancelAtPeriodEnd) {
@@ -38,15 +34,9 @@ export async function POST(req: NextRequest) {
       subscription = await stripe.subscriptions.update(subscriptionId, {
         cancel_at_period_end: true,
       });
-      console.log(
-        `[CANCEL] ✅ Subscription ${subscriptionId} will cancel at period end`
-      );
     } else {
       // Cancel immediately
       subscription = await stripe.subscriptions.cancel(subscriptionId);
-      console.log(
-        `[CANCEL] ✅ Subscription ${subscriptionId} canceled immediately`
-      );
     }
 
     return NextResponse.json({
