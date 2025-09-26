@@ -1,171 +1,202 @@
-# SnapShark - Privacy-First Image Converter
+# SnapShark - Professional Image Processing Suite
 
-A modern, client-side image converter and resizer built with Next.js. Convert between formats, resize images, and process batches - all without uploading your files to any server.
+A privacy-first, AI-powered image processing platform built with Next.js. Convert formats, remove backgrounds, fix underwater photos, create print packages, and more - all while keeping your images secure on your device.
 
-## 🚀 Features
+**Live Demo**: [snap-shark.com](https://snap-shark.com)
 
-### Free Tier
+## Features
 
-- ✅ Single image processing
-- ✅ Basic formats (JPG, PNG, WebP)
-- ✅ Resize by dimensions or scale percentage
-- ✅ Quality control for lossy formats
-- ✅ 100% privacy (no uploads)
-- ✅ PWA installable
-- ✅ One-time trial (3 files batch)
+### Core Image Processing
 
-### Pro Tier (£3/month or £15/year)
+- **Multi-format support**: JPG, PNG, WebP, HEIC/HEIF input; JPG, PNG, WebP, AVIF output
+- **Smart resizing**: By dimensions, scale percentage, or intelligent presets
+- **Quality optimization**: Lossy format quality control with real-time preview
+- **Batch processing**: Process up to 50 images simultaneously (Pro)
+- **Print packages**: Auto-generate 7-10+ print sizes with 300 PPI optimization
 
-- ✅ Batch process up to 50 images
-- ✅ Professional presets & templates
-- ✅ Advanced formats (AVIF output, HEIC/HEIF input)
-- ✅ ZIP download for batches
-- ✅ Metadata stripping for privacy
-- ✅ Custom preset saving
-- ✅ Priority support
+### Specialized Tools
 
-## 🛠️ Tech Stack
+- **AI Background Removal**: Professional-grade subject isolation with MediaPipe
+- **Underwater Color Correction**: Fix green/blue tints in underwater photography
+- **Smart Print Packages**: Automatic aspect ratio detection and optimal print sizing
+- **Logo Package Generator**: Complete favicon and icon sets for websites/apps
+
+### Advanced Features
+
+- **Client-side processing**: 100% private - images never leave your device
+- **Web Workers**: Non-blocking UI with background processing
+- **Progressive enhancement**: Mobile-optimized with hybrid processing
+- **Real-time preview**: See changes instantly as you adjust settings
+- **Custom presets**: Save and reuse your favorite processing settings
+
+### Pro Features (£3/month)
+
+- **Batch processing**: Up to 50 images at once
+- **Advanced formats**: AVIF output, enhanced processing options
+- **Premium presets**: Professional templates for common use cases
+- **Print optimization**: Auto-upscaling and 300 PPI conversion
+- **Priority processing**: Faster rendering and enhanced algorithms
+- **ZIP downloads**: Convenient batch downloads
+
+## Tech Stack
 
 - **Framework**: Next.js 14 (App Router, TypeScript)
-- **Styling**: Tailwind CSS + shadcn/ui
-- **State Management**: Zustand + React hooks
-- **Image Processing**: HTML Canvas + Pica (WASM)
-- **Workers**: Web Workers for CPU-heavy operations
-- **Authentication**: Clerk (Phase 2)
-- **Payments**: Stripe (Phase 2)
-- **PWA**: Service Workers (Phase 3)
-- **Testing**: Playwright + Vitest
-- **Deployment**: Vercel
+- **Styling**: Tailwind CSS + shadcn/ui components
+- **Image Processing**: HTML Canvas + Pica (WASM) + MediaPipe AI
+- **Background Processing**: Web Workers for CPU-intensive operations
+- **Authentication**: Clerk with secure user management
+- **Payments**: Stripe with webhook automation
+- **AI/ML**: MediaPipe for background removal, custom algorithms for color correction
+- **Testing**: Vitest + Playwright E2E testing
+- **Deployment**: Vercel with serverless functions
+- **Mobile Optimization**: Responsive design with progressive enhancement
 
-## 🏃‍♂️ Quick Start
+## Quick Start
 
 ### Prerequisites
 
 - Node.js 18+ and npm
-- Modern browser with Web Workers support
+- Modern browser (Chrome, Firefox, Safari, Edge)
 
 ### Installation
 
-1. Clone the repository:
-
 ```bash
-git clone <repository-url>
+# Clone the repository
+git clone https://github.com/your-username/snapshark.git
 cd snapshark
-```
 
-2. Install dependencies:
-
-```bash
+# Install dependencies
 npm install
-```
 
-3. Set up environment variables:
-
-```bash
+# Set up environment variables (optional for core features)
 cp .env.example .env.local
-# Edit .env.local with your keys (optional for basic functionality)
-```
 
-4. Run the development server:
-
-```bash
+# Start development server
 npm run dev
 ```
 
-5. Open [http://localhost:3000](http://localhost:3000) in your browser.
+Open [http://localhost:3000](http://localhost:3000) to see the app.
 
-## 🧪 Testing
+## Environment Variables
 
-### Unit Tests
-
-```bash
-npm run test
-```
-
-### E2E Tests
-
-```bash
-npm run e2e
-npm run test:setup  # First time only
-```
-
-## 🚀 Getting Started
-
-The app is **fully functional without any environment variables** for core features!
-
-### Optional Environment Variables (Phase 2+)
-
-For authentication and payments, create a `.env.local` file:
+SnapShark works out of the box without any environment variables for core image processing. For full functionality:
 
 ```env
-# Clerk Authentication (Phase 2)
+# Authentication (Clerk)
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
 CLERK_SECRET_KEY=sk_test_...
 
-# Stripe (Phase 2)
+# Payments (Stripe)
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
 STRIPE_SECRET_KEY=sk_test_...
 STRIPE_WEBHOOK_SECRET=whsec_...
 
 # App Configuration
-NEXT_PUBLIC_APP_URL=http://localhost:3000
-
-# Feature Flags (Phase 3+)
-NEXT_PUBLIC_ENABLE_HEIC=true
-NEXT_PUBLIC_ENABLE_AVIF=true
-NEXT_PUBLIC_ENABLE_PICA=true
+NEXT_PUBLIC_APP_URL=https://yourdomain.com
 ```
 
-## 📁 Project Structure
+## Navigation & Pages
+
+### Main Tools
+
+- **/** - Main image processor with smart presets and batch processing
+- **/background-removal** - AI-powered background removal tool
+- **/underwater** - Underwater photo color correction
+- **/examples** - Interactive tutorials and example outputs
+
+### User Features
+
+- **/account** - User dashboard and subscription management
+- **/pricing** - Pro plan details and subscription
+- **/about** - Project information and contact
+
+## Project Structure
 
 ```
 src/
-├── app/                    # Next.js app router pages
-│   ├── (marketing)/        # Marketing pages (pricing)
-│   ├── account/           # Account management
-│   ├── layout.tsx         # Root layout
-│   └── page.tsx           # Home converter page
-├── components/            # React components
-│   ├── ui/               # shadcn/ui base components
-│   ├── Dropzone.tsx      # File upload component
-│   ├── SettingsPanel.tsx # Image processing settings
-│   ├── PreviewGrid.tsx   # Results display
+├── app/                           # Next.js App Router
+│   ├── (marketing)/              # Marketing pages
+│   ├── api/                      # Serverless API routes
+│   │   ├── stripe/               # Payment webhooks
+│   │   └── debug/                # Development utilities
+│   ├── background-removal/       # AI background removal tool
+│   ├── underwater/               # Underwater color correction
+│   ├── examples/                 # Interactive tutorials
+│   ├── account/                  # User dashboard
+│   └── page.tsx                  # Main image processor
+├── components/                    # React components
+│   ├── ui/                       # shadcn/ui base components
+│   ├── BackgroundRemoval.tsx     # AI background removal
+│   ├── Dropzone.tsx             # File upload with validation
+│   ├── SettingsPanel.tsx        # Processing configuration
+│   ├── Navigation.tsx           # Responsive navigation
 │   └── ...
-├── hooks/                # Custom React hooks
-│   ├── useImageProcessor.ts
-│   ├── usePresets.ts
-│   └── usePaywall.ts
-├── lib/                  # Utility libraries
-│   ├── canvas.ts         # Canvas operations
-│   ├── formats.ts        # Format definitions
-│   ├── presets.ts        # Built-in presets
+├── hooks/                        # Custom React hooks
+│   ├── useImageProcessor.ts     # Main processing logic
+│   ├── usePaywall.ts           # Pro feature access
+│   └── usePresets.ts           # Preset management
+├── lib/                         # Utility libraries
+│   ├── canvas.ts               # Canvas operations
+│   ├── formats.ts              # Image format definitions
+│   ├── background-removal.ts   # AI processing utilities
+│   ├── vtracer.ts             # SVG vectorization
 │   └── ...
-└── workers/              # Web Workers
-    └── imageWorker.ts    # Image processing worker
+└── workers/                    # Web Workers
+    └── imageWorker.ts         # Background image processing
 ```
 
-## 🎨 Key Components
+## Key Features Deep Dive
 
-### Image Processing Pipeline
+### Smart Image Processing
 
-1. **File Upload**: Drag & drop with format validation
-2. **Settings**: Format, quality, dimensions, presets
-3. **Web Worker**: CPU-intensive processing in background
-4. **Download**: Individual files or ZIP batches
+- **Format Intelligence**: Automatic format recommendations based on image content
+- **Quality Optimization**: Real-time quality preview with size estimates
+- **Preset System**: Built-in presets for social media, print, web, and mobile
+- **Batch Optimization**: Intelligent processing order and progress tracking
 
-### Privacy Features
+### AI Background Removal
 
-- No server uploads - all processing is client-side
-- Web Workers prevent UI blocking
-- Local storage for settings and presets
-- Optional metadata stripping
+- **MediaPipe Integration**: Google's production-grade segmentation model
+- **Edge Detection**: Precise subject isolation with smooth edges
+- **Transparent Output**: Perfect PNG transparency for logos and portraits
+- **Fallback System**: Graceful degradation if AI processing fails
 
-## 🚢 Deployment
+### Underwater Color Correction
+
+- **Advanced Algorithm**: Custom color matrix transformation
+- **Histogram Analysis**: Intelligent red channel restoration
+- **Real-time Adjustment**: Live preview with intensity slider
+- **Mobile Optimized**: Debounced processing for smooth mobile experience
+
+### Print Package Generation
+
+- **Aspect Ratio Detection**: Automatic landscape/portrait optimization
+- **Smart Sizing**: Generates 7-10+ optimal print sizes (4"×6" to 24"×30")
+- **300 PPI Standard**: Professional print resolution with upscaling
+- **ZIP Download**: Convenient batch download of all sizes
+
+## Testing
+
+```bash
+# Run unit tests
+npm run test
+
+# Run tests with coverage
+npm run test:coverage
+
+# Run E2E tests
+npm run e2e
+
+# Run all tests in CI mode
+npm run test:ci
+```
+
+## Deployment
 
 ### Vercel (Recommended)
 
 1. Connect your GitHub repository to Vercel
-2. Set environment variables in Vercel dashboard
+2. Set environment variables in the Vercel dashboard
 3. Deploy automatically on push to main branch
 
 ### Manual Deployment
@@ -175,86 +206,70 @@ npm run build
 npm run start
 ```
 
-## 🔒 Security & Privacy
+## Privacy & Security
 
-- **Client-side only**: No image data leaves your browser
-- **No tracking**: Minimal analytics, privacy-focused
-- **GDPR compliant**: Only billing data stored server-side
-- **Local storage**: Settings saved in browser only
+- **Client-side Processing**: Images never leave your browser
+- **Zero-Knowledge Architecture**: No server-side image storage
+- **Mobile Optimized**: Secure processing on all devices
+- **GDPR Compliant**: Minimal data collection, user consent
+- **No Tracking**: Privacy-first analytics approach
 
-## 🎯 Current Status
+## Performance Optimizations
 
-✅ **PRODUCTION READY** - App is deployed and fully functional on Vercel!
+- **Web Workers**: Non-blocking UI during processing
+- **Progressive Enhancement**: Mobile-first with desktop optimization
+- **Lazy Loading**: Efficient image and component loading
+- **Responsive Images**: Next.js Image optimization
+- **Smart Caching**: Efficient browser storage usage
 
-- Core image processing working perfectly
-- Client-side only (no backend required)
-- All formats supported with proper fallbacks
-- Print presets ready for immediate use
+## Current Status
 
-## 🛣️ Development Roadmap
+**PRODUCTION READY** - Fully deployed and operational
 
-### Phase 1 ✅ (COMPLETED)
+### Completed Features
 
-- [x] Basic image conversion and resizing
-- [x] Web Worker integration
-- [x] Freemium paywall system
-- [x] Production deployment on Vercel
-- [x] CI/CD pipeline with GitHub Actions
-- [x] Format detection and quality fixes
+- Core image processing with all formats
+- AI background removal with MediaPipe
+- Underwater color correction
+- Print package generation with auto-sizing
+- User authentication and Pro subscriptions
+- Stripe payment integration with webhooks
+- Mobile-optimized responsive design
+- Comprehensive testing suite
+- Production deployment on Vercel
 
-### Phase 2 (NEXT - Business Features)
+### Recent Updates
 
-- [ ] **Auth integration (Clerk)** - User accounts and login
-- [ ] **Payment integration (Stripe)** - Pro subscriptions
-- [ ] **User dashboard** - Usage tracking and settings
-- [ ] **Enhanced preset management** - Save custom presets
+- Enhanced mobile responsiveness for all tools
+- Performance optimizations for underwater processing
+- SVG optimization (92% file size reduction)
+- Improved navigation with Tools dropdown
+- Examples page with interactive tutorials
 
-### Phase 3 (UX & Performance)
+## Upcoming Features
 
-- [ ] **UI/UX improvements** - Better design and user flow
-- [ ] **PWA enhancements** - Offline support, app install
-- [ ] **Performance optimization** - Faster processing, better quality
-- [ ] **Advanced formats** - HEIC input, enhanced AVIF
+### Short Term
 
-### Phase 4 (Advanced Features)
+- Server-side processing for better mobile performance
+- Enhanced preset management system
+- Advanced batch processing templates
+- Additional AI-powered tools
 
-- [ ] **AI upscaling** - WASM ESRGAN integration
-- [ ] **Batch template system** - Complex preset workflows
-- [ ] **Cloud preset sync** - Share presets across devices
-- [ ] **API for developers** - Programmatic access
+### Medium Term
 
-### Phase 5 (Scale & Growth)
+- Desktop app (Tauri-based)
+- Advanced AI upscaling (ESRGAN)
+- Team collaboration features
+- API for developers
 
-- [ ] **Team collaboration** - Multi-user accounts
-- [ ] **Desktop app** - Tauri-based standalone app
-- [ ] **Enterprise features** - White-labeling, bulk licensing
+### Long Term
 
-## 🎯 Immediate Next Steps (Recommended Order)
+- Enterprise white-labeling
+- Advanced AI features (object removal, style transfer)
+- Mobile app (React Native)
+- Advanced analytics dashboard
 
-### Option A: Business First (Monetization)
-
-1. **Integrate Clerk Auth** - Enable user accounts
-2. **Add Stripe Payments** - Enable Pro subscriptions
-3. **Build User Dashboard** - Track usage, manage subscription
-4. **UI Polish** - Improve design and user experience
-
-### Option B: User Experience First
-
-1. **UI/UX Improvements** - Better design, smoother workflow
-2. **PWA Features** - Offline support, app install prompt
-3. **Performance Optimization** - Faster processing
-4. **Auth & Payments** - Business features after UX is perfect
-
-### Option C: Technical Depth
-
-1. **Advanced Format Support** - HEIC input, better AVIF
-2. **Performance Optimization** - Multi-threading, WASM improvements
-3. **Enhanced PWA** - Full offline functionality
-4. **Auth & Payments** - Business layer on solid tech foundation
-
-**💡 Recommendation**: Start with **Option A** to validate monetization early, then circle back to UX improvements.
-
-## 🤝 Contributing
+## Contributing
 
 1. Fork the repository
 2. Create a feature branch: `git checkout -b feature/amazing-feature`
@@ -262,18 +277,18 @@ npm run start
 4. Push to branch: `git push origin feature/amazing-feature`
 5. Open a Pull Request
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🆘 Support
+## Support
 
-- 📧 Email: support@snapshark.app
-- 💬 Discord: [Join our community](https://discord.gg/snapshark)
-- 📖 Docs: [docs.snapshark.app](https://docs.snapshark.app)
+- **Email**: [your-email@domain.com]
+- **Issues**: [GitHub Issues](https://github.com/your-username/snapshark/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/your-username/snapshark/discussions)
 
 ---
 
-Built with ❤️ for privacy-conscious users who want powerful image processing without compromising their data.
+**Built with care for privacy-conscious users who demand professional-grade image processing without compromising their data security.**
 
-# snapShark
+Made by [Your Name] | [Website](https://yourwebsite.com) | [Twitter](https://twitter.com/yourusername)
