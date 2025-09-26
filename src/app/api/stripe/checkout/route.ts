@@ -1,9 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { stripe, STRIPE_CONFIG } from '@/lib/stripe';
+import { RATE_LIMITS, createRateLimitHeaders } from '@/lib/rate-limit';
+import { trackPaymentError, trackAPIError } from '@/lib/error-tracking';
 
 export async function POST(req: NextRequest) {
   try {
+    // Apply rate limiting
+    const rateLimitResult = await RATE_LIMITS.PAYMENT(req);
+
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        {
+          error: 'Too many requests. Please try again later.',
+          retryAfter: Math.ceil(
+            (rateLimitResult.resetTime - Date.now()) / 1000
+          ),
+        },
+        {
+          status: 429,
+          headers: createRateLimitHeaders(rateLimitResult),
+        }
+      );
+    }
+
     const { userId } = await auth();
 
     if (!userId) {
@@ -53,12 +73,29 @@ export async function POST(req: NextRequest) {
       allow_promotion_codes: true,
     });
 
-    return NextResponse.json({
-      sessionId: session.id,
-      url: session.url,
-    });
+    return NextResponse.json(
+      {
+        sessionId: session.id,
+        url: session.url,
+      },
+      {
+        headers: createRateLimitHeaders(rateLimitResult),
+      }
+    );
   } catch (error) {
     console.error('Stripe checkout error:', error);
+
+    // Track payment error for monitoring
+    trackPaymentError(
+      error as Error,
+      undefined, // userId not available in error case
+      undefined, // no session ID yet
+      {
+        endpoint: '/api/stripe/checkout',
+        userAgent: req.headers.get('user-agent'),
+      }
+    );
+
     return NextResponse.json(
       { error: 'Failed to create checkout session' },
       { status: 500 }

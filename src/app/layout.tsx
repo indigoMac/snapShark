@@ -1,10 +1,12 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import { ClerkProvider } from '@clerk/nextjs';
+import Link from 'next/link';
 import { Navigation } from '@/components/Navigation';
 import { GlobalGracePeriodAlert } from '@/components/GlobalGracePeriodAlert';
 import { LogoIcon } from '@/components/Logo';
 import { ThemeProvider } from '@/components/theme-provider';
+import { ErrorTrackingProvider } from '@/components/ErrorTrackingProvider';
 import './globals.css';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -87,6 +89,7 @@ export default function RootLayout({
             enableSystem={false}
             disableTransitionOnChange={false}
           >
+            <ErrorTrackingProvider />
             <div className="min-h-screen bg-white dark:bg-slate-900 transition-colors">
               <Navigation />
               <GlobalGracePeriodAlert />
@@ -95,21 +98,54 @@ export default function RootLayout({
 
               <footer className="border-t border-blue-200/30 dark:border-blue-800/30 bg-blue-50/50 dark:bg-slate-800/50 mt-16">
                 <div className="container mx-auto px-4 py-8">
-                  <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-                    <div className="flex items-center gap-3">
-                      <LogoIcon size="md" />
-                      <span className="font-medium text-slate-800 dark:text-slate-200">
-                        <span>Snap</span>
-                        <span className="text-blue-600 dark:text-blue-400">
-                          Shark
+                  <div className="flex flex-col gap-6">
+                    {/* Main footer content */}
+                    <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+                      <div className="flex items-center gap-3">
+                        <LogoIcon size="md" />
+                        <span className="font-medium text-slate-800 dark:text-slate-200">
+                          <span>Snap</span>
+                          <span className="text-blue-600 dark:text-blue-400">
+                            Shark
+                          </span>
                         </span>
-                      </span>
+                      </div>
+
+                      <div className="flex items-center gap-6 text-sm text-slate-600 dark:text-slate-400">
+                        <span>🔒 100% Privacy - No uploads</span>
+                        <span>🚀 Powered by your browser</span>
+                        <span>⚡ Lightning fast</span>
+                      </div>
                     </div>
 
-                    <div className="flex items-center gap-6 text-sm text-slate-600 dark:text-slate-400">
-                      <span>🔒 100% Privacy - No uploads</span>
-                      <span>🚀 Powered by your browser</span>
-                      <span>⚡ Lightning fast</span>
+                    {/* Legal links and copyright */}
+                    <div className="border-t border-blue-200/30 dark:border-blue-800/30 pt-4">
+                      <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+                        <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-sm text-slate-500 dark:text-slate-400">
+                          <Link
+                            href="/legal/privacy"
+                            className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                          >
+                            Privacy Policy
+                          </Link>
+                          <Link
+                            href="/legal/terms"
+                            className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                          >
+                            Terms of Service
+                          </Link>
+                          <Link
+                            href="/about"
+                            className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                          >
+                            Contact
+                          </Link>
+                        </div>
+                        <div className="text-sm text-slate-500 dark:text-slate-400">
+                          © {new Date().getFullYear()} SnapShark. Privacy-first
+                          image processing.
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>

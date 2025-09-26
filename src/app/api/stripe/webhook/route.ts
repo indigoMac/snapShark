@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 import { stripe } from '@/lib/stripe';
 import { clerkClient } from '@clerk/nextjs/server';
+import { RATE_LIMITS, createRateLimitHeaders } from '@/lib/rate-limit';
 import Stripe from 'stripe';
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
@@ -12,6 +13,18 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
   try {
+    // Apply rate limiting (even for webhooks as defense in depth)
+    const rateLimitResult = await RATE_LIMITS.API(req);
+
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded' },
+        {
+          status: 429,
+          headers: createRateLimitHeaders(rateLimitResult),
+        }
+      );
+    }
     if (!stripe) {
       return NextResponse.json(
         { error: 'Stripe not configured' },
@@ -230,7 +243,12 @@ export async function POST(req: NextRequest) {
       default:
     }
 
-    return NextResponse.json({ received: true });
+    return NextResponse.json(
+      { received: true },
+      {
+        headers: createRateLimitHeaders(rateLimitResult),
+      }
+    );
   } catch (error: any) {
     return NextResponse.json(
       { error: 'Webhook handler failed', details: error.message },
