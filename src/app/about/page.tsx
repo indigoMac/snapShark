@@ -70,6 +70,107 @@ export default function AboutPage() {
             </CardContent>
           </Card>
 
+          {/* Where We're At */}
+          <Card className="border-slate-200 dark:border-slate-700">
+            <CardContent className="p-8">
+              <h2 className="text-2xl font-semibold text-slate-900 dark:text-white mb-4">
+                🚧 Where We're At
+              </h2>
+              <div className="space-y-4 text-slate-700 dark:text-slate-300">
+                <p className="text-lg leading-relaxed">
+                  SnapShark is brand new — and we're still adding features. So
+                  far, it can handle conversions, resizing, upscaling, color
+                  correction, compression, and metadata stripping. But this is
+                  just the beginning.
+                </p>
+                <p className="text-lg leading-relaxed">
+                  Current tools include smart print packages that automatically
+                  generate all the sizes you need, AI-powered background removal
+                  for perfect logos, and underwater photo correction that
+                  actually works. Everything processes directly in your browser
+                  for privacy and speed.
+                </p>
+                <div className="bg-blue-50 dark:bg-blue-950/30 p-4 rounded-lg border-l-4 border-blue-500">
+                  <p className="font-medium text-blue-900 dark:text-blue-200 mb-2">
+                    What's Working Right Now:
+                  </p>
+                  <ul className="space-y-1 text-sm text-blue-800 dark:text-blue-300">
+                    <li>
+                      • Multi-format conversion (JPG, PNG, WebP, AVIF, HEIC)
+                    </li>
+                    <li>• Smart resizing with aspect ratio control</li>
+                    <li>• AI background removal for clean logos</li>
+                    <li>• Underwater color correction without watermarks</li>
+                    <li>
+                      • Auto-generated print packages (7-10+ sizes at 300 PPI)
+                    </li>
+                    <li>• Batch processing up to 50 images</li>
+                    <li>• Mobile-optimized with direct camera roll saving</li>
+                  </ul>
+                </div>
+                <div className="mt-4 p-4 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
+                  <p className="font-medium text-slate-900 dark:text-slate-200 mb-2 text-sm">
+                    💰 About Pro vs Free:
+                  </p>
+                  <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                    All core features are available to everyone! Pro mainly adds
+                    <strong> convenience</strong> — you can create print
+                    packages, logo sets, and process multiple images using free
+                    presets, but you'd need to do them one at a time. Pro lets
+                    you generate entire packages instantly and process up to 50
+                    images in batches.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Help Shape the Future */}
+          <Card className="border-green-200 dark:border-green-800">
+            <CardContent className="p-8">
+              <h2 className="text-2xl font-semibold text-slate-900 dark:text-white mb-4">
+                🚀 Help Shape the Future
+              </h2>
+              <div className="space-y-4 text-slate-700 dark:text-slate-300">
+                <p className="text-lg leading-relaxed">
+                  We'd love your feedback as one of our first testers. Try it
+                  out, see what works (or doesn't), and let us know what you
+                  think.
+                </p>
+                <div className="bg-green-50 dark:bg-green-950/30 p-6 rounded-lg border border-green-200 dark:border-green-800">
+                  <div className="text-center">
+                    <p className="font-medium text-green-900 dark:text-green-200 mb-4">
+                      Your input directly shapes what we build next!
+                    </p>
+                    <a
+                      href="https://forms.gle/2W6yWzWV1T3nY4WU7"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center justify-center bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+                    >
+                      Take the Feedback Survey
+                      <span className="ml-2">→</span>
+                    </a>
+                    <p className="text-sm text-green-700 dark:text-green-300 mt-2">
+                      Takes less than 1 minute
+                    </p>
+                    <div className="mt-4 pt-4 border-t border-green-200 dark:border-green-700">
+                      <p className="text-sm text-green-700 dark:text-green-300 mb-1">
+                        Prefer email? Send your thoughts to:
+                      </p>
+                      <a
+                        href="mailto:snapshark2025@gmail.com"
+                        className="text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 font-medium"
+                      >
+                        snapshark2025@gmail.com
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* About the Developer */}
           <Card className="border-slate-200 dark:border-slate-700">
             <CardContent className="p-8">
@@ -272,10 +373,21 @@ export default function AboutPage() {
             <h3 className="text-2xl font-semibold text-slate-900 dark:text-white mb-4">
               Ready to process some images?
             </h3>
-            <p className="text-slate-600 dark:text-slate-400 mb-6">
+            <p className="text-slate-600 dark:text-slate-400 mb-4">
               Start with our free tools or upgrade to Pro for advanced features
               and professional packages.
             </p>
+            <div className="bg-blue-50 dark:bg-blue-950/30 p-4 rounded-lg border border-blue-200 dark:border-blue-700 mb-6">
+              <p className="text-blue-900 dark:text-blue-200 font-medium mb-2">
+                🎯 Early Bird Special: Try Pro Free for a Month!
+              </p>
+              <p className="text-sm text-blue-700 dark:text-blue-300 mb-2">
+                Use promo code at checkout to unlock all Pro features:
+              </p>
+              <div className="bg-blue-100 dark:bg-blue-900/50 px-3 py-2 rounded font-mono text-blue-800 dark:text-blue-200 inline-block">
+                EARLYSHARK
+              </div>
+            </div>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a
                 href="/"
