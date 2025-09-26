@@ -130,7 +130,7 @@ export default function HomePage() {
               <p className="text-xl text-slate-600 dark:text-slate-300 max-w-2xl mx-auto">
                 Professional image processing directly in your browser.
                 <span className="block text-blue-600 dark:text-blue-400 font-semibold mt-1">
-                  No uploads • No tracking • Always free
+                  No uploads • No tracking • Free to start
                 </span>
               </p>
             </div>
