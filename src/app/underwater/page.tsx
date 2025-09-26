@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
@@ -19,6 +19,7 @@ export default function UnderwaterPage() {
   const [intensity, setIntensity] = useState([100]);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const processingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleFileSelect = useCallback(
     async (file: File) => {
@@ -345,14 +346,30 @@ export default function UnderwaterPage() {
     return { low, high };
   }, []);
 
+  // Debounced processing for better mobile performance
+  const debouncedProcessImage = useCallback(
+    (file: File, intensityValue: number) => {
+      // Clear existing timeout
+      if (processingTimeoutRef.current) {
+        clearTimeout(processingTimeoutRef.current);
+      }
+
+      // Set new timeout for processing
+      processingTimeoutRef.current = setTimeout(() => {
+        processImage(file, intensityValue);
+      }, 150); // 150ms debounce delay
+    },
+    [processImage]
+  );
+
   const handleIntensityChange = useCallback(
-    async (newIntensity: number[]) => {
+    (newIntensity: number[]) => {
       setIntensity(newIntensity);
       if (selectedFile) {
-        await processImage(selectedFile, newIntensity[0]);
+        debouncedProcessImage(selectedFile, newIntensity[0]);
       }
     },
-    [selectedFile, processImage]
+    [selectedFile, debouncedProcessImage]
   );
 
   const handleDownload = useCallback(() => {
@@ -371,9 +388,25 @@ export default function UnderwaterPage() {
     setResult(null);
     setError(null);
     setIntensity([100]);
+
+    // Clear any pending processing
+    if (processingTimeoutRef.current) {
+      clearTimeout(processingTimeoutRef.current);
+      processingTimeoutRef.current = null;
+    }
+
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
+  }, []);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (processingTimeoutRef.current) {
+        clearTimeout(processingTimeoutRef.current);
+      }
+    };
   }, []);
 
   return (
@@ -479,8 +512,11 @@ export default function UnderwaterPage() {
                         disabled={isProcessing}
                       />
                       <span className="text-blue-300 text-sm">150%</span>
-                      <span className="text-blue-400 font-mono text-sm ml-2">
+                      <span className="text-blue-400 font-mono text-sm ml-2 flex items-center gap-1">
                         {intensity[0]}%
+                        {isProcessing && (
+                          <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" />
+                        )}
                       </span>
                     </div>
                   </div>
