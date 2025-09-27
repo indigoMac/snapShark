@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
+import { useState, useRef, useCallback, useMemo, useEffect, memo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
@@ -21,6 +21,7 @@ export default function UnderwaterPage() {
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const processingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
 
   const handleFileSelect = useCallback(
     async (file: File) => {
@@ -412,6 +413,20 @@ export default function UnderwaterPage() {
     }
   }, []);
 
+  // Mobile detection for performance optimizations
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768 || /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+    };
+  }, []);
+
   // Cleanup timeout on unmount
   useEffect(() => {
     return () => {
@@ -421,67 +436,73 @@ export default function UnderwaterPage() {
     };
   }, []);
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
-      {/* Hero Section */}
-      <div className="relative overflow-hidden">
-        {/* Optimized background - CSS only, no heavy SVG */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-20 left-20 w-32 h-32 bg-blue-400/20 rounded-full blur-3xl animate-pulse"></div>
-          <div
-            className="absolute top-40 right-32 w-24 h-24 bg-cyan-400/20 rounded-full blur-2xl animate-pulse"
-            style={{ animationDelay: '1s' }}
-          ></div>
-          <div
-            className="absolute bottom-32 left-1/3 w-40 h-40 bg-blue-500/20 rounded-full blur-3xl animate-pulse"
-            style={{ animationDelay: '2s' }}
-          ></div>
+  // Memoized hero section to prevent unnecessary re-renders
+  const heroSection = useMemo(() => (
+    <div className="relative overflow-hidden">
+      {/* Mobile-optimized background - Reduced effects on small screens */}
+      <div className="absolute inset-0 opacity-10">
+        {/* Reduce blur and animations on mobile for better performance */}
+        <div className="absolute top-20 left-20 w-32 h-32 bg-blue-400/20 rounded-full md:blur-3xl blur-xl md:animate-pulse will-change-transform"></div>
+        <div
+          className="absolute top-40 right-32 w-24 h-24 bg-cyan-400/20 rounded-full md:blur-2xl blur-lg md:animate-pulse will-change-transform"
+          style={{ animationDelay: '1s' }}
+        ></div>
+        <div
+          className="absolute bottom-32 left-1/3 w-40 h-40 bg-blue-500/20 rounded-full md:blur-3xl blur-xl md:animate-pulse will-change-transform"
+          style={{ animationDelay: '2s' }}
+        ></div>
+      </div>
+      <div className="relative max-w-4xl mx-auto px-4 py-16 text-center">
+        <div className="flex items-center justify-center gap-3 mb-6">
+          <Waves className="w-12 h-12 text-blue-400" />
+          <h1 className="text-4xl md:text-6xl font-bold text-white">
+            Underwater Color Correction
+          </h1>
         </div>
-        <div className="relative max-w-4xl mx-auto px-4 py-16 text-center">
-          <div className="flex items-center justify-center gap-3 mb-6">
-            <Waves className="w-12 h-12 text-blue-400" />
-            <h1 className="text-4xl md:text-6xl font-bold text-white">
-              Underwater Color Correction
-            </h1>
+        <p className="text-xl text-blue-200 mb-8 max-w-2xl mx-auto">
+          Restore natural colors to your underwater photos with advanced
+          algorithmic color correction
+        </p>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+          <div className="flex items-center gap-2 text-blue-200">
+            <div className="w-8 h-8 bg-blue-500/20 rounded-full flex items-center justify-center">
+              🌊
+            </div>
+            <span className="font-medium">Auto Detection</span>
           </div>
-          <p className="text-xl text-blue-200 mb-8 max-w-2xl mx-auto">
-            Restore natural colors to your underwater photos with advanced
-            algorithmic color correction
-          </p>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-            <div className="flex items-center gap-2 text-blue-200">
-              <div className="w-8 h-8 bg-blue-500/20 rounded-full flex items-center justify-center">
-                🌊
-              </div>
-              <span className="font-medium">Auto Detection</span>
+          <div className="flex items-center gap-2 text-blue-200">
+            <div className="w-8 h-8 bg-emerald-500/20 rounded-full flex items-center justify-center">
+              🎨
             </div>
-            <div className="flex items-center gap-2 text-blue-200">
-              <div className="w-8 h-8 bg-emerald-500/20 rounded-full flex items-center justify-center">
-                🎨
-              </div>
-              <span className="font-medium">Color Restoration</span>
+            <span className="font-medium">Color Restoration</span>
+          </div>
+          <div className="flex items-center gap-2 text-blue-200">
+            <div className="w-8 h-8 bg-purple-500/20 rounded-full flex items-center justify-center">
+              ⚡
             </div>
-            <div className="flex items-center gap-2 text-blue-200">
-              <div className="w-8 h-8 bg-purple-500/20 rounded-full flex items-center justify-center">
-                ⚡
-              </div>
-              <span className="font-medium">Instant Preview</span>
+            <span className="font-medium">Instant Preview</span>
+          </div>
+          <div className="flex items-center gap-2 text-blue-200">
+            <div className="w-8 h-8 bg-orange-500/20 rounded-full flex items-center justify-center">
+              🎯
             </div>
-            <div className="flex items-center gap-2 text-blue-200">
-              <div className="w-8 h-8 bg-orange-500/20 rounded-full flex items-center justify-center">
-                🎯
-              </div>
-              <span className="font-medium">Adjustable</span>
-            </div>
+            <span className="font-medium">Adjustable</span>
           </div>
         </div>
       </div>
+    </div>
+  ), []);
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
+      {/* Hero Section - Memoized for performance */}
+      {heroSection}
 
       {/* Main Tool */}
       <div className="max-w-6xl mx-auto px-4 pb-16">
-        <Card className="shadow-2xl border border-blue-800/50 bg-slate-800/80 backdrop-blur-sm relative overflow-hidden">
-          {/* Subtle animated background */}
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-900/20 via-transparent to-cyan-900/20"></div>
+        <Card className="shadow-2xl border border-blue-800/50 bg-slate-800/80 md:backdrop-blur-sm relative overflow-hidden will-change-transform">
+          {/* Subtle animated background - mobile optimized */}
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-900/15 md:from-blue-900/20 via-transparent to-cyan-900/15 md:to-cyan-900/20"></div>
           <div className="relative z-10">
             <CardHeader className="text-center pb-4">
               <CardTitle className="text-2xl text-white">
@@ -625,14 +646,14 @@ export default function UnderwaterPage() {
           </div>
         </Card>
 
-        {/* Info Section - Lazy loaded */}
+        {/* Info Section - Lazy loaded with mobile optimizations */}
         <div
           className="mt-12 grid md:grid-cols-3 gap-6"
           style={{ contentVisibility: 'auto' }}
         >
-          <Card className="bg-slate-800/60 border-blue-800/50 backdrop-blur-sm hover:bg-slate-800/70 transition-all duration-300 hover:scale-105">
+          <Card className="bg-slate-800/60 border-blue-800/50 md:backdrop-blur-sm md:hover:bg-slate-800/70 md:transition-all md:duration-300 md:hover:scale-105 will-change-transform">
             <CardContent className="p-6 text-center">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-500/30 to-cyan-500/30 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-500/20 md:from-blue-500/30 to-cyan-500/20 md:to-cyan-500/30 rounded-full flex items-center justify-center mx-auto mb-4 md:shadow-lg">
                 🧠
               </div>
               <h3 className="text-white font-semibold mb-2">Smart Algorithm</h3>
@@ -642,9 +663,9 @@ export default function UnderwaterPage() {
               </p>
             </CardContent>
           </Card>
-          <Card className="bg-slate-800/60 border-blue-800/50 backdrop-blur-sm hover:bg-slate-800/70 transition-all duration-300 hover:scale-105">
+          <Card className="bg-slate-800/60 border-blue-800/50 md:backdrop-blur-sm md:hover:bg-slate-800/70 md:transition-all md:duration-300 md:hover:scale-105 will-change-transform">
             <CardContent className="p-6 text-center">
-              <div className="w-12 h-12 bg-gradient-to-br from-emerald-500/30 to-green-500/30 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+              <div className="w-12 h-12 bg-gradient-to-br from-emerald-500/20 md:from-emerald-500/30 to-green-500/20 md:to-green-500/30 rounded-full flex items-center justify-center mx-auto mb-4 md:shadow-lg">
                 🎨
               </div>
               <h3 className="text-white font-semibold mb-2">Red Recovery</h3>
@@ -654,9 +675,9 @@ export default function UnderwaterPage() {
               </p>
             </CardContent>
           </Card>
-          <Card className="bg-slate-800/60 border-blue-800/50 backdrop-blur-sm hover:bg-slate-800/70 transition-all duration-300 hover:scale-105">
+          <Card className="bg-slate-800/60 border-blue-800/50 md:backdrop-blur-sm md:hover:bg-slate-800/70 md:transition-all md:duration-300 md:hover:scale-105 will-change-transform">
             <CardContent className="p-6 text-center">
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-500/30 to-pink-500/30 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+              <div className="w-12 h-12 bg-gradient-to-br from-purple-500/20 md:from-purple-500/30 to-pink-500/20 md:to-pink-500/30 rounded-full flex items-center justify-center mx-auto mb-4 md:shadow-lg">
                 ⚙️
               </div>
               <h3 className="text-white font-semibold mb-2">Fine Control</h3>
