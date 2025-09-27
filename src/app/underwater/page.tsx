@@ -425,7 +425,18 @@ export default function UnderwaterPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
       {/* Hero Section */}
       <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-[url('/snapshark-logo-embedded.svg')] opacity-5 bg-center bg-no-repeat bg-contain"></div>
+        {/* Optimized background - CSS only, no heavy SVG */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-20 left-20 w-32 h-32 bg-blue-400/20 rounded-full blur-3xl animate-pulse"></div>
+          <div
+            className="absolute top-40 right-32 w-24 h-24 bg-cyan-400/20 rounded-full blur-2xl animate-pulse"
+            style={{ animationDelay: '1s' }}
+          ></div>
+          <div
+            className="absolute bottom-32 left-1/3 w-40 h-40 bg-blue-500/20 rounded-full blur-3xl animate-pulse"
+            style={{ animationDelay: '2s' }}
+          ></div>
+        </div>
         <div className="relative max-w-4xl mx-auto px-4 py-16 text-center">
           <div className="flex items-center justify-center gap-3 mb-6">
             <Waves className="w-12 h-12 text-blue-400" />
@@ -468,153 +479,160 @@ export default function UnderwaterPage() {
 
       {/* Main Tool */}
       <div className="max-w-6xl mx-auto px-4 pb-16">
-        <Card className="shadow-2xl border border-blue-800/50 bg-slate-800/50 backdrop-blur">
-          <CardHeader className="text-center pb-4">
-            <CardTitle className="text-2xl text-white">
-              Upload Your Underwater Photo
-            </CardTitle>
-            <p className="text-blue-300">
-              Automatically restores reds and balances colors lost underwater
-            </p>
-          </CardHeader>
-          <CardContent>
-            {!selectedFile ? (
-              <div className="space-y-6">
-                <div
-                  className="border-2 border-dashed border-blue-400 rounded-lg p-12 text-center hover:border-blue-300 transition-colors cursor-pointer"
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  <Upload className="w-16 h-16 text-blue-400 mx-auto mb-4" />
-                  <p className="text-white text-lg mb-2">
-                    Click to upload your underwater photo
-                  </p>
-                  <p className="text-blue-300 text-sm">
-                    Supports JPG, PNG, WebP formats
-                  </p>
-                </div>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) handleFileSelect(file);
-                  }}
-                  className="hidden"
-                />
-              </div>
-            ) : (
-              <div className="space-y-6">
-                {/* Controls - Mobile Responsive */}
-                <div className="space-y-4">
-                  {/* Intensity Control */}
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-                    <span className="text-white font-medium text-sm sm:text-base">
-                      Correction Intensity:
-                    </span>
-                    <div className="flex items-center gap-2 flex-1">
-                      <span className="text-blue-300 text-sm">0%</span>
-                      <Slider
-                        value={intensity}
-                        onValueChange={handleIntensityChange}
-                        max={150}
-                        min={0}
-                        step={5}
-                        className="flex-1 min-w-0"
-                        disabled={isProcessing}
-                      />
-                      <span className="text-blue-300 text-sm">150%</span>
-                      <span className="text-blue-400 font-mono text-sm ml-2 flex items-center gap-1">
-                        {intensity[0]}%
-                        {isProcessing && (
-                          <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" />
-                        )}
-                      </span>
-                    </div>
+        <Card className="shadow-2xl border border-blue-800/50 bg-slate-800/80 backdrop-blur-sm relative overflow-hidden">
+          {/* Subtle animated background */}
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-900/20 via-transparent to-cyan-900/20"></div>
+          <div className="relative z-10">
+            <CardHeader className="text-center pb-4">
+              <CardTitle className="text-2xl text-white">
+                Upload Your Underwater Photo
+              </CardTitle>
+              <p className="text-blue-300">
+                Automatically restores reds and balances colors lost underwater
+              </p>
+            </CardHeader>
+            <CardContent>
+              {!selectedFile ? (
+                <div className="space-y-6">
+                  <div
+                    className="border-2 border-dashed border-blue-400 rounded-lg p-12 text-center hover:border-blue-300 transition-colors cursor-pointer"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <Upload className="w-16 h-16 text-blue-400 mx-auto mb-4" />
+                    <p className="text-white text-lg mb-2">
+                      Click to upload your underwater photo
+                    </p>
+                    <p className="text-blue-300 text-sm">
+                      Supports JPG, PNG, WebP formats
+                    </p>
                   </div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) handleFileSelect(file);
+                    }}
+                    className="hidden"
+                  />
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {/* Controls - Mobile Responsive */}
+                  <div className="space-y-4">
+                    {/* Intensity Control */}
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                      <span className="text-white font-medium text-sm sm:text-base">
+                        Correction Intensity:
+                      </span>
+                      <div className="flex items-center gap-2 flex-1">
+                        <span className="text-blue-300 text-sm">0%</span>
+                        <Slider
+                          value={intensity}
+                          onValueChange={handleIntensityChange}
+                          max={150}
+                          min={0}
+                          step={5}
+                          className="flex-1 min-w-0"
+                          disabled={isProcessing}
+                        />
+                        <span className="text-blue-300 text-sm">150%</span>
+                        <span className="text-blue-400 font-mono text-sm ml-2 flex items-center gap-1">
+                          {intensity[0]}%
+                          {isProcessing && (
+                            <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" />
+                          )}
+                        </span>
+                      </div>
+                    </div>
 
-                  {/* Action Buttons */}
-                  <div className="flex flex-col sm:flex-row gap-2">
-                    <Button
-                      variant="outline"
-                      onClick={handleReset}
-                      size="sm"
-                      className="w-full sm:w-auto"
-                    >
-                      <RotateCcw className="w-4 h-4 mr-2" />
-                      Reset
-                    </Button>
-                    {result && (
+                    {/* Action Buttons */}
+                    <div className="flex flex-col sm:flex-row gap-2">
                       <Button
-                        onClick={handleDownload}
+                        variant="outline"
+                        onClick={handleReset}
                         size="sm"
                         className="w-full sm:w-auto"
                       >
-                        <Download className="w-4 h-4 mr-2" />
-                        Download
+                        <RotateCcw className="w-4 h-4 mr-2" />
+                        Reset
                       </Button>
-                    )}
+                      {result && (
+                        <Button
+                          onClick={handleDownload}
+                          size="sm"
+                          className="w-full sm:w-auto"
+                        >
+                          <Download className="w-4 h-4 mr-2" />
+                          Download
+                        </Button>
+                      )}
+                    </div>
                   </div>
+
+                  {/* Before/After Preview */}
+                  {result && (
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <h3 className="text-white font-medium">Original</h3>
+                        <div className="relative rounded-lg overflow-hidden bg-slate-700">
+                          <img
+                            src={result.original}
+                            alt="Original underwater photo"
+                            className="w-full h-auto"
+                          />
+                          <div className="absolute top-2 left-2 bg-black/70 text-white px-2 py-1 rounded text-sm">
+                            Original
+                          </div>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <h3 className="text-white font-medium">
+                          Color Corrected
+                        </h3>
+                        <div className="relative rounded-lg overflow-hidden bg-slate-700">
+                          <img
+                            src={result.corrected}
+                            alt="Color corrected underwater photo"
+                            className="w-full h-auto"
+                          />
+                          <div className="absolute top-2 left-2 bg-emerald-600/80 text-white px-2 py-1 rounded text-sm">
+                            Corrected
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {isProcessing && (
+                    <div className="text-center py-8">
+                      <div className="animate-spin w-8 h-8 border-2 border-blue-400 border-t-transparent rounded-full mx-auto mb-4"></div>
+                      <p className="text-blue-300">
+                        Processing your underwater photo...
+                      </p>
+                    </div>
+                  )}
+
+                  {error && (
+                    <div className="bg-red-900/20 border border-red-500 rounded-lg p-4">
+                      <p className="text-red-300">{error}</p>
+                    </div>
+                  )}
                 </div>
-
-                {/* Before/After Preview */}
-                {result && (
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <h3 className="text-white font-medium">Original</h3>
-                      <div className="relative rounded-lg overflow-hidden bg-slate-700">
-                        <img
-                          src={result.original}
-                          alt="Original underwater photo"
-                          className="w-full h-auto"
-                        />
-                        <div className="absolute top-2 left-2 bg-black/70 text-white px-2 py-1 rounded text-sm">
-                          Original
-                        </div>
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <h3 className="text-white font-medium">
-                        Color Corrected
-                      </h3>
-                      <div className="relative rounded-lg overflow-hidden bg-slate-700">
-                        <img
-                          src={result.corrected}
-                          alt="Color corrected underwater photo"
-                          className="w-full h-auto"
-                        />
-                        <div className="absolute top-2 left-2 bg-emerald-600/80 text-white px-2 py-1 rounded text-sm">
-                          Corrected
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {isProcessing && (
-                  <div className="text-center py-8">
-                    <div className="animate-spin w-8 h-8 border-2 border-blue-400 border-t-transparent rounded-full mx-auto mb-4"></div>
-                    <p className="text-blue-300">
-                      Processing your underwater photo...
-                    </p>
-                  </div>
-                )}
-
-                {error && (
-                  <div className="bg-red-900/20 border border-red-500 rounded-lg p-4">
-                    <p className="text-red-300">{error}</p>
-                  </div>
-                )}
-              </div>
-            )}
-          </CardContent>
+              )}
+            </CardContent>
+          </div>
         </Card>
 
-        {/* Info Section */}
-        <div className="mt-12 grid md:grid-cols-3 gap-6">
-          <Card className="bg-slate-800/50 border-blue-800/50">
+        {/* Info Section - Lazy loaded */}
+        <div
+          className="mt-12 grid md:grid-cols-3 gap-6"
+          style={{ contentVisibility: 'auto' }}
+        >
+          <Card className="bg-slate-800/60 border-blue-800/50 backdrop-blur-sm hover:bg-slate-800/70 transition-all duration-300 hover:scale-105">
             <CardContent className="p-6 text-center">
-              <div className="w-12 h-12 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-500/30 to-cyan-500/30 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
                 🧠
               </div>
               <h3 className="text-white font-semibold mb-2">Smart Algorithm</h3>
@@ -624,9 +642,9 @@ export default function UnderwaterPage() {
               </p>
             </CardContent>
           </Card>
-          <Card className="bg-slate-800/50 border-blue-800/50">
+          <Card className="bg-slate-800/60 border-blue-800/50 backdrop-blur-sm hover:bg-slate-800/70 transition-all duration-300 hover:scale-105">
             <CardContent className="p-6 text-center">
-              <div className="w-12 h-12 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-emerald-500/30 to-green-500/30 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
                 🎨
               </div>
               <h3 className="text-white font-semibold mb-2">Red Recovery</h3>
@@ -636,9 +654,9 @@ export default function UnderwaterPage() {
               </p>
             </CardContent>
           </Card>
-          <Card className="bg-slate-800/50 border-blue-800/50">
+          <Card className="bg-slate-800/60 border-blue-800/50 backdrop-blur-sm hover:bg-slate-800/70 transition-all duration-300 hover:scale-105">
             <CardContent className="p-6 text-center">
-              <div className="w-12 h-12 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-purple-500/30 to-pink-500/30 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
                 ⚙️
               </div>
               <h3 className="text-white font-semibold mb-2">Fine Control</h3>
