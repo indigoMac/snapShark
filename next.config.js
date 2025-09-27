@@ -82,7 +82,7 @@ const nextConfig = {
             value: [
               "default-src 'self'",
               // More permissive script-src for Clerk authentication
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.clerk.accounts.dev https://*.clerk.dev https://*.clerk.com https://js.stripe.com https://challenges.cloudflare.com https://vercel.live https://va.vercel-scripts.com",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.clerk.accounts.dev https://*.clerk.dev https://*.clerk.com https://clerk.snap-shark.com https://js.stripe.com https://challenges.cloudflare.com https://vercel.live https://va.vercel-scripts.com",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com",
               // Allow Clerk images and avatars
