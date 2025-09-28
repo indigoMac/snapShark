@@ -81,26 +81,26 @@
       scroll-behavior: auto !important;
     }
   }
-  
+
   /* Force hardware acceleration for smooth scrolling */
   * {
     -webkit-transform: translate3d(0, 0, 0);
     transform: translate3d(0, 0, 0);
   }
-  
+
   /* Optimize blur effects on mobile */
   .blur-3xl {
     filter: blur(32px);
   }
-  
+
   .blur-2xl {
     filter: blur(24px);
   }
-  
+
   .blur-xl {
     filter: blur(16px);
   }
-  
+
   .blur-lg {
     filter: blur(8px);
   }

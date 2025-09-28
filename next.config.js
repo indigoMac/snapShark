@@ -87,15 +87,15 @@ const nextConfig = {
               "font-src 'self' https://fonts.gstatic.com",
               // Allow Clerk images and avatars
               "img-src 'self' data: blob: https://*.stripe.com https://images.clerk.dev https://*.clerk.com https://*.gravatar.com https://img.clerk.com",
-              // Allow Clerk API connections
-              "connect-src 'self' https://api.stripe.com https://*.clerk.accounts.dev https://*.clerk.dev https://*.clerk.com https://clerk.snap-shark.com https://challenges.cloudflare.com https://vitals.vercel-insights.com https://clerk-telemetry.com",
-              // Allow Clerk frames (for OAuth providers)
-              "frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://challenges.cloudflare.com https://*.clerk.accounts.dev https://*.clerk.dev https://*.clerk.com",
+              // Allow Clerk API connections + social OAuth
+              "connect-src 'self' https://api.stripe.com https://*.clerk.accounts.dev https://*.clerk.dev https://*.clerk.com https://clerk.snap-shark.com https://challenges.cloudflare.com https://vitals.vercel-insights.com https://clerk-telemetry.com https://*.google.com https://*.facebook.com https://*.github.com",
+              // Allow Clerk frames (for OAuth providers) + social media in-app browsers
+              "frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://challenges.cloudflare.com https://*.clerk.accounts.dev https://*.clerk.dev https://*.clerk.com https://*.google.com https://*.facebook.com https://*.github.com",
               "worker-src 'self' blob:",
               "object-src 'none'",
               "base-uri 'self'",
-              // Allow form submissions to Clerk
-              "form-action 'self' https://api.stripe.com https://*.clerk.accounts.dev https://*.clerk.dev https://*.clerk.com",
+              // Allow form submissions to Clerk + OAuth providers
+              "form-action 'self' https://api.stripe.com https://*.clerk.accounts.dev https://*.clerk.dev https://*.clerk.com https://*.google.com https://*.facebook.com https://*.github.com",
             ].join('; '),
           },
         ],

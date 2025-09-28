@@ -416,12 +416,17 @@ export default function UnderwaterPage() {
   // Mobile detection for performance optimizations
   useEffect(() => {
     const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768 || /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
+      setIsMobile(
+        window.innerWidth < 768 ||
+          /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+            navigator.userAgent
+          )
+      );
     };
-    
+
     checkMobile();
     window.addEventListener('resize', checkMobile);
-    
+
     return () => {
       window.removeEventListener('resize', checkMobile);
     };
@@ -437,61 +442,64 @@ export default function UnderwaterPage() {
   }, []);
 
   // Memoized hero section to prevent unnecessary re-renders
-  const heroSection = useMemo(() => (
-    <div className="relative overflow-hidden">
-      {/* Mobile-optimized background - Reduced effects on small screens */}
-      <div className="absolute inset-0 opacity-10">
-        {/* Reduce blur and animations on mobile for better performance */}
-        <div className="absolute top-20 left-20 w-32 h-32 bg-blue-400/20 rounded-full md:blur-3xl blur-xl md:animate-pulse will-change-transform"></div>
-        <div
-          className="absolute top-40 right-32 w-24 h-24 bg-cyan-400/20 rounded-full md:blur-2xl blur-lg md:animate-pulse will-change-transform"
-          style={{ animationDelay: '1s' }}
-        ></div>
-        <div
-          className="absolute bottom-32 left-1/3 w-40 h-40 bg-blue-500/20 rounded-full md:blur-3xl blur-xl md:animate-pulse will-change-transform"
-          style={{ animationDelay: '2s' }}
-        ></div>
-      </div>
-      <div className="relative max-w-4xl mx-auto px-4 py-16 text-center">
-        <div className="flex items-center justify-center gap-3 mb-6">
-          <Waves className="w-12 h-12 text-blue-400" />
-          <h1 className="text-4xl md:text-6xl font-bold text-white">
-            Underwater Color Correction
-          </h1>
+  const heroSection = useMemo(
+    () => (
+      <div className="relative overflow-hidden">
+        {/* Mobile-optimized background - Reduced effects on small screens */}
+        <div className="absolute inset-0 opacity-10">
+          {/* Reduce blur and animations on mobile for better performance */}
+          <div className="absolute top-20 left-20 w-32 h-32 bg-blue-400/20 rounded-full md:blur-3xl blur-xl md:animate-pulse will-change-transform"></div>
+          <div
+            className="absolute top-40 right-32 w-24 h-24 bg-cyan-400/20 rounded-full md:blur-2xl blur-lg md:animate-pulse will-change-transform"
+            style={{ animationDelay: '1s' }}
+          ></div>
+          <div
+            className="absolute bottom-32 left-1/3 w-40 h-40 bg-blue-500/20 rounded-full md:blur-3xl blur-xl md:animate-pulse will-change-transform"
+            style={{ animationDelay: '2s' }}
+          ></div>
         </div>
-        <p className="text-xl text-blue-200 mb-8 max-w-2xl mx-auto">
-          Restore natural colors to your underwater photos with advanced
-          algorithmic color correction
-        </p>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-          <div className="flex items-center gap-2 text-blue-200">
-            <div className="w-8 h-8 bg-blue-500/20 rounded-full flex items-center justify-center">
-              🌊
-            </div>
-            <span className="font-medium">Auto Detection</span>
+        <div className="relative max-w-4xl mx-auto px-4 py-16 text-center">
+          <div className="flex items-center justify-center gap-3 mb-6">
+            <Waves className="w-12 h-12 text-blue-400" />
+            <h1 className="text-4xl md:text-6xl font-bold text-white">
+              Underwater Color Correction
+            </h1>
           </div>
-          <div className="flex items-center gap-2 text-blue-200">
-            <div className="w-8 h-8 bg-emerald-500/20 rounded-full flex items-center justify-center">
-              🎨
+          <p className="text-xl text-blue-200 mb-8 max-w-2xl mx-auto">
+            Restore natural colors to your underwater photos with advanced
+            algorithmic color correction
+          </p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+            <div className="flex items-center gap-2 text-blue-200">
+              <div className="w-8 h-8 bg-blue-500/20 rounded-full flex items-center justify-center">
+                🌊
+              </div>
+              <span className="font-medium">Auto Detection</span>
             </div>
-            <span className="font-medium">Color Restoration</span>
-          </div>
-          <div className="flex items-center gap-2 text-blue-200">
-            <div className="w-8 h-8 bg-purple-500/20 rounded-full flex items-center justify-center">
-              ⚡
+            <div className="flex items-center gap-2 text-blue-200">
+              <div className="w-8 h-8 bg-emerald-500/20 rounded-full flex items-center justify-center">
+                🎨
+              </div>
+              <span className="font-medium">Color Restoration</span>
             </div>
-            <span className="font-medium">Instant Preview</span>
-          </div>
-          <div className="flex items-center gap-2 text-blue-200">
-            <div className="w-8 h-8 bg-orange-500/20 rounded-full flex items-center justify-center">
-              🎯
+            <div className="flex items-center gap-2 text-blue-200">
+              <div className="w-8 h-8 bg-purple-500/20 rounded-full flex items-center justify-center">
+                ⚡
+              </div>
+              <span className="font-medium">Instant Preview</span>
             </div>
-            <span className="font-medium">Adjustable</span>
+            <div className="flex items-center gap-2 text-blue-200">
+              <div className="w-8 h-8 bg-orange-500/20 rounded-full flex items-center justify-center">
+                🎯
+              </div>
+              <span className="font-medium">Adjustable</span>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  ), []);
+    ),
+    []
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
