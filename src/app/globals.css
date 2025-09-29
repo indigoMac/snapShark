@@ -122,10 +122,23 @@
   }
 
   /* Ensure Clerk modals work properly on mobile */
-  [data-clerk-modal], [class*="cl-modal"], [class*="cl-card"] {
-    transform: none !important;
-    -webkit-transform: none !important;
+  [data-clerk-modal], [class*="cl-modal"] {
     position: fixed !important;
     z-index: 9999 !important;
+    inset: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 1rem !important;
+  }
+  
+  [class*="cl-card"], [class*="cl-modalContent"] {
+    position: relative !important;
+    z-index: 9999 !important;
+    width: 100% !important;
+    max-width: 28rem !important;
+    margin: 0 auto !important;
+    transform: none !important;
+    -webkit-transform: none !important;
   }
 }
