@@ -110,7 +110,7 @@ export function GlobalGracePeriodAlert() {
   if (!alertInfo) return null;
 
   return (
-    <div className="sticky top-16 z-50 mx-4 mt-4">
+    <div className="sticky top-16 z-60 mx-4 mt-4">
       <Alert
         variant={alertInfo.type === 'critical' ? 'destructive' : 'default'}
         className="border-l-4 border-l-amber-400"

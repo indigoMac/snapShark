@@ -2,6 +2,22 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+  Z-INDEX HIERARCHY
+  =================
+  To prevent z-index creep, follow this hierarchy:
+
+  z-10  - Content overlays (tooltips, small popups)
+  z-20  - Dropdown menus, select options
+  z-30  - Navigation bars, headers
+  z-40  - Mobile menus, side panels
+  z-50  - Modal dialogs, authentication overlays
+  z-60  - Critical alerts, notifications
+  z-70+ - Reserved for emergency overrides
+
+  Always use the lowest appropriate value!
+*/
+
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -70,11 +86,11 @@
 
 /* Mobile performance optimizations */
 @media (max-width: 768px) {
-  /* Reduce motion for better mobile performance */
+  /* Reduce motion for better mobile performance - but preserve essential modal animations */
   @media (prefers-reduced-motion: reduce) {
-    *,
-    *::before,
-    *::after {
+    *:not([class*="clerk"]):not([data-clerk]):not([role="dialog"]):not([aria-modal]),
+    *:not([class*="clerk"]):not([data-clerk]):not([role="dialog"]):not([aria-modal])::before,
+    *:not([class*="clerk"]):not([data-clerk]):not([role="dialog"]):not([aria-modal])::after {
       animation-duration: 0.01ms !important;
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
@@ -82,8 +98,8 @@
     }
   }
 
-  /* Force hardware acceleration for smooth scrolling */
-  * {
+  /* Force hardware acceleration for smooth scrolling - but exclude modals and overlays */
+  body, main, .container {
     -webkit-transform: translate3d(0, 0, 0);
     transform: translate3d(0, 0, 0);
   }
@@ -103,5 +119,13 @@
 
   .blur-lg {
     filter: blur(8px);
+  }
+
+  /* Ensure Clerk modals work properly on mobile */
+  [data-clerk-modal], [class*="cl-modal"], [class*="cl-card"] {
+    transform: none !important;
+    -webkit-transform: none !important;
+    position: fixed !important;
+    z-index: 9999 !important;
   }
 }
