@@ -61,7 +61,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <ClerkProvider>
+    <ClerkProvider
+      appearance={{
+        elements: {
+          modalBackdrop: "!z-50",
+          modalContent: "!z-50",
+          card: "!z-50"
+        }
+      }}
+    >
       <html lang="en" suppressHydrationWarning>
         <head>
           {/* Modern favicon configuration */}

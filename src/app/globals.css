@@ -2,6 +2,22 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+  Z-INDEX HIERARCHY
+  =================
+  To prevent z-index creep, follow this hierarchy:
+
+  z-10  - Content overlays (tooltips, small popups)
+  z-20  - Dropdown menus, select options
+  z-30  - Navigation bars, headers
+  z-40  - Mobile menus, side panels
+  z-50  - Modal dialogs, authentication overlays
+  z-60  - Critical alerts, notifications
+  z-70+ - Reserved for emergency overrides
+
+  Always use the lowest appropriate value!
+*/
+
 @layer base {
   :root {
     --background: 0 0% 100%;
