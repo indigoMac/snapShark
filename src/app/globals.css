@@ -143,19 +143,32 @@
   }
 
   /* Fix UserButton dropdown/popover positioning on mobile */
-  [class*="cl-userButtonPopover"], [class*="cl-popover"] {
-    position: fixed !important;
-    z-index: 9999 !important;
-    transform: none !important;
-    -webkit-transform: none !important;
+  @media (max-width: 768px) {
+    [class*="cl-userButtonPopover"], [class*="cl-popover"] {
+      position: fixed !important;
+      z-index: 9999 !important;
+      transform: none !important;
+      -webkit-transform: none !important;
+      top: 4rem !important;
+      right: 1rem !important;
+      left: auto !important;
+      width: auto !important;
+      max-width: calc(100vw - 2rem) !important;
+    }
+    
+    [class*="cl-userButtonPopoverCard"] {
+      position: relative !important;
+      z-index: 9999 !important;
+      transform: none !important;
+      -webkit-transform: none !important;
+      width: 280px !important;
+      max-width: calc(100vw - 2rem) !important;
+      margin: 0 !important;
+    }
   }
   
-  [class*="cl-userButtonPopoverCard"] {
-    position: relative !important;
+  /* Ensure UserButton dropdown appears above mobile menu */
+  [class*="cl-userButtonPopover"], [class*="cl-popover"] {
     z-index: 9999 !important;
-    transform: none !important;
-    -webkit-transform: none !important;
-    max-width: 90vw !important;
-    margin: 0 auto !important;
   }
 }

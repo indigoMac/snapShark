@@ -355,6 +355,8 @@ export function Navigation() {
                           appearance={{
                             elements: {
                               avatarBox: 'w-10 h-10',
+                              userButtonPopoverCard: 'shadow-lg border border-gray-200',
+                              userButtonPopover: 'z-[9999]'
                             },
                           }}
                         />

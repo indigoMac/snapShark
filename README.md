@@ -284,11 +284,11 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Support
 
 - **Email**: [your-email@domain.com]
-- **Issues**: [GitHub Issues](https://github.com/your-username/snapshark/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/your-username/snapshark/discussions)
+- **Issues**: [GitHub Issues](https://github.com/indigoMac/snapshark/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/indigoMac/snapshark/discussions)
 
 ---
 
 **Built with care for privacy-conscious users who demand professional-grade image processing without compromising their data security.**
 
-Made by [Your Name] | [Website](https://yourwebsite.com) | [Twitter](https://twitter.com/yourusername)
+Made by [Mackenzie Cox] 
