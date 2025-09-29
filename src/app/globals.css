@@ -141,4 +141,21 @@
     transform: none !important;
     -webkit-transform: none !important;
   }
+
+  /* Fix UserButton dropdown/popover positioning on mobile */
+  [class*="cl-userButtonPopover"], [class*="cl-popover"] {
+    position: fixed !important;
+    z-index: 9999 !important;
+    transform: none !important;
+    -webkit-transform: none !important;
+  }
+  
+  [class*="cl-userButtonPopoverCard"] {
+    position: relative !important;
+    z-index: 9999 !important;
+    transform: none !important;
+    -webkit-transform: none !important;
+    max-width: 90vw !important;
+    margin: 0 auto !important;
+  }
 }

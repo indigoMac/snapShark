@@ -67,7 +67,10 @@ export default function RootLayout({
             modalBackdrop: "!z-50 !fixed !inset-0",
             modalContent: "!z-50 !fixed !left-1/2 !top-1/2 !-translate-x-1/2 !-translate-y-1/2 !transform", 
             card: "!z-50 !w-full !max-w-md !mx-auto",
-            modal: "!z-50 !fixed !inset-0 !flex !items-center !justify-center !p-4"
+            modal: "!z-50 !fixed !inset-0 !flex !items-center !justify-center !p-4",
+            userButtonPopoverCard: "!z-50 !fixed !transform-none",
+            userButtonPopoverMain: "!z-50 !fixed !transform-none",
+            userButtonPopover: "!z-50 !fixed !transform-none"
           }
         }}
     >
