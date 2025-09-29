@@ -103,6 +103,12 @@
     -webkit-transform: translate3d(0, 0, 0);
     transform: translate3d(0, 0, 0);
   }
+  
+  /* Ensure Clerk elements are not affected by transforms */
+  [class*="cl-"], [data-clerk] {
+    transform: none !important;
+    -webkit-transform: none !important;
+  }
 
   /* Optimize blur effects on mobile */
   .blur-3xl {
@@ -121,54 +127,8 @@
     filter: blur(8px);
   }
 
-  /* Ensure Clerk modals work properly on mobile */
-  [data-clerk-modal], [class*="cl-modal"] {
-    position: fixed !important;
-    z-index: 9999 !important;
-    inset: 0 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    padding: 1rem !important;
-  }
-  
-  [class*="cl-card"], [class*="cl-modalContent"] {
-    position: relative !important;
-    z-index: 9999 !important;
-    width: 100% !important;
-    max-width: 28rem !important;
-    margin: 0 auto !important;
-    transform: none !important;
-    -webkit-transform: none !important;
-  }
-
-  /* Fix UserButton dropdown/popover positioning on mobile */
-  @media (max-width: 768px) {
-    [class*="cl-userButtonPopover"], [class*="cl-popover"] {
-      position: fixed !important;
-      z-index: 9999 !important;
-      transform: none !important;
-      -webkit-transform: none !important;
-      top: 4rem !important;
-      right: 1rem !important;
-      left: auto !important;
-      width: auto !important;
-      max-width: calc(100vw - 2rem) !important;
-    }
-    
-    [class*="cl-userButtonPopoverCard"] {
-      position: relative !important;
-      z-index: 9999 !important;
-      transform: none !important;
-      -webkit-transform: none !important;
-      width: 280px !important;
-      max-width: calc(100vw - 2rem) !important;
-      margin: 0 !important;
-    }
-  }
-  
-  /* Ensure UserButton dropdown appears above mobile menu */
-  [class*="cl-userButtonPopover"], [class*="cl-popover"] {
-    z-index: 9999 !important;
+  /* Simple fix: Just ensure Clerk elements have high enough z-index to appear above mobile menu */
+  [class*="cl-"], [data-clerk] {
+    z-index: 999999 !important;
   }
 }
