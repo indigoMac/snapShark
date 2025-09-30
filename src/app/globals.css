@@ -131,4 +131,26 @@
   [class*="cl-"], [data-clerk] {
     z-index: 999999 !important;
   }
+
+  /* Mobile UserButton dropdown fix */
+  @media (max-width: 768px) {
+    /* Ensure UserButton dropdown appears above everything on mobile */
+    [class*="cl-userButtonPopover"] {
+      position: fixed !important;
+      z-index: 999999 !important;
+      top: 4rem !important;
+      right: 1rem !important;
+      left: auto !important;
+      bottom: auto !important;
+      width: 280px !important;
+      max-width: calc(100vw - 2rem) !important;
+      margin: 0 !important;
+    }
+    
+    /* Ensure the dropdown card is properly styled */
+    [class*="cl-userButtonPopoverCard"] {
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+      border: 1px solid rgba(0, 0, 0, 0.1) !important;
+    }
+  }
 }
