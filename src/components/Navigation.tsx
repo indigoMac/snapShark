@@ -30,9 +30,14 @@ export function Navigation() {
     setMounted(true);
   }, []);
 
-  // Close mobile menu when clicking outside or on links
+  // Close mobile menu when clicking outside or on links (but not on UserButton)
   useEffect(() => {
-    const handleClickOutside = () => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      // Don't close if clicking on UserButton or its dropdown
+      if (target.closest('[class*="cl-userButton"]') || target.closest('[class*="cl-popover"]')) {
+        return;
+      }
       setMobileMenuOpen(false);
       setToolsDropdownOpen(false);
     };
@@ -350,14 +355,16 @@ export function Navigation() {
                   {isSignedIn && (
                     <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
                       <div className="flex items-center gap-3 px-3">
-                        <UserButton
-                          afterSignOutUrl="/"
-                          appearance={{
-                            elements: {
-                              avatarBox: 'w-10 h-10',
-                            },
-                          }}
-                        />
+                        <div onClick={(e) => e.stopPropagation()}>
+                          <UserButton
+                            afterSignOutUrl="/"
+                            appearance={{
+                              elements: {
+                                avatarBox: 'w-10 h-10',
+                              },
+                            }}
+                          />
+                        </div>
                         <div className="flex-1">
                           <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
                             {user?.firstName ||
