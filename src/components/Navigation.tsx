@@ -361,8 +361,6 @@ export function Navigation() {
                             appearance={{
                               elements: {
                                 avatarBox: 'w-10 h-10',
-                                userButtonPopover: 'fixed top-20 left-1/2 transform -translate-x-1/2 z-[999999] w-72 max-w-[calc(100vw-2rem)]',
-                                userButtonPopoverCard: 'shadow-xl border border-gray-200'
                               },
                             }}
                           />
