@@ -138,13 +138,14 @@
     [class*="cl-userButtonPopover"] {
       position: fixed !important;
       z-index: 999999 !important;
-      top: 4rem !important;
-      right: 1rem !important;
-      left: auto !important;
+      top: 8rem !important;
+      left: 50% !important;
+      right: auto !important;
       bottom: auto !important;
       width: 280px !important;
       max-width: calc(100vw - 2rem) !important;
       margin: 0 !important;
+      transform: translateX(-50%) !important;
     }
     
     /* Ensure the dropdown card is properly styled */
