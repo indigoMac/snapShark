@@ -131,46 +131,4 @@
   [class*="cl-"], [data-clerk] {
     z-index: 999999 !important;
   }
-
-  /* Debug: Make all Clerk elements visible with red border on mobile */
-  @media (max-width: 768px) {
-    [class*="cl-"] {
-      border: 2px solid red !important;
-      background: yellow !important;
-    }
-  }
-
-  /* Mobile UserButton dropdown fix - using more specific selectors */
-  @media (max-width: 768px) {
-    /* Target all possible Clerk popover classes */
-    [class*="cl-userButtonPopover"],
-    [class*="cl-popover"],
-    [data-clerk-popover],
-    .cl-userButtonPopover,
-    .cl-popover {
-      position: fixed !important;
-      z-index: 999999 !important;
-      top: 5rem !important;
-      left: 1rem !important;
-      right: 1rem !important;
-      bottom: auto !important;
-      width: auto !important;
-      max-width: none !important;
-      margin: 0 !important;
-      transform: none !important;
-    }
-    
-    /* Target the card inside */
-    [class*="cl-userButtonPopoverCard"],
-    [class*="cl-card"],
-    [data-clerk-card],
-    .cl-userButtonPopoverCard,
-    .cl-card {
-      width: 100% !important;
-      max-width: 320px !important;
-      margin: 0 auto !important;
-      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
-      border: 1px solid rgba(0, 0, 0, 0.1) !important;
-    }
-  }
 }

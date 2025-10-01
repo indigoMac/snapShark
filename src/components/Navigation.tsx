@@ -1,6 +1,6 @@
 'use client';
 
-import { UserButton, useUser, SignInButton } from '@clerk/nextjs';
+import { UserButton, useUser, SignInButton, useClerk } from '@clerk/nextjs';
 import Link from 'next/link';
 import { LogoIcon } from '@/components/Logo';
 import { Button } from '@/components/ui/button';
@@ -20,6 +20,7 @@ import { usePaywall } from '@/hooks/usePaywall';
 
 export function Navigation() {
   const { isSignedIn, user } = useUser();
+  const { signOut } = useClerk();
   const { theme, setTheme } = useTheme();
   const { isPro } = usePaywall();
   const [mounted, setMounted] = useState(false);
@@ -354,16 +355,9 @@ export function Navigation() {
                   {/* User info for signed-in users */}
                   {isSignedIn && (
                     <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
-                      <div className="flex items-center gap-3 px-3">
-                        <div onClick={(e) => e.stopPropagation()}>
-                          <UserButton
-                            afterSignOutUrl="/"
-                            appearance={{
-                              elements: {
-                                avatarBox: 'w-10 h-10',
-                              },
-                            }}
-                          />
+                      <div className="flex items-center gap-3 px-3 mb-4">
+                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                          {user?.firstName?.charAt(0) || user?.emailAddresses[0]?.emailAddress?.charAt(0) || 'U'}
                         </div>
                         <div className="flex-1">
                           <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
@@ -375,6 +369,14 @@ export function Navigation() {
                           </p>
                         </div>
                       </div>
+                      
+                      {/* Custom Sign Out Button */}
+                      <button
+                        onClick={() => signOut()}
+                        className="w-full flex items-center gap-3 h-12 px-4 text-base font-medium text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-950/50 rounded-lg transition-colors border border-transparent hover:border-red-200 dark:hover:border-red-800"
+                      >
+                        🚪 Sign Out
+                      </button>
                     </div>
                   )}
                 </div>
