@@ -73,3 +73,6 @@ Thumbs.db
 # Vercel
 .vercel
 logs_result.csv
+
+# clerk configuration (can include secrets)
+/.clerk/
