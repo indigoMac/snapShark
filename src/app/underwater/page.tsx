@@ -11,6 +11,7 @@ interface ProcessedResult {
   original: string;
   corrected: string;
   filename: string;
+  isVideo?: boolean;
 }
 
 export default function UnderwaterPage() {
@@ -22,23 +23,46 @@ export default function UnderwaterPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const processingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [isMobile, setIsMobile] = useState(false);
+  
+  // Video processing state
+  const [isVideoFile, setIsVideoFile] = useState(false);
+  const [videoProgress, setVideoProgress] = useState(0);
+  const [totalFrames, setTotalFrames] = useState(0);
+  const [processedFrames, setProcessedFrames] = useState(0);
 
   const handleFileSelect = useCallback(
     async (file: File) => {
-      if (!file.type.startsWith('image/')) {
-        setError('Please select a valid image file');
+      const isVideo = file.type.startsWith('video/');
+      const isImage = file.type.startsWith('image/');
+      
+      if (!isImage && !isVideo) {
+        setError('Please select a valid image or video file');
+        return;
+      }
+
+      // Check video file size (limit to ~100MB for now)
+      if (isVideo && file.size > 100 * 1024 * 1024) {
+        setError('Video file too large. Please select a video under 100MB.');
         return;
       }
 
       setSelectedFile(file);
+      setIsVideoFile(isVideo);
       setError(null);
       setResult(null);
+      setVideoProgress(0);
+      setProcessedFrames(0);
+      setTotalFrames(0);
 
-      // Create preview of original image
+      // Create preview of original file
       const originalUrl = URL.createObjectURL(file);
 
       // Start processing immediately with default intensity
-      await processImage(file, intensity[0]);
+      if (isVideo) {
+        await processVideo(file, intensity[0]);
+      } else {
+        await processImage(file, intensity[0]);
+      }
     },
     [intensity]
   );
@@ -348,8 +372,152 @@ export default function UnderwaterPage() {
     return { low, high };
   }, []);
 
+  const processVideo = useCallback(
+    async (file: File, intensityValue: number) => {
+      setIsProcessing(true);
+      setError(null);
+      setVideoProgress(0);
+      setProcessedFrames(0);
+
+      try {
+        // Create video element
+        const video = document.createElement('video');
+        const videoUrl = URL.createObjectURL(file);
+        video.src = videoUrl;
+        video.muted = true;
+        video.preload = 'metadata';
+
+        // Wait for video metadata to load
+        await new Promise((resolve, reject) => {
+          video.onloadedmetadata = resolve;
+          video.onerror = reject;
+        });
+
+        // FIXED: Use consistent 30fps for good quality/performance balance
+        const targetFps = 30; // Use 30fps consistently to preserve video duration
+        const duration = video.duration;
+        
+        // FIXED: Use Math.ceil to ensure we don't lose the last partial second
+        const totalFrames = Math.ceil(duration * targetFps);
+        
+        // Limit video length for performance (max 60 seconds for now)
+        if (duration > 60) {
+          throw new Error('Video too long. Please select a video under 60 seconds.');
+        }
+
+        setTotalFrames(totalFrames);
+
+        // Create canvas for frame processing
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        if (!ctx) {
+          throw new Error('Could not get canvas context');
+        }
+
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+
+        // FIXED: Create MediaRecorder with proper frame rate
+        const stream = canvas.captureStream(targetFps);
+        const mediaRecorder = new MediaRecorder(stream, {
+          mimeType: 'video/webm;codecs=vp9',
+          videoBitsPerSecond: 2500000 // 2.5 Mbps for good quality
+        });
+
+        const chunks: Blob[] = [];
+        mediaRecorder.ondataavailable = (event) => {
+          if (event.data.size > 0) {
+            chunks.push(event.data);
+          }
+        };
+
+        // Start recording
+        mediaRecorder.start();
+
+        // FIXED: Process frames with proper timing and duration checking
+        const frameInterval = 1000 / targetFps; // Time between frames in milliseconds
+        
+        for (let frameIndex = 0; frameIndex < totalFrames; frameIndex++) {
+          const currentTime = frameIndex / targetFps;
+          
+          // FIXED: Ensure we don't exceed video duration
+          if (currentTime >= duration) {
+            console.log(`Stopping at frame ${frameIndex}, time ${currentTime}s >= duration ${duration}s`);
+            break;
+          }
+          
+          // Seek to frame with bounds checking
+          video.currentTime = Math.min(currentTime, duration - 0.01); // Ensure we stay within bounds
+          
+          // Wait for seek to complete with timeout fallback
+          await new Promise((resolve) => {
+            const onSeeked = () => {
+              video.removeEventListener('seeked', onSeeked);
+              resolve(void 0);
+            };
+            video.addEventListener('seeked', onSeeked);
+            
+            // Fallback timeout in case seeked event doesn't fire
+            setTimeout(() => {
+              video.removeEventListener('seeked', onSeeked);
+              resolve(void 0);
+            }, 100);
+          });
+
+          // Draw frame to canvas
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+          // Get image data and apply correction
+          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          const correctedImageData = applyUnderwaterCorrection(imageData, intensityValue / 100);
+          
+          // Put corrected data back to canvas
+          ctx.putImageData(correctedImageData, 0, 0);
+
+          // Update progress
+          setProcessedFrames(frameIndex + 1);
+          setVideoProgress(((frameIndex + 1) / totalFrames) * 100);
+
+          // FIXED: Proper timing to ensure MediaRecorder captures each frame
+          // Wait at least 1/4 of frame interval, minimum 16ms (60fps max processing speed)
+          await new Promise(resolve => setTimeout(resolve, Math.max(frameInterval / 4, 16)));
+        }
+
+        // FIXED: Give MediaRecorder extra time to capture the last frame
+        await new Promise(resolve => setTimeout(resolve, 200));
+
+        // Stop recording and get result
+        mediaRecorder.stop();
+        
+        const processedVideoBlob = await new Promise<Blob>((resolve) => {
+          mediaRecorder.onstop = () => {
+            const blob = new Blob(chunks, { type: 'video/webm' });
+            resolve(blob);
+          };
+        });
+
+        const correctedUrl = URL.createObjectURL(processedVideoBlob);
+
+        setResult({
+          original: videoUrl,
+          corrected: correctedUrl,
+          filename: file.name.replace(/\.[^/.]+$/, '_underwater_corrected.webm'),
+          isVideo: true
+        });
+
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Video processing failed');
+      } finally {
+        setIsProcessing(false);
+        setVideoProgress(0);
+      }
+    },
+    [applyUnderwaterCorrection]
+  );
+
   // Debounced processing for better mobile performance
-  const debouncedProcessImage = useCallback(
+  const debouncedProcessFile = useCallback(
     (file: File, intensityValue: number) => {
       // Clear existing timeout
       if (processingTimeoutRef.current) {
@@ -357,21 +525,26 @@ export default function UnderwaterPage() {
       }
 
       // Set new timeout for processing
+      const delay = isVideoFile ? 500 : 150; // Longer delay for videos to avoid excessive processing
       processingTimeoutRef.current = setTimeout(() => {
-        processImage(file, intensityValue);
-      }, 150); // 150ms debounce delay
+        if (isVideoFile) {
+          processVideo(file, intensityValue);
+        } else {
+          processImage(file, intensityValue);
+        }
+      }, delay);
     },
-    [processImage]
+    [processImage, processVideo, isVideoFile]
   );
 
   const handleIntensityChange = useCallback(
     (newIntensity: number[]) => {
       setIntensity(newIntensity);
       if (selectedFile) {
-        debouncedProcessImage(selectedFile, newIntensity[0]);
+        debouncedProcessFile(selectedFile, newIntensity[0]);
       }
     },
-    [selectedFile, debouncedProcessImage]
+    [selectedFile, debouncedProcessFile]
   );
 
   const handleDownload = useCallback(async () => {
@@ -401,6 +574,10 @@ export default function UnderwaterPage() {
     setResult(null);
     setError(null);
     setIntensity([100]);
+    setIsVideoFile(false);
+    setVideoProgress(0);
+    setProcessedFrames(0);
+    setTotalFrames(0);
 
     // Clear any pending processing
     if (processingTimeoutRef.current) {
@@ -466,7 +643,7 @@ export default function UnderwaterPage() {
             </h1>
           </div>
           <p className="text-xl text-blue-200 mb-8 max-w-2xl mx-auto">
-            Restore natural colors to your underwater photos with advanced
+            Restore natural colors to your underwater photos and videos with advanced
             algorithmic color correction
           </p>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
@@ -529,16 +706,16 @@ export default function UnderwaterPage() {
                   >
                     <Upload className="w-16 h-16 text-blue-400 mx-auto mb-4" />
                     <p className="text-white text-lg mb-2">
-                      Click to upload your underwater photo
+                      Click to upload your underwater photo or video
                     </p>
                     <p className="text-blue-300 text-sm">
-                      Supports JPG, PNG, WebP formats
+                      Supports JPG, PNG, WebP images and MP4, WebM, MOV videos (max 100MB, 60 seconds)
                     </p>
                   </div>
                   <input
                     ref={fileInputRef}
                     type="file"
-                    accept="image/*"
+                    accept="image/*,video/*"
                     onChange={(e) => {
                       const file = e.target.files?.[0];
                       if (file) handleFileSelect(file);
@@ -606,11 +783,21 @@ export default function UnderwaterPage() {
                       <div className="space-y-2">
                         <h3 className="text-white font-medium">Original</h3>
                         <div className="relative rounded-lg overflow-hidden bg-slate-700">
-                          <img
-                            src={result.original}
-                            alt="Original underwater photo"
-                            className="w-full h-auto"
-                          />
+                          {result.isVideo ? (
+                            <video
+                              src={result.original}
+                              controls
+                              muted
+                              className="w-full h-auto"
+                              style={{ maxHeight: '400px' }}
+                            />
+                          ) : (
+                            <img
+                              src={result.original}
+                              alt="Original underwater photo"
+                              className="w-full h-auto"
+                            />
+                          )}
                           <div className="absolute top-2 left-2 bg-black/70 text-white px-2 py-1 rounded text-sm">
                             Original
                           </div>
@@ -621,11 +808,21 @@ export default function UnderwaterPage() {
                           Color Corrected
                         </h3>
                         <div className="relative rounded-lg overflow-hidden bg-slate-700">
-                          <img
-                            src={result.corrected}
-                            alt="Color corrected underwater photo"
-                            className="w-full h-auto"
-                          />
+                          {result.isVideo ? (
+                            <video
+                              src={result.corrected}
+                              controls
+                              muted
+                              className="w-full h-auto"
+                              style={{ maxHeight: '400px' }}
+                            />
+                          ) : (
+                            <img
+                              src={result.corrected}
+                              alt="Color corrected underwater photo"
+                              className="w-full h-auto"
+                            />
+                          )}
                           <div className="absolute top-2 left-2 bg-emerald-600/80 text-white px-2 py-1 rounded text-sm">
                             Corrected
                           </div>
@@ -637,9 +834,23 @@ export default function UnderwaterPage() {
                   {isProcessing && (
                     <div className="text-center py-8">
                       <div className="animate-spin w-8 h-8 border-2 border-blue-400 border-t-transparent rounded-full mx-auto mb-4"></div>
-                      <p className="text-blue-300">
-                        Processing your underwater photo...
+                      <p className="text-blue-300 mb-4">
+                        Processing your underwater {isVideoFile ? 'video' : 'photo'}...
                       </p>
+                      
+                      {isVideoFile && totalFrames > 0 && (
+                        <div className="space-y-2">
+                          <div className="w-full bg-slate-700 rounded-full h-2">
+                            <div 
+                              className="bg-blue-400 h-2 rounded-full transition-all duration-300"
+                              style={{ width: `${videoProgress}%` }}
+                            ></div>
+                          </div>
+                          <p className="text-blue-300 text-sm">
+                            Frame {processedFrames} of {totalFrames} ({Math.round(videoProgress)}%)
+                          </p>
+                        </div>
+                      )}
                     </div>
                   )}
 
