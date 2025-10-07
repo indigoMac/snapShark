@@ -570,6 +570,14 @@ export default function UnderwaterPage() {
   }, [result]);
 
   const handleReset = useCallback(() => {
+    // Clean up blob URLs before clearing result
+    if (result?.original) {
+      URL.revokeObjectURL(result.original);
+    }
+    if (result?.corrected) {
+      URL.revokeObjectURL(result.corrected);
+    }
+
     setSelectedFile(null);
     setResult(null);
     setError(null);
@@ -588,7 +596,7 @@ export default function UnderwaterPage() {
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
-  }, []);
+  }, [result]);
 
   // Mobile detection for performance optimizations
   useEffect(() => {
@@ -614,6 +622,30 @@ export default function UnderwaterPage() {
     return () => {
       if (processingTimeoutRef.current) {
         clearTimeout(processingTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Cleanup blob URLs when results change to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (result?.original) {
+        URL.revokeObjectURL(result.original);
+      }
+      if (result?.corrected) {
+        URL.revokeObjectURL(result.corrected);
+      }
+    };
+  }, [result]);
+
+  // Cleanup all blob URLs on component unmount
+  useEffect(() => {
+    return () => {
+      if (result?.original) {
+        URL.revokeObjectURL(result.original);
+      }
+      if (result?.corrected) {
+        URL.revokeObjectURL(result.corrected);
       }
     };
   }, []);
