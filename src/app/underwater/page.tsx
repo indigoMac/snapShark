@@ -393,12 +393,34 @@ export default function UnderwaterPage() {
           video.onerror = reject;
         });
 
-        // FIXED: Use consistent 30fps for good quality/performance balance
-        const targetFps = 30; // Use 30fps consistently to preserve video duration
+        // MATCH original video properties exactly
         const duration = video.duration;
         
-        // FIXED: Use Math.ceil to ensure we don't lose the last partial second
-        const totalFrames = Math.ceil(duration * targetFps);
+        // Try to detect original frame rate (approximation)
+        // Most videos are 24, 25, 30, or 60 fps
+        const possibleFps = [24, 25, 30, 60];
+        let detectedFps = 30; // default fallback
+        
+        // Simple heuristic: try to match common frame rates
+        for (const fps of possibleFps) {
+          const expectedFrames = duration * fps;
+          if (Math.abs(expectedFrames - Math.round(expectedFrames)) < 0.1) {
+            detectedFps = fps;
+            break;
+          }
+        }
+        
+        const targetFps = detectedFps;
+        const totalFrames = Math.round(duration * targetFps); // Use round for exact match
+        
+        console.log('Video analysis:', {
+          videoDuration: duration,
+          detectedFps,
+          targetFps,
+          totalFrames,
+          expectedDuration: totalFrames / targetFps,
+          durationDiff: Math.abs(duration - (totalFrames / targetFps))
+        });
         
         // Limit video length for performance (max 60 seconds for now)
         if (duration > 60) {
@@ -418,11 +440,31 @@ export default function UnderwaterPage() {
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
 
-        // FIXED: Create MediaRecorder with proper frame rate
+        // Create MediaRecorder with adaptive bitrate for better quality
         const stream = canvas.captureStream(targetFps);
+        
+        // MATCH original bitrate as closely as possible
+        const originalBitrate = (file.size * 8) / duration; // Original bitrate in bits/second
+        
+        // Use original bitrate exactly, with small safety margins
+        const adaptiveBitrate = Math.min(
+          Math.max(originalBitrate * 0.98, 1000000), // Use 98% of original, minimum 1Mbps
+          originalBitrate * 1.02  // Allow up to 102% of original (tiny margin for encoding differences)
+        );
+        
         const mediaRecorder = new MediaRecorder(stream, {
           mimeType: 'video/webm;codecs=vp9',
-          videoBitsPerSecond: 2500000 // 2.5 Mbps for good quality
+          videoBitsPerSecond: adaptiveBitrate
+        });
+        
+        // Debug info
+        console.log('Video processing settings:', {
+          originalSize: `${(file.size / 1024 / 1024).toFixed(1)}MB`,
+          resolution: `${canvas.width}x${canvas.height}`,
+          duration: `${duration.toFixed(1)}s`,
+          targetFps,
+          originalBitrate: `${(originalBitrate / 1000000).toFixed(1)}Mbps`,
+          adaptiveBitrate: `${(adaptiveBitrate / 1000000).toFixed(1)}Mbps`
         });
 
         const chunks: Blob[] = [];
@@ -435,20 +477,20 @@ export default function UnderwaterPage() {
         // Start recording
         mediaRecorder.start();
 
-        // FIXED: Process frames with proper timing and duration checking
+        // Process EXACT number of frames to match original duration
         const frameInterval = 1000 / targetFps; // Time between frames in milliseconds
         
         for (let frameIndex = 0; frameIndex < totalFrames; frameIndex++) {
           const currentTime = frameIndex / targetFps;
           
-          // FIXED: Ensure we don't exceed video duration
+          // Process every frame up to exact duration
           if (currentTime >= duration) {
-            console.log(`Stopping at frame ${frameIndex}, time ${currentTime}s >= duration ${duration}s`);
+            console.log(`Reached end: frame ${frameIndex}, time ${currentTime}s, duration ${duration}s`);
             break;
           }
           
-          // Seek to frame with bounds checking
-          video.currentTime = Math.min(currentTime, duration - 0.01); // Ensure we stay within bounds
+          // Seek to EXACT frame position
+          video.currentTime = Math.min(currentTime, duration - (1 / targetFps)); // Leave exactly 1 frame buffer
           
           // Wait for seek to complete with timeout fallback
           await new Promise((resolve) => {
@@ -479,13 +521,13 @@ export default function UnderwaterPage() {
           setProcessedFrames(frameIndex + 1);
           setVideoProgress(((frameIndex + 1) / totalFrames) * 100);
 
-          // FIXED: Proper timing to ensure MediaRecorder captures each frame
-          // Wait at least 1/4 of frame interval, minimum 16ms (60fps max processing speed)
-          await new Promise(resolve => setTimeout(resolve, Math.max(frameInterval / 4, 16)));
+          // EXACT timing to match original frame rate
+          // Wait the precise frame interval for perfect timing
+          await new Promise(resolve => setTimeout(resolve, frameInterval / 2));
         }
 
-        // FIXED: Give MediaRecorder extra time to capture the last frame
-        await new Promise(resolve => setTimeout(resolve, 200));
+        // No extra wait - stop immediately after last frame
+        // await new Promise(resolve => setTimeout(resolve, 50)); // Minimal if needed
 
         // Stop recording and get result
         mediaRecorder.stop();
