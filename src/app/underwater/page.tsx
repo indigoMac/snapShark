@@ -5,71 +5,106 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Download, Upload, RotateCcw, Waves } from 'lucide-react';
-import { downloadFile } from '@/lib/zip';
+import { downloadFile, createZip, downloadZip } from '@/lib/zip';
 
 interface ProcessedResult {
   original: string;
   corrected: string;
   filename: string;
   isVideo?: boolean;
+  correctedBlob?: Blob; // Store the actual blob for ZIP creation
 }
 
 export default function UnderwaterPage() {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [result, setResult] = useState<ProcessedResult | null>(null);
+  const [results, setResults] = useState<ProcessedResult[]>([]);
   const [intensity, setIntensity] = useState([100]);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const processingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   
-  // Video processing state
+  // Batch processing state
+  const [batchProgress, setBatchProgress] = useState(0);
+  const [currentProcessingIndex, setCurrentProcessingIndex] = useState(0);
+  const [isBatchMode, setIsBatchMode] = useState(false);
+  
+  // Video processing state (for single file mode)
   const [isVideoFile, setIsVideoFile] = useState(false);
   const [videoProgress, setVideoProgress] = useState(0);
   const [totalFrames, setTotalFrames] = useState(0);
   const [processedFrames, setProcessedFrames] = useState(0);
 
   const handleFileSelect = useCallback(
-    async (file: File) => {
-      const isVideo = file.type.startsWith('video/');
-      const isImage = file.type.startsWith('image/');
+    async (files: FileList | File[]) => {
+      const fileArray = Array.from(files);
       
-      if (!isImage && !isVideo) {
-        setError('Please select a valid image or video file');
+      // Filter for images only in batch mode
+      const imageFiles = fileArray.filter(file => file.type.startsWith('image/'));
+      const videoFiles = fileArray.filter(file => file.type.startsWith('video/'));
+      
+      if (imageFiles.length === 0 && videoFiles.length === 0) {
+        setError('Please select valid image or video files');
         return;
       }
 
-      // Check video file size (limit to ~100MB for now)
-      if (isVideo && file.size > 100 * 1024 * 1024) {
-        setError('Video file too large. Please select a video under 100MB.');
+      // Check for mixed file types
+      if (imageFiles.length > 0 && videoFiles.length > 0) {
+        setError('Please select either images or videos, not both');
         return;
       }
 
-      setSelectedFile(file);
-      setIsVideoFile(isVideo);
+      // Check video file sizes (limit to ~100MB for now)
+      const oversizedVideos = videoFiles.filter(file => file.size > 100 * 1024 * 1024);
+      if (oversizedVideos.length > 0) {
+        setError('Some video files are too large. Please select videos under 100MB.');
+        return;
+      }
+
       setError(null);
-      setResult(null);
+      setResults([]);
       setVideoProgress(0);
       setProcessedFrames(0);
       setTotalFrames(0);
+      setBatchProgress(0);
+      setCurrentProcessingIndex(0);
 
-      // Create preview of original file
-      const originalUrl = URL.createObjectURL(file);
+      if (fileArray.length === 1) {
+        // Single file mode (existing behavior)
+        const file = fileArray[0];
+        const isVideo = file.type.startsWith('video/');
+        setSelectedFiles([file]);
+        setIsVideoFile(isVideo);
+        setIsBatchMode(false);
 
-      // Start processing immediately with default intensity
-      if (isVideo) {
-        await processVideo(file, intensity[0]);
+        // Start processing immediately with default intensity
+        if (isVideo) {
+          await processVideo(file, intensity[0]);
+        } else {
+          await processImage(file, intensity[0], false);
+        }
       } else {
-        await processImage(file, intensity[0]);
+        // Batch mode (images only)
+        if (videoFiles.length > 0) {
+          setError('Batch processing only supports images. Please select image files only.');
+          return;
+        }
+        
+        setSelectedFiles(imageFiles);
+        setIsVideoFile(false);
+        setIsBatchMode(true);
+        // Don't auto-process in batch mode, wait for user to click "Process Batch"
       }
     },
     [intensity]
   );
 
   const processImage = useCallback(
-    async (file: File, intensityValue: number) => {
-      setIsProcessing(true);
+    async (file: File, intensityValue: number, isBatchProcessing: boolean = false) => {
+      if (!isBatchProcessing) {
+        setIsProcessing(true);
+      }
       setError(null);
 
       try {
@@ -120,15 +155,24 @@ export default function UnderwaterPage() {
 
         const correctedUrl = URL.createObjectURL(correctedBlob);
 
-        setResult({
+        const newResult = {
           original: imageUrl,
           corrected: correctedUrl,
           filename: file.name.replace(/\.[^/.]+$/, '_underwater_corrected.jpg'),
-        });
+          correctedBlob: correctedBlob, // Store the blob for ZIP creation
+        };
+
+        if (isBatchProcessing) {
+          setResults(prev => [...prev, newResult]);
+        } else {
+          setResults([newResult]);
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Processing failed');
       } finally {
-        setIsProcessing(false);
+        if (!isBatchProcessing) {
+          setIsProcessing(false);
+        }
       }
     },
     []
@@ -419,7 +463,9 @@ export default function UnderwaterPage() {
           targetFps,
           totalFrames,
           expectedDuration: totalFrames / targetFps,
-          durationDiff: Math.abs(duration - (totalFrames / targetFps))
+          durationDiff: Math.abs(duration - (totalFrames / targetFps)),
+          resolution: `${video.videoWidth}x${video.videoHeight}`,
+          aspectRatio: (video.videoWidth / video.videoHeight).toFixed(2)
         });
         
         // Limit video length for performance (max 60 seconds for now)
@@ -452,10 +498,29 @@ export default function UnderwaterPage() {
           originalBitrate * 1.02  // Allow up to 102% of original (tiny margin for encoding differences)
         );
         
-        const mediaRecorder = new MediaRecorder(stream, {
-          mimeType: 'video/webm;codecs=vp9',
+        // Try different codecs for better quality/compatibility
+        let mediaRecorder;
+        const codecOptions = [
+          { mimeType: 'video/webm;codecs=vp9', name: 'VP9' },
+          { mimeType: 'video/webm;codecs=vp8', name: 'VP8' },
+          { mimeType: 'video/mp4;codecs=avc1', name: 'H.264' },
+          { mimeType: 'video/webm', name: 'WebM' }
+        ];
+        
+        let selectedCodec = codecOptions[0]; // Default to VP9
+        for (const codec of codecOptions) {
+          if (MediaRecorder.isTypeSupported(codec.mimeType)) {
+            selectedCodec = codec;
+            break;
+          }
+        }
+        
+        mediaRecorder = new MediaRecorder(stream, {
+          mimeType: selectedCodec.mimeType,
           videoBitsPerSecond: adaptiveBitrate
         });
+        
+        console.log(`Using codec: ${selectedCodec.name} (${selectedCodec.mimeType})`);
         
         // Debug info
         console.log('Video processing settings:', {
@@ -474,8 +539,8 @@ export default function UnderwaterPage() {
           }
         };
 
-        // Start recording
-        mediaRecorder.start();
+        // Start recording with optimized chunk size
+        mediaRecorder.start(100); // Record in 100ms chunks for better memory management
 
         // Process EXACT number of frames to match original duration
         const frameInterval = 1000 / targetFps; // Time between frames in milliseconds
@@ -541,12 +606,19 @@ export default function UnderwaterPage() {
 
         const correctedUrl = URL.createObjectURL(processedVideoBlob);
 
-        setResult({
+        const newResult = {
           original: videoUrl,
           corrected: correctedUrl,
           filename: file.name.replace(/\.[^/.]+$/, '_underwater_corrected.webm'),
-          isVideo: true
-        });
+          isVideo: true,
+          correctedBlob: processedVideoBlob, // Store the blob for potential future use
+        };
+
+        if (isBatchMode) {
+          setResults(prev => [...prev, newResult]);
+        } else {
+          setResults([newResult]);
+        }
 
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Video processing failed');
@@ -556,6 +628,34 @@ export default function UnderwaterPage() {
       }
     },
     [applyUnderwaterCorrection]
+  );
+
+  // Batch processing function
+  const processBatch = useCallback(
+    async (files: File[], intensityValue: number) => {
+      setIsProcessing(true);
+      setError(null);
+      setResults([]);
+      setBatchProgress(0);
+      setCurrentProcessingIndex(0);
+
+      try {
+        for (let i = 0; i < files.length; i++) {
+          setCurrentProcessingIndex(i + 1);
+          setBatchProgress((i / files.length) * 100);
+          
+          await processImage(files[i], intensityValue, true);
+        }
+        
+        setBatchProgress(100);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Batch processing failed');
+      } finally {
+        setIsProcessing(false);
+        setCurrentProcessingIndex(0);
+      }
+    },
+    [processImage]
   );
 
   // Debounced processing for better mobile performance
@@ -572,7 +672,7 @@ export default function UnderwaterPage() {
         if (isVideoFile) {
           processVideo(file, intensityValue);
         } else {
-          processImage(file, intensityValue);
+          processImage(file, intensityValue, false);
         }
       }, delay);
     },
@@ -582,52 +682,87 @@ export default function UnderwaterPage() {
   const handleIntensityChange = useCallback(
     (newIntensity: number[]) => {
       setIntensity(newIntensity);
-      if (selectedFile) {
-        debouncedProcessFile(selectedFile, newIntensity[0]);
+      if (selectedFiles.length === 1 && !isBatchMode) {
+        debouncedProcessFile(selectedFiles[0], newIntensity[0]);
       }
     },
-    [selectedFile, debouncedProcessFile]
+    [selectedFiles, isBatchMode, debouncedProcessFile]
   );
 
-  const handleDownload = useCallback(async () => {
-    if (!result) return;
+  const handleDownload = useCallback(async (result?: ProcessedResult) => {
+    const targetResult = result || results[0];
+    if (!targetResult) return;
 
     try {
       // Convert data URL to blob for proper mobile sharing
-      const response = await fetch(result.corrected);
+      const response = await fetch(targetResult.corrected);
       const blob = await response.blob();
 
       // Use enhanced download function with mobile sharing support
-      await downloadFile(blob, result.filename);
+      await downloadFile(blob, targetResult.filename);
     } catch (error) {
       console.error('Download failed:', error);
       // Fallback to traditional download
       const link = document.createElement('a');
-      link.href = result.corrected;
-      link.download = result.filename;
+      link.href = targetResult.corrected;
+      link.download = targetResult.filename;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
     }
-  }, [result]);
+  }, [results]);
+
+  const handleDownloadAll = useCallback(async () => {
+    if (results.length === 0) return;
+
+    try {
+      // Create ZIP file with all processed images using stored blobs
+      const files = results.map((result, index) => {
+        if (!result.correctedBlob) {
+          throw new Error(`No blob data available for image ${index + 1}`);
+        }
+        
+        // Clean filename for ZIP compatibility
+        const cleanFilename = result.filename
+          .replace(/[<>:"/\\|?*]/g, '_') // Replace invalid characters
+          .replace(/\s+/g, '_'); // Replace spaces with underscores
+        
+        return { name: cleanFilename, blob: result.correctedBlob };
+      });
+
+      // Create and download ZIP file
+      console.log('Creating ZIP with files:', files.map(f => ({ name: f.name, size: f.blob.size })));
+      const zipBlob = await createZip(files);
+      console.log('ZIP created successfully, size:', zipBlob.size);
+      downloadZip(zipBlob, 'underwater_corrected_batch.zip');
+    } catch (error) {
+      console.error('Batch download failed:', error);
+      setError(`Failed to create ZIP file: ${error instanceof Error ? error.message : 'Unknown error'}. Please try downloading individual files.`);
+    }
+  }, [results]);
 
   const handleReset = useCallback(() => {
-    // Clean up blob URLs before clearing result
-    if (result?.original) {
-      URL.revokeObjectURL(result.original);
-    }
-    if (result?.corrected) {
-      URL.revokeObjectURL(result.corrected);
-    }
+    // Clean up blob URLs before clearing results
+    results.forEach(result => {
+      if (result.original) {
+        URL.revokeObjectURL(result.original);
+      }
+      if (result.corrected) {
+        URL.revokeObjectURL(result.corrected);
+      }
+    });
 
-    setSelectedFile(null);
-    setResult(null);
+    setSelectedFiles([]);
+    setResults([]);
     setError(null);
     setIntensity([100]);
     setIsVideoFile(false);
+    setIsBatchMode(false);
     setVideoProgress(0);
     setProcessedFrames(0);
     setTotalFrames(0);
+    setBatchProgress(0);
+    setCurrentProcessingIndex(0);
 
     // Clear any pending processing
     if (processingTimeoutRef.current) {
@@ -638,7 +773,7 @@ export default function UnderwaterPage() {
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
-  }, [result]);
+  }, [results]);
 
   // Mobile detection for performance optimizations
   useEffect(() => {
@@ -671,24 +806,28 @@ export default function UnderwaterPage() {
   // Cleanup blob URLs when results change to prevent memory leaks
   useEffect(() => {
     return () => {
-      if (result?.original) {
-        URL.revokeObjectURL(result.original);
-      }
-      if (result?.corrected) {
-        URL.revokeObjectURL(result.corrected);
-      }
+      results.forEach(result => {
+        if (result.original) {
+          URL.revokeObjectURL(result.original);
+        }
+        if (result.corrected) {
+          URL.revokeObjectURL(result.corrected);
+        }
+      });
     };
-  }, [result]);
+  }, [results]);
 
   // Cleanup all blob URLs on component unmount
   useEffect(() => {
     return () => {
-      if (result?.original) {
-        URL.revokeObjectURL(result.original);
-      }
-      if (result?.corrected) {
-        URL.revokeObjectURL(result.corrected);
-      }
+      results.forEach(result => {
+        if (result.original) {
+          URL.revokeObjectURL(result.original);
+        }
+        if (result.corrected) {
+          URL.revokeObjectURL(result.corrected);
+        }
+      });
     };
   }, []);
 
@@ -772,7 +911,7 @@ export default function UnderwaterPage() {
               </p>
             </CardHeader>
             <CardContent>
-              {!selectedFile ? (
+              {selectedFiles.length === 0 ? (
                 <div className="space-y-6">
                   <div
                     className="border-2 border-dashed border-blue-400 rounded-lg p-12 text-center hover:border-blue-300 transition-colors cursor-pointer"
@@ -780,25 +919,50 @@ export default function UnderwaterPage() {
                   >
                     <Upload className="w-16 h-16 text-blue-400 mx-auto mb-4" />
                     <p className="text-white text-lg mb-2">
-                      Click to upload your underwater photo or video
+                      Click to upload your underwater photos or video
                     </p>
                     <p className="text-blue-300 text-sm">
                       Supports JPG, PNG, WebP images and MP4, WebM, MOV videos (max 100MB, 60 seconds)
+                    </p>
+                    <p className="text-blue-200 text-xs mt-2">
+                      Select multiple images for batch processing
                     </p>
                   </div>
                   <input
                     ref={fileInputRef}
                     type="file"
                     accept="image/*,video/*"
+                    multiple
                     onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) handleFileSelect(file);
+                      const files = e.target.files;
+                      if (files && files.length > 0) handleFileSelect(files);
                     }}
                     className="hidden"
                   />
                 </div>
               ) : (
                 <div className="space-y-6">
+                  {/* File List for Batch Mode */}
+                  {isBatchMode && (
+                    <div className="space-y-3">
+                      <h3 className="text-white font-medium">
+                        Selected Images ({selectedFiles.length})
+                      </h3>
+                      <div className="max-h-32 overflow-y-auto space-y-2">
+                        {selectedFiles.map((file, index) => (
+                          <div key={index} className="flex items-center justify-between bg-slate-700/50 rounded-lg p-2">
+                            <span className="text-blue-200 text-sm truncate flex-1">
+                              {file.name}
+                            </span>
+                            <span className="text-blue-300 text-xs">
+                              {(file.size / 1024 / 1024).toFixed(1)}MB
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Controls - Mobile Responsive */}
                   <div className="space-y-4">
                     {/* Intensity Control */}
@@ -838,9 +1002,23 @@ export default function UnderwaterPage() {
                         <RotateCcw className="w-4 h-4 mr-2" />
                         Reset
                       </Button>
-                      {result && (
+                      
+                      {/* Batch Process Button */}
+                      {isBatchMode && !isProcessing && results.length === 0 && (
                         <Button
-                          onClick={handleDownload}
+                          onClick={() => processBatch(selectedFiles, intensity[0])}
+                          size="sm"
+                          className="w-full sm:w-auto"
+                        >
+                          <Waves className="w-4 h-4 mr-2" />
+                          Process {selectedFiles.length} Images
+                        </Button>
+                      )}
+                      
+                      {/* Single Download Button */}
+                      {!isBatchMode && results.length > 0 && (
+                        <Button
+                          onClick={() => handleDownload()}
                           size="sm"
                           className="w-full sm:w-auto"
                         >
@@ -848,60 +1026,137 @@ export default function UnderwaterPage() {
                           Download
                         </Button>
                       )}
+                      
+                      {/* Batch Download Buttons */}
+                      {isBatchMode && results.length > 0 && (
+                        <>
+                          <Button
+                            onClick={handleDownloadAll}
+                            size="sm"
+                            className="w-full sm:w-auto"
+                          >
+                            <Download className="w-4 h-4 mr-2" />
+                            Download All as ZIP
+                          </Button>
+                        </>
+                      )}
                     </div>
                   </div>
 
-                  {/* Before/After Preview */}
-                  {result && (
-                    <div className="grid md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <h3 className="text-white font-medium">Original</h3>
-                        <div className="relative rounded-lg overflow-hidden bg-slate-700">
-                          {result.isVideo ? (
-                            <video
-                              src={result.original}
-                              controls
-                              muted
-                              className="w-full h-auto"
-                              style={{ maxHeight: '400px' }}
-                            />
-                          ) : (
-                            <img
-                              src={result.original}
-                              alt="Original underwater photo"
-                              className="w-full h-auto"
-                            />
-                          )}
-                          <div className="absolute top-2 left-2 bg-black/70 text-white px-2 py-1 rounded text-sm">
-                            Original
+                  {/* Results Display */}
+                  {results.length > 0 && (
+                    <div className="space-y-4">
+                      {!isBatchMode ? (
+                        // Single file display (existing layout)
+                        <div className="grid md:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <h3 className="text-white font-medium">Original</h3>
+                            <div className="relative rounded-lg overflow-hidden bg-slate-700">
+                              {results[0].isVideo ? (
+                                <video
+                                  src={results[0].original}
+                                  controls
+                                  muted
+                                  className="w-full h-auto"
+                                  style={{ maxHeight: '400px' }}
+                                />
+                              ) : (
+                                <img
+                                  src={results[0].original}
+                                  alt="Original underwater photo"
+                                  className="w-full h-auto"
+                                />
+                              )}
+                              <div className="absolute top-2 left-2 bg-black/70 text-white px-2 py-1 rounded text-sm">
+                                Original
+                              </div>
+                            </div>
+                          </div>
+                          <div className="space-y-2">
+                            <h3 className="text-white font-medium">
+                              Color Corrected
+                            </h3>
+                            <div className="relative rounded-lg overflow-hidden bg-slate-700">
+                              {results[0].isVideo ? (
+                                <video
+                                  src={results[0].corrected}
+                                  controls
+                                  muted
+                                  className="w-full h-auto"
+                                  style={{ maxHeight: '400px' }}
+                                />
+                              ) : (
+                                <img
+                                  src={results[0].corrected}
+                                  alt="Color corrected underwater photo"
+                                  className="w-full h-auto"
+                                />
+                              )}
+                              <div className="absolute top-2 left-2 bg-emerald-600/80 text-white px-2 py-1 rounded text-sm">
+                                Corrected
+                              </div>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                      <div className="space-y-2">
-                        <h3 className="text-white font-medium">
-                          Color Corrected
-                        </h3>
-                        <div className="relative rounded-lg overflow-hidden bg-slate-700">
-                          {result.isVideo ? (
-                            <video
-                              src={result.corrected}
-                              controls
-                              muted
-                              className="w-full h-auto"
-                              style={{ maxHeight: '400px' }}
-                            />
-                          ) : (
-                            <img
-                              src={result.corrected}
-                              alt="Color corrected underwater photo"
-                              className="w-full h-auto"
-                            />
-                          )}
-                          <div className="absolute top-2 left-2 bg-emerald-600/80 text-white px-2 py-1 rounded text-sm">
-                            Corrected
+                      ) : (
+                        // Batch results grid
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between">
+                            <h3 className="text-white font-medium">
+                              Processed Images ({results.length})
+                            </h3>
+                            <Button
+                              onClick={handleDownloadAll}
+                              size="sm"
+                              variant="outline"
+                            >
+                              <Download className="w-4 h-4 mr-2" />
+                              Download All
+                            </Button>
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {results.map((result, index) => (
+                              <div key={index} className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-blue-200 text-sm truncate">
+                                    {result.filename.replace('_underwater_corrected.jpg', '')}
+                                  </span>
+                                  <Button
+                                    onClick={() => handleDownload(result)}
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-6 px-2 text-xs"
+                                  >
+                                    <Download className="w-3 h-3" />
+                                  </Button>
+                                </div>
+                                <div className="grid grid-cols-2 gap-2">
+                                  <div className="relative rounded-lg overflow-hidden bg-slate-700">
+                                    <img
+                                      src={result.original}
+                                      alt={`Original ${index + 1}`}
+                                      className="w-full h-24 object-cover"
+                                    />
+                                    <div className="absolute top-1 left-1 bg-black/70 text-white px-1 py-0.5 rounded text-xs">
+                                      Original
+                                    </div>
+                                  </div>
+                                  <div className="relative rounded-lg overflow-hidden bg-slate-700">
+                                    <img
+                                      src={result.corrected}
+                                      alt={`Corrected ${index + 1}`}
+                                      className="w-full h-24 object-cover"
+                                    />
+                                    <div className="absolute top-1 left-1 bg-emerald-600/80 text-white px-1 py-0.5 rounded text-xs">
+                                      Corrected
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
                           </div>
                         </div>
-                      </div>
+                      )}
                     </div>
                   )}
 
@@ -909,9 +1164,29 @@ export default function UnderwaterPage() {
                     <div className="text-center py-8">
                       <div className="animate-spin w-8 h-8 border-2 border-blue-400 border-t-transparent rounded-full mx-auto mb-4"></div>
                       <p className="text-blue-300 mb-4">
-                        Processing your underwater {isVideoFile ? 'video' : 'photo'}...
+                        {isBatchMode ? (
+                          `Processing image ${currentProcessingIndex} of ${selectedFiles.length}...`
+                        ) : (
+                          `Processing your underwater ${isVideoFile ? 'video' : 'photo'}...`
+                        )}
                       </p>
                       
+                      {/* Batch Progress */}
+                      {isBatchMode && selectedFiles.length > 1 && (
+                        <div className="space-y-2">
+                          <div className="w-full bg-slate-700 rounded-full h-2">
+                            <div 
+                              className="bg-blue-400 h-2 rounded-full transition-all duration-300"
+                              style={{ width: `${batchProgress}%` }}
+                            ></div>
+                          </div>
+                          <p className="text-blue-300 text-sm">
+                            {Math.round(batchProgress)}% complete
+                          </p>
+                        </div>
+                      )}
+                      
+                      {/* Video Progress */}
                       {isVideoFile && totalFrames > 0 && (
                         <div className="space-y-2">
                           <div className="w-full bg-slate-700 rounded-full h-2">

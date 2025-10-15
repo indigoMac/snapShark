@@ -8,16 +8,24 @@ export interface ZipFile {
 }
 
 export async function createZip(files: ZipFile[]): Promise<Blob> {
-  // Lazy load JSZip to reduce bundle size
-  const JSZip = (await import('jszip')).default;
+  try {
+    // Lazy load JSZip to reduce bundle size
+    const JSZip = (await import('jszip')).default;
 
-  const zip = new JSZip();
+    const zip = new JSZip();
 
-  files.forEach((file) => {
-    zip.file(file.name, file.blob);
-  });
+    files.forEach((file, index) => {
+      if (!file.name || !file.blob) {
+        throw new Error(`Invalid file at index ${index}: missing name or blob`);
+      }
+      zip.file(file.name, file.blob);
+    });
 
-  return await zip.generateAsync({ type: 'blob' });
+    return await zip.generateAsync({ type: 'blob' });
+  } catch (error) {
+    console.error('Error creating ZIP:', error);
+    throw new Error(`Failed to create ZIP file: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
 }
 
 export function downloadZip(
