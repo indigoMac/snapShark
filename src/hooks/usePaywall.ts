@@ -1,173 +1,61 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useUser } from '@clerk/nextjs';
-import { getStripe } from '@/lib/stripe';
-
-export interface PaywallState {
-  isPro: boolean;
-  hasTrialAvailable: boolean;
-  trialUsed: boolean;
-  subscriptionStatus?: string;
-  customerId?: string;
-  subscriptionId?: string;
-  cancelAtPeriodEnd?: boolean;
-  cancelAt?: string;
-}
+import { createPaywallService } from '@/lib/paywall/service';
+import { mapUserToPaywallState } from '@/lib/paywall/mapper';
+import { createBrowserTrialStorage, type TrialStorage } from '@/lib/paywall/storage';
+import type { PaywallFeature, PaywallState } from '@/lib/paywall/types';
 
 export function usePaywall() {
   const { user, isLoaded } = useUser();
+  const paywallService = useMemo(() => createPaywallService(), []);
+  const storageRef = useRef<TrialStorage>();
 
-  // Log metadata loading issues for production monitoring
-  useEffect(() => {
-    if (
-      isLoaded &&
-      user &&
-      !(user as any)?.publicMetadata &&
-      !(user as any)?.privateMetadata
-    ) {
-      // No user metadata found - user may need to refresh
-    }
-  }, [user, isLoaded]);
-
-  // Get subscription status from Clerk user metadata (check both private and public)
-  const isProUserPrivate = (user as any)?.privateMetadata?.isProUser === true;
-  const isProUserPublic = (user as any)?.publicMetadata?.isProUser === true;
-  const isProUser = isProUserPrivate || isProUserPublic;
-
-  const subscriptionStatusPrivate = (user as any)?.privateMetadata
-    ?.subscriptionStatus as string;
-  const subscriptionStatusPublic = (user as any)?.publicMetadata
-    ?.subscriptionStatus as string;
-  const subscriptionStatus =
-    subscriptionStatusPrivate || subscriptionStatusPublic;
-
-  // Debug logging
-  useEffect(() => {}, [
-    user,
-    isLoaded,
-    isProUserPrivate,
-    isProUserPublic,
-    isProUser,
-    subscriptionStatus,
-  ]);
-
-  const customerIdPrivate = (user as any)?.privateMetadata
-    ?.stripeCustomerId as string;
-  const customerIdPublic = (user as any)?.publicMetadata
-    ?.stripeCustomerId as string;
-  const customerId = customerIdPrivate || customerIdPublic;
-  const subscriptionIdPrivate = (user as any)?.privateMetadata
-    ?.stripeSubscriptionId as string;
-  const subscriptionIdPublic = (user as any)?.publicMetadata
-    ?.stripeSubscriptionId as string;
-  const subscriptionId = subscriptionIdPrivate || subscriptionIdPublic;
-
-  // Get cancellation info
-  const cancelAtPeriodEndPrivate = (user as any)?.privateMetadata
-    ?.cancelAtPeriodEnd;
-  const cancelAtPeriodEndPublic = (user as any)?.publicMetadata
-    ?.cancelAtPeriodEnd;
-  const cancelAtPeriodEnd = cancelAtPeriodEndPrivate || cancelAtPeriodEndPublic;
-
-  const cancelAtPrivate = (user as any)?.privateMetadata?.cancelAt;
-  const cancelAtPublic = (user as any)?.publicMetadata?.cancelAt;
-  const cancelAt = cancelAtPrivate || cancelAtPublic;
-
-  // Get payment failure info
-  const lastPaymentFailed = (user as any)?.privateMetadata?.lastPaymentFailed;
-
-  // Get subscription period info for grace period messaging
-  const currentPeriodEndPrivate = (user as any)?.privateMetadata
-    ?.currentPeriodEnd;
-  const currentPeriodEndPublic = (user as any)?.publicMetadata
-    ?.currentPeriodEnd;
-  const currentPeriodEnd = currentPeriodEndPrivate || currentPeriodEndPublic;
-
-  const currentPeriodStart = (user as any)?.privateMetadata?.currentPeriodStart;
-
-  // Initialize state without localStorage (will be set in useEffect)
-  const [paywallState, setPaywallState] = useState<PaywallState>({
-    isPro: isProUser,
-    hasTrialAvailable: true, // Default to true, will be updated in useEffect
-    trialUsed: false, // Default to false, will be updated in useEffect
-    subscriptionStatus,
-    customerId,
-    subscriptionId,
-    cancelAtPeriodEnd,
-    cancelAt,
-  });
-
-  // Update trial state from localStorage after component mounts
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const trialUsedFromStorage =
-        localStorage.getItem('snapshark-trial-used') === 'true';
-      setPaywallState((prev) => ({
-        ...prev,
-        hasTrialAvailable: !trialUsedFromStorage,
-        trialUsed: trialUsedFromStorage,
-      }));
-    }
-  }, []);
-
-  // Update state when user data changes
-  useEffect(() => {
-    if (isLoaded) {
-      setPaywallState((prev) => ({
-        ...prev,
-        isPro: isProUser,
-        subscriptionStatus,
-        customerId,
-        subscriptionId,
-        cancelAtPeriodEnd,
-        cancelAt,
-      }));
-    }
-  }, [
-    isLoaded,
-    isProUser,
-    subscriptionStatus,
-    customerId,
-    subscriptionId,
-    cancelAtPeriodEnd,
-    cancelAt,
-  ]);
+  const [paywallState, setPaywallState] = useState<PaywallState>(() =>
+    mapUserToPaywallState(user as any)
+  );
 
   const [showPaywallDialog, setShowPaywallDialog] = useState(false);
   const [paywallFeature, setPaywallFeature] = useState<string>('');
 
+  // Lazy-create browser storage to keep this hook SSR-friendly
+  if (!storageRef.current) {
+    storageRef.current = createBrowserTrialStorage();
+  }
+
+  // Initialize trial state from storage
+  useEffect(() => {
+    const storage = storageRef.current;
+    if (!storage) return;
+
+    const trialUsed = storage.getTrialUsed();
+    setPaywallState((prev) => ({
+      ...prev,
+      hasTrialAvailable: !trialUsed,
+      trialUsed,
+    }));
+  }, []);
+
+  // Update state when user data changes
+  useEffect(() => {
+    if (!isLoaded) return;
+
+    const mapped = mapUserToPaywallState(user as any);
+    setPaywallState((prev) => ({
+      ...mapped,
+      hasTrialAvailable: prev.hasTrialAvailable,
+      trialUsed: prev.trialUsed,
+    }));
+  }, [isLoaded, user]);
+
   const checkFeatureAccess = useCallback(
-    (
-      feature:
-        | 'batch'
-        | 'presets'
-        | 'advanced-formats'
-        | 'zip-export'
-        | 'packages'
-        | 'background-removal'
-    ): boolean => {
-      if (paywallState.isPro) return true;
-
-      // Allow trial for batch processing (up to 3 files)
-      if (feature === 'batch' && paywallState.hasTrialAvailable) {
-        return true;
-      }
-
-      return false;
+    (feature: PaywallFeature): boolean => {
+      return paywallService.checkFeatureAccess(paywallState, feature);
     },
-    [paywallState]
+    [paywallService, paywallState]
   );
 
   const requestFeatureAccess = useCallback(
-    (
-      feature:
-        | 'batch'
-        | 'presets'
-        | 'advanced-formats'
-        | 'zip-export'
-        | 'packages'
-        | 'background-removal',
-      context?: string
-    ) => {
+    (feature: PaywallFeature, context?: string) => {
       if (checkFeatureAccess(feature)) {
         return true;
       }
@@ -181,24 +69,13 @@ export function usePaywall() {
   );
 
   const useTrial = useCallback(() => {
-    if (!paywallState.hasTrialAvailable || paywallState.trialUsed) {
-      return false;
-    }
+    if (!paywallState.hasTrialAvailable || paywallState.trialUsed) return false;
 
-    // Save trial usage to localStorage (only on client)
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('snapshark-trial-used', 'true');
-    }
-
-    setPaywallState((prev) => ({
-      ...prev,
-      trialUsed: true,
-      hasTrialAvailable: false,
-    }));
-
+    storageRef.current?.setTrialUsed(true);
+    setPaywallState((prev) => paywallService.markTrialUsed(prev));
     setShowPaywallDialog(false);
     return true;
-  }, [paywallState]);
+  }, [paywallService, paywallState]);
 
   const closePaywallDialog = useCallback(() => {
     setShowPaywallDialog(false);
@@ -207,99 +84,28 @@ export function usePaywall() {
 
   const upgradeToPro = useCallback(
     async (priceId: string, isYearly = false) => {
-      try {
-        const response = await fetch('/api/stripe/checkout', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ priceId, isYearly }),
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          // Checkout error occurred
-
-          if (response.status === 401) {
-            alert('Please sign in first to upgrade to Pro');
-            return;
-          }
-
-          alert(
-            `Error: ${errorData.error || 'Failed to create checkout session'}`
-          );
-          return;
-        }
-
-        const { sessionId, url } = await response.json();
-
-        if (url) {
-          window.location.href = url;
-        } else {
-          // No checkout URL received
-          alert('Failed to create checkout session');
-        }
-      } catch (error) {
-        // Upgrade error occurred
-        alert('Network error. Please try again.');
-      }
+      await paywallService.upgradeToPro(priceId, isYearly);
     },
-    []
+    [paywallService]
   );
 
   const manageSubscription = useCallback(async () => {
-    if (!customerId) return;
-
-    try {
-      const response = await fetch('/api/stripe/portal', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ customerId }),
-      });
-
-      const { url } = await response.json();
-
-      if (url) {
-        window.location.href = url;
-      }
-    } catch (error) {
-      // Portal error occurred
-    }
-  }, [customerId]);
+    if (!paywallState.customerId) return;
+    await paywallService.manageSubscription(paywallState.customerId);
+  }, [paywallService, paywallState.customerId]);
 
   const cancelSubscription = useCallback(
     async (subscriptionId: string, cancelAtPeriodEnd: boolean = true) => {
-      try {
-        const response = await fetch('/api/stripe/cancel', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ subscriptionId, cancelAtPeriodEnd }),
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          // Cancel subscription error occurred
-          throw new Error(errorData.error || 'Failed to cancel subscription');
-        }
-
-        const result = await response.json();
-
-        // Refresh user data to update the UI immediately
-        if (user) {
-          await user.reload();
-        }
-
-        return result;
-      } catch (error) {
-        // Cancel subscription error occurred
-        throw error;
+      const result = await paywallService.cancelSubscription(
+        subscriptionId,
+        cancelAtPeriodEnd
+      );
+      if (user) {
+        await user.reload();
       }
+      return result;
     },
-    [user]
+    [paywallService, user]
   );
 
   return {
@@ -312,9 +118,9 @@ export function usePaywall() {
     subscriptionId: paywallState.subscriptionId,
     cancelAtPeriodEnd: paywallState.cancelAtPeriodEnd,
     cancelAt: paywallState.cancelAt,
-    lastPaymentFailed,
-    currentPeriodEnd,
-    currentPeriodStart,
+    lastPaymentFailed: paywallState.lastPaymentFailed,
+    currentPeriodEnd: paywallState.currentPeriodEnd,
+    currentPeriodStart: paywallState.currentPeriodStart,
 
     // Feature access
     checkFeatureAccess,
