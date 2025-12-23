@@ -39,7 +39,8 @@ export function mapUserToPaywallState(user: MetadataSource): PaywallState {
   const cancelAt =
     getString(privateMeta, 'cancelAt') || getString(publicMeta, 'cancelAt');
 
-  const lastPaymentFailed = privateMeta?.lastPaymentFailed === true;
+  const lastPaymentFailed =
+    getString(privateMeta, 'lastPaymentFailed') || getString(publicMeta, 'lastPaymentFailed');
 
   const currentPeriodEnd =
     getString(privateMeta, 'currentPeriodEnd') || getString(publicMeta, 'currentPeriodEnd');

@@ -15,7 +15,7 @@ export interface PaywallState {
   subscriptionId?: string;
   cancelAtPeriodEnd?: boolean;
   cancelAt?: string;
-  lastPaymentFailed?: boolean;
+  lastPaymentFailed?: string;
   currentPeriodEnd?: string;
   currentPeriodStart?: string;
 }
