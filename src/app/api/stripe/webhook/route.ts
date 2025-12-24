@@ -4,7 +4,6 @@ import { stripe } from '@/lib/stripe';
 import { clerkClient } from '@clerk/nextjs/server';
 import { RATE_LIMITS, createRateLimitHeaders } from '@/lib/rate-limit';
 import Stripe from 'stripe';
-import type { ClerkClient } from '@clerk/nextjs/dist/types/server';
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
 
@@ -279,7 +278,10 @@ export async function POST(req: NextRequest) {
   }
 }
 
-async function findUserByCustomerId(client: ClerkClient, customerId: string) {
+async function findUserByCustomerId(
+  client: Awaited<ReturnType<typeof clerkClient>>,
+  customerId: string
+) {
   const users = await client.users.getUserList({
     limit: 100,
   });
