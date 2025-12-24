@@ -67,39 +67,48 @@ export async function POST(req: NextRequest) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
         const userId = session.metadata?.userId;
+        const customerId = session.customer as string | undefined;
+        const subscriptionId = session.subscription as string | undefined;
 
-        if (userId && session.subscription) {
+        if (userId && subscriptionId) {
           try {
-            // Update user metadata with subscription info
             const client = await clerkClient();
-
-            // First, verify the user exists
             const user = await client.users.getUser(userId);
 
             await client.users.updateUserMetadata(userId, {
               privateMetadata: {
-                ...(user.privateMetadata || {}), // Preserve existing metadata
-                stripeCustomerId: session.customer,
-                stripeSubscriptionId: session.subscription,
+                ...(user.privateMetadata || {}),
+                stripeCustomerId: customerId,
+                stripeSubscriptionId: subscriptionId,
                 subscriptionStatus: 'active',
                 isProUser: true,
                 subscriptionStarted: new Date().toISOString(),
               },
-              // Also update public metadata for immediate client sync
               publicMetadata: {
-                ...(user.publicMetadata || {}), // Preserve existing metadata
+                ...(user.publicMetadata || {}),
                 subscriptionStatus: 'active',
                 isProUser: true,
                 plan: 'pro',
-                stripeCustomerId: session.customer,
-                stripeSubscriptionId: session.subscription,
+                stripeCustomerId: customerId,
+                stripeSubscriptionId: subscriptionId,
               },
             });
           } catch (clerkError: any) {
-            console.error(`[WEBHOOK] Full Clerk error:`, clerkError);
-            // Don't throw - let Stripe know we received the webhook but had an issue
+            console.error(
+              `[WEBHOOK] checkout.session.completed Clerk update failed`,
+              {
+                userId,
+                customerId,
+                subscriptionId,
+                message: clerkError?.message,
+              }
+            );
           }
         } else {
+          console.warn(
+            `[WEBHOOK] checkout.session.completed missing userId or subscriptionId`,
+            { userId, customerId, subscriptionId }
+          );
         }
         break;
       }
@@ -107,17 +116,13 @@ export async function POST(req: NextRequest) {
       case 'customer.subscription.updated': {
         const subscription = event.data.object as Stripe.Subscription;
         const customerId = subscription.customer as string;
+        const userId = (subscription.metadata as any)?.userId as string | undefined;
 
         try {
-          // Find user by customer ID
           const client = await clerkClient();
-          const users = await client.users.getUserList({
-            limit: 100, // Increased limit to find users
-          });
-
-          const user = users.data.find(
-            (u: any) => u.privateMetadata?.stripeCustomerId === customerId
-          );
+          const user = userId
+            ? await client.users.getUser(userId)
+            : await findUserByCustomerId(client, customerId);
 
           if (user) {
             const isActive = subscription.status === 'active';
@@ -126,50 +131,54 @@ export async function POST(req: NextRequest) {
               ? new Date(subscription.cancel_at * 1000).toISOString()
               : null;
 
-            // Capture subscription period information for grace period messaging
-            const subscriptionData = subscription as any; // Type assertion for period properties
-            const currentPeriodStart = subscriptionData.current_period_start
-              ? new Date(
-                  subscriptionData.current_period_start * 1000
-                ).toISOString()
+            const currentPeriodStart = (subscription as any).current_period_start
+              ? new Date((subscription as any).current_period_start * 1000).toISOString()
               : null;
-            const currentPeriodEnd = subscriptionData.current_period_end
-              ? new Date(
-                  subscriptionData.current_period_end * 1000
-                ).toISOString()
+            const currentPeriodEnd = (subscription as any).current_period_end
+              ? new Date((subscription as any).current_period_end * 1000).toISOString()
               : null;
 
-            // Update metadata in BOTH private and public for immediate sync
             await client.users.updateUserMetadata(user.id, {
               privateMetadata: {
                 ...(user.privateMetadata || {}),
                 subscriptionStatus: subscription.status,
-                isProUser: isActive, // Keep Pro until actually canceled
+                isProUser: isActive,
                 cancelAtPeriodEnd: willCancel,
-                cancelAt: cancelAt,
-                currentPeriodStart: currentPeriodStart,
-                currentPeriodEnd: currentPeriodEnd,
+                cancelAt,
+                currentPeriodStart,
+                currentPeriodEnd,
                 subscriptionUpdated: new Date().toISOString(),
+                stripeCustomerId: customerId,
+                stripeSubscriptionId: subscription.id,
               },
-              // ALSO update public metadata - this syncs immediately to client
               publicMetadata: {
                 ...(user.publicMetadata || {}),
                 subscriptionStatus: subscription.status,
-                isProUser: isActive, // Keep Pro until actually canceled
+                isProUser: isActive,
                 plan: isActive ? 'pro' : 'free',
                 cancelAtPeriodEnd: willCancel,
-                cancelAt: cancelAt,
-                currentPeriodEnd: currentPeriodEnd,
+                cancelAt,
+                currentPeriodEnd,
+                stripeCustomerId: customerId,
+                stripeSubscriptionId: subscription.id,
               },
             });
           } else {
+            console.warn(
+              `[WEBHOOK] subscription.updated user not found`,
+              { userId, customerId, subscriptionId: subscription.id }
+            );
           }
         } catch (clerkError: any) {
           console.error(
-            `[WEBHOOK] ❌ Clerk error in subscription.updated:`,
-            clerkError.message
+            `[WEBHOOK] subscription.updated Clerk update failed`,
+            {
+              userId,
+              customerId,
+              subscriptionId: subscription.id,
+              message: clerkError?.message,
+            }
           );
-          console.error(`[WEBHOOK] Full error:`, clerkError);
         }
         break;
       }
@@ -177,38 +186,50 @@ export async function POST(req: NextRequest) {
       case 'customer.subscription.deleted': {
         const subscription = event.data.object as Stripe.Subscription;
         const customerId = subscription.customer as string;
+        const userId = (subscription.metadata as any)?.userId as string | undefined;
 
         try {
-          // Find user by customer ID
           const client = await clerkClient();
-          const users = await client.users.getUserList({
-            limit: 100, // Increased limit to find users
-          });
-
-          const user = users.data.find(
-            (u: any) => u.privateMetadata?.stripeCustomerId === customerId
-          );
+          const user = userId
+            ? await client.users.getUser(userId)
+            : await findUserByCustomerId(client, customerId);
 
           if (user) {
-            // Update metadata in BOTH private and public for immediate sync
             await client.users.updateUserMetadata(user.id, {
               privateMetadata: {
                 ...(user.privateMetadata || {}),
                 subscriptionStatus: 'canceled',
                 isProUser: false,
                 subscriptionCanceled: new Date().toISOString(),
+                stripeCustomerId: customerId,
+                stripeSubscriptionId: subscription.id,
               },
-              // ALSO update public metadata - this syncs immediately to client
               publicMetadata: {
                 ...(user.publicMetadata || {}),
                 subscriptionStatus: 'canceled',
                 isProUser: false,
                 plan: 'free',
+                stripeCustomerId: customerId,
+                stripeSubscriptionId: subscription.id,
               },
             });
           } else {
+            console.warn(
+              `[WEBHOOK] subscription.deleted user not found`,
+              { userId, customerId, subscriptionId: subscription.id }
+            );
           }
-        } catch (clerkError: any) {}
+        } catch (clerkError: any) {
+          console.error(
+            `[WEBHOOK] subscription.deleted Clerk update failed`,
+            {
+              userId,
+              customerId,
+              subscriptionId: subscription.id,
+              message: clerkError?.message,
+            }
+          );
+        }
         break;
       }
 
@@ -255,4 +276,16 @@ export async function POST(req: NextRequest) {
       { status: 400 }
     );
   }
+}
+
+async function findUserByCustomerId(
+  client: Awaited<ReturnType<typeof clerkClient>>,
+  customerId: string
+) {
+  const users = await client.users.getUserList({
+    limit: 100,
+  });
+  return users.data.find(
+    (u: any) => u.privateMetadata?.stripeCustomerId === customerId
+  );
 }
