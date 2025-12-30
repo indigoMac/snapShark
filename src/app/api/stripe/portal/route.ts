@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
+import { auth, clerkClient } from '@clerk/nextjs/server';
 import { stripe, STRIPE_CONFIG } from '@/lib/stripe';
 
 export async function POST(req: NextRequest) {
@@ -23,6 +23,22 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         { error: 'Customer ID is required' },
         { status: 400 }
+      );
+    }
+
+    // Verify the customer belongs to the authenticated user
+    const client = await clerkClient();
+    const user = await client.users.getUser(userId);
+    const userCustomerId =
+      (user.privateMetadata as Record<string, any> | undefined)
+        ?.stripeCustomerId ||
+      (user.publicMetadata as Record<string, any> | undefined)
+        ?.stripeCustomerId;
+
+    if (!userCustomerId || userCustomerId !== customerId) {
+      return NextResponse.json(
+        { error: 'Customer does not belong to the current user' },
+        { status: 403 }
       );
     }
 
