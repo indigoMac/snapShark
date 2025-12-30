@@ -27,6 +27,22 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Verify the subscription belongs to the authenticated user
+    const client = await clerkClient();
+    const user = await client.users.getUser(userId);
+    const userSubscriptionId =
+      (user.privateMetadata as Record<string, any> | undefined)
+        ?.stripeSubscriptionId ||
+      (user.publicMetadata as Record<string, any> | undefined)
+        ?.stripeSubscriptionId;
+
+    if (!userSubscriptionId || userSubscriptionId !== subscriptionId) {
+      return NextResponse.json(
+        { error: 'Subscription does not belong to the current user' },
+        { status: 403 }
+      );
+    }
+
     // Cancel the subscription
     let subscription: Stripe.Subscription;
     if (cancelAtPeriodEnd) {
@@ -41,7 +57,6 @@ export async function POST(req: NextRequest) {
 
     // Update Clerk metadata immediately so the UI reflects the cancel choice
     try {
-      const client = await clerkClient();
       const user = await client.users.getUser(userId);
 
       const isActive = subscription.status === 'active';
