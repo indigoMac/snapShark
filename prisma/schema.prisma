@@ -1,0 +1,64 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  clerkUserId  String   @unique
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  dives        Dive[]
+  diveSites    DiveSite[]
+}
+
+model DiveSite {
+  id          String    @id @default(uuid())
+  name        String
+  description String?
+  userId      String
+  latitude    Decimal   @db.Decimal(9, 6)
+  longitude   Decimal   @db.Decimal(9, 6)
+  country     String?
+  region      String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  dives       Dive[]
+  user        User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Dive {
+  id                 String    @id @default(uuid())
+  userId             String
+  siteId             String?
+  diveDate           DateTime
+  depthMeters        Decimal?  @db.Decimal(5, 2)
+  bottomTimeMinutes  Int?
+  buddy              String?
+  conditions         Json?
+  notes              String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  photos             Photo[]
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  site DiveSite? @relation(fields: [siteId], references: [id], onDelete: SetNull)
+}
+
+model Photo {
+  id         String    @id @default(uuid())
+  diveId     String
+  url        String
+  caption    String?
+  takenAt    DateTime?
+  latitude   Decimal?  @db.Decimal(9, 6)
+  longitude  Decimal?  @db.Decimal(9, 6)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  dive Dive @relation(fields: [diveId], references: [id], onDelete: Cascade)
+}

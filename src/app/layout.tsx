@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import localFont from 'next/font/local';
 import { ClerkProvider } from '@clerk/nextjs';
 import Link from 'next/link';
 import { Navigation } from '@/components/Navigation';
@@ -10,7 +10,12 @@ import { ErrorTrackingProvider } from '@/components/ErrorTrackingProvider';
 import { Analytics } from '@vercel/analytics/react';
 import './globals.css';
 
-const inter = Inter({ subsets: ['latin'] });
+const appFont = localFont({
+  src: '../../public/fonts/Inter-Regular.woff2',
+  variable: '--font-app',
+  weight: '400',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: 'SnapShark - Privacy-First Image Converter',
@@ -83,7 +88,7 @@ export default function RootLayout({
           {/* Modern mobile web app capability */}
           <meta name="mobile-web-app-capable" content="yes" />
         </head>
-        <body className={inter.className} suppressHydrationWarning={true}>
+        <body className={appFont.className} suppressHydrationWarning={true}>
           <ThemeProvider
             attribute="class"
             defaultTheme="light"
