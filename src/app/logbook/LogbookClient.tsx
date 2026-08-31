@@ -29,6 +29,7 @@ export default function LogbookClient() {
   const [sites, setSites] = useState<LogbookSite[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [authTimedOut, setAuthTimedOut] = useState(false);
   const [selectedSiteId, setSelectedSiteId] = useState<string | null>(null);
   const [pendingPin, setPendingPin] = useState<{
     lat: number;
@@ -62,6 +63,15 @@ export default function LogbookClient() {
       setLoading(false);
     }
   }, []);
+
+  useEffect(() => {
+    if (isLoaded) {
+      setAuthTimedOut(false);
+      return;
+    }
+    const timer = window.setTimeout(() => setAuthTimedOut(true), 8000);
+    return () => window.clearTimeout(timer);
+  }, [isLoaded]);
 
   useEffect(() => {
     if (isSignedIn) {
@@ -208,7 +218,18 @@ export default function LogbookClient() {
 
   if (!isLoaded) {
     return (
-      <div className="py-20 text-center text-sm text-slate-500">Loading…</div>
+      <div className="mx-auto max-w-lg space-y-3 py-20 text-center">
+        <p className="text-sm text-slate-500">
+          {authTimedOut ? 'Sign-in is not loading…' : 'Loading…'}
+        </p>
+        {authTimedOut && (
+          <p className="text-sm text-muted-foreground">
+            Preview deployments need Clerk <span className="font-medium">Development</span> keys
+            (production keys only work on snap-shark.com). Set Preview env vars in Vercel, or
+            test Memories locally with <code className="text-xs">npm run dev</code>.
+          </p>
+        )}
+      </div>
     );
   }
 
