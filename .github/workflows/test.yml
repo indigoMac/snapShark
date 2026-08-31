@@ -44,6 +44,9 @@ jobs:
           STRIPE_PRO_YEARLY_PRICE_ID: ${{ secrets.STRIPE_PRO_YEARLY_PRICE_ID }}
           # App Configuration
           NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
+          # Database (Prisma generate needs these; CI does not connect)
+          DATABASE_URL: postgresql://ci:ci@127.0.0.1:5432/ci?schema=public
+          DIRECT_URL: postgresql://ci:ci@127.0.0.1:5432/ci?schema=public
           # Feature Flags
           NEXT_PUBLIC_ENABLE_HEIC: true
           NEXT_PUBLIC_ENABLE_AVIF: true

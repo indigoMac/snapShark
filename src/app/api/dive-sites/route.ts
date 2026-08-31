@@ -1,10 +1,15 @@
-'use server';
-
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireDbUser } from '@/lib/auth';
+import { serializeSite } from '@/lib/logbook';
 
-// Create a new dive site
+const diveInclude = {
+  dives: {
+    include: { photos: { orderBy: { createdAt: 'asc' as const } } },
+    orderBy: { diveDate: 'desc' as const },
+  },
+};
+
 export async function POST(req: NextRequest) {
   try {
     const { user } = await requireDbUser();
@@ -28,16 +33,20 @@ export async function POST(req: NextRequest) {
         country,
         region,
       },
+      include: diveInclude,
     });
 
-    return NextResponse.json(site, { status: 201 });
-  } catch (error: any) {
-    const status = error?.status || 500;
-    return NextResponse.json({ error: error.message || 'Server error' }, { status });
+    return NextResponse.json(serializeSite(site), { status: 201 });
+  } catch (error: unknown) {
+    const err = error as { status?: number; message?: string };
+    const status = err?.status || 500;
+    return NextResponse.json(
+      { error: err.message || 'Server error' },
+      { status }
+    );
   }
 }
 
-// List dive sites for the authenticated user
 export async function GET(req: NextRequest) {
   try {
     const { user } = await requireDbUser();
@@ -64,12 +73,17 @@ export async function GET(req: NextRequest) {
             }
           : {}),
       },
-      orderBy: { createdAt: 'desc' },
+      include: diveInclude,
+      orderBy: { updatedAt: 'desc' },
     });
 
-    return NextResponse.json(sites);
-  } catch (error: any) {
-    const status = error?.status || 500;
-    return NextResponse.json({ error: error.message || 'Server error' }, { status });
+    return NextResponse.json(sites.map(serializeSite));
+  } catch (error: unknown) {
+    const err = error as { status?: number; message?: string };
+    const status = err?.status || 500;
+    return NextResponse.json(
+      { error: err.message || 'Server error' },
+      { status }
+    );
   }
 }

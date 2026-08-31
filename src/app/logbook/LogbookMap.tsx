@@ -6,28 +6,15 @@ import {
   TileLayer,
   Marker,
   Popup,
+  useMap,
   useMapEvents,
 } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import type { LogbookSite } from '@/lib/logbook';
 
-type DiveSite = {
-  id: string;
-  name: string;
-  latitude: number;
-  longitude: number;
-};
+const defaultCenter: [number, number] = [20, 0];
 
-type Dive = {
-  id: string;
-  diveDate: string;
-  site?: DiveSite | null;
-  notes?: string | null;
-};
-
-const defaultCenter: [number, number] = [20, 0]; // global view
-
-// Work around missing default icon assets in Leaflet with bundlers
 const markerIcon = new L.Icon({
   iconUrl:
     'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
@@ -37,97 +24,123 @@ const markerIcon = new L.Icon({
     'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
   iconSize: [25, 41],
   iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
 });
 
-function BoundsFetcher({
-  onBoundsChange,
+const pendingIcon = new L.Icon({
+  iconUrl:
+    'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
+  iconRetinaUrl:
+    'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
+  shadowUrl:
+    'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  className: 'opacity-70',
+});
+
+function ClickToPlace({
+  enabled,
+  onPlaceClick,
 }: {
-  onBoundsChange: (bbox: {
-    minLat: number;
-    maxLat: number;
-    minLng: number;
-    maxLng: number;
-  }) => void;
+  enabled: boolean;
+  onPlaceClick: (lat: number, lng: number) => void;
 }) {
   useMapEvents({
-    moveend: (event) => {
-      const bounds = event.target.getBounds();
-      const ne = bounds.getNorthEast();
-      const sw = bounds.getSouthWest();
-      onBoundsChange({
-        minLat: sw.lat,
-        maxLat: ne.lat,
-        minLng: sw.lng,
-        maxLng: ne.lng,
-      });
+    click(event) {
+      if (!enabled) return;
+      onPlaceClick(event.latlng.lat, event.latlng.lng);
     },
   });
   return null;
 }
 
-export default function LogbookMap({ refreshToken }: { refreshToken?: number }) {
-  const [sites, setSites] = useState<DiveSite[]>([]);
-  const [dives, setDives] = useState<Dive[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const lastBoundsRef = useRef<
-    { minLat: number; maxLat: number; minLng: number; maxLng: number } | undefined
-  >(undefined);
+function FitSites({
+  sites,
+  focusSiteId,
+}: {
+  sites: LogbookSite[];
+  focusSiteId?: string | null;
+}) {
+  const map = useMap();
+  const fittedRef = useRef(false);
 
-  const fetchData = useMemo(
-    () => async (bbox?: { minLat: number; maxLat: number; minLng: number; maxLng: number }) => {
-      setLoading(true);
-      setError(null);
-      try {
-        const params = bbox
-          ? `?minLat=${bbox.minLat}&maxLat=${bbox.maxLat}&minLng=${bbox.minLng}&maxLng=${bbox.maxLng}`
-          : '';
-        const [sitesRes, divesRes] = await Promise.all([
-          fetch(`/api/dive-sites${params}`),
-          fetch(`/api/dives${params}`),
-        ]);
-        if (!sitesRes.ok || !divesRes.ok) {
-          throw new Error('Failed to load data');
-        }
-        const sitesJson = (await sitesRes.json()) as DiveSite[];
-        const divesJson = (await divesRes.json()) as Dive[];
-        setSites(sitesJson);
-        setDives(divesJson);
-      } catch (err: any) {
-        setError(err.message || 'Failed to load map data');
-      } finally {
-        setLoading(false);
+  useEffect(() => {
+    if (focusSiteId) {
+      const site = sites.find((s) => s.id === focusSiteId);
+      if (site) {
+        map.flyTo([site.latitude, site.longitude], Math.max(map.getZoom(), 8), {
+          duration: 0.6,
+        });
       }
-    },
-    []
-  );
-
-  useEffect(() => {
-    // initial fetch without bbox
-    fetchData();
-  }, [fetchData]);
-
-  useEffect(() => {
-    if (refreshToken) {
-      fetchData(lastBoundsRef.current);
+      return;
     }
-  }, [refreshToken, fetchData]);
+
+    if (fittedRef.current || sites.length === 0) return;
+    fittedRef.current = true;
+    if (sites.length === 1) {
+      map.setView([sites[0].latitude, sites[0].longitude], 8);
+      return;
+    }
+    const bounds = L.latLngBounds(
+      sites.map((s) => [s.latitude, s.longitude] as [number, number])
+    );
+    map.fitBounds(bounds.pad(0.25));
+  }, [sites, focusSiteId, map]);
+
+  return null;
+}
+
+type LogbookMapProps = {
+  sites: LogbookSite[];
+  selectedSiteId?: string | null;
+  pendingPin?: { lat: number; lng: number } | null;
+  clickToCreate?: boolean;
+  onMapClick?: (lat: number, lng: number) => void;
+  onSelectSite?: (siteId: string) => void;
+};
+
+export default function LogbookMap({
+  sites,
+  selectedSiteId,
+  pendingPin,
+  clickToCreate = true,
+  onMapClick,
+  onSelectSite,
+}: LogbookMapProps) {
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    setReady(true);
+  }, []);
+
+  const center = useMemo((): [number, number] => {
+    if (selectedSiteId) {
+      const site = sites.find((s) => s.id === selectedSiteId);
+      if (site) return [site.latitude, site.longitude];
+    }
+    if (sites[0]) return [sites[0].latitude, sites[0].longitude];
+    return defaultCenter;
+  }, [sites, selectedSiteId]);
+
+  if (!ready) {
+    return (
+      <div className="flex h-full w-full items-center justify-center bg-slate-100 text-sm text-slate-500 dark:bg-slate-800 dark:text-slate-300">
+        Loading map…
+      </div>
+    );
+  }
 
   return (
     <div className="relative h-full w-full">
-      {loading && (
-        <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/5 backdrop-blur-sm text-sm text-slate-600 dark:text-slate-300">
-          Loading map data...
-        </div>
-      )}
-      {error && (
-        <div className="absolute top-2 left-2 z-10 bg-red-100 text-red-700 px-3 py-2 rounded shadow">
-          {error}
+      {clickToCreate && (
+        <div className="pointer-events-none absolute left-3 top-3 z-[1000] rounded-md bg-white/95 px-3 py-2 text-xs font-medium text-slate-700 shadow dark:bg-slate-900/95 dark:text-slate-200">
+          Click the map to pin a dive place
         </div>
       )}
       <MapContainer
-        center={defaultCenter}
-        zoom={2}
+        center={center}
+        zoom={sites.length ? 4 : 2}
         className="h-full w-full"
         scrollWheelZoom
       >
@@ -135,60 +148,67 @@ export default function LogbookMap({ refreshToken }: { refreshToken?: number }) 
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        <BoundsFetcher
-          onBoundsChange={(bbox) => {
-            lastBoundsRef.current = bbox;
-            fetchData(bbox);
-          }}
+        <ClickToPlace
+          enabled={Boolean(clickToCreate && onMapClick)}
+          onPlaceClick={(lat, lng) => onMapClick?.(lat, lng)}
         />
+        <FitSites sites={sites} focusSiteId={selectedSiteId} />
 
-        {sites.map((site) => (
-          <Marker
-            key={site.id}
-            position={[site.latitude, site.longitude]}
-            icon={markerIcon}
-          >
-            <Popup>
-              <div className="space-y-1">
-                <div className="font-semibold">{site.name}</div>
-                <div className="text-xs text-muted-foreground">
-                  {site.latitude.toFixed(4)}, {site.longitude.toFixed(4)}
-                </div>
-              </div>
-            </Popup>
-          </Marker>
-        ))}
+        {pendingPin && (
+          <Marker position={[pendingPin.lat, pendingPin.lng]} icon={pendingIcon} />
+        )}
 
-        {dives
-          .filter((d) => d.site)
-          .map((dive) => (
+        {sites.map((site) => {
+          const diveCount = site.dives.length;
+          const latest = site.dives[0];
+          const cover = latest?.photos[0]?.url;
+          return (
             <Marker
-              key={dive.id}
-              position={[
-                dive.site!.latitude,
-                dive.site!.longitude,
-              ]}
+              key={site.id}
+              position={[site.latitude, site.longitude]}
               icon={markerIcon}
+              eventHandlers={{
+                click: () => onSelectSite?.(site.id),
+              }}
             >
               <Popup>
-                <div className="space-y-1">
-                  <div className="font-semibold">
-                    Dive on {new Date(dive.diveDate).toLocaleDateString()}
+                <div className="min-w-[160px] space-y-1.5">
+                  <div className="font-semibold text-slate-900">{site.name}</div>
+                  <div className="text-xs text-slate-600">
+                    {diveCount === 0
+                      ? 'No memories yet'
+                      : `${diveCount} memor${diveCount === 1 ? 'y' : 'ies'}`}
                   </div>
-                  {dive.site && (
-                    <div className="text-sm text-muted-foreground">
-                      {dive.site.name}
+                  {latest && (
+                    <div className="text-xs text-slate-500">
+                      Last dive{' '}
+                      {new Date(latest.diveDate).toLocaleDateString(undefined, {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric',
+                      })}
                     </div>
                   )}
-                  {dive.notes && (
-                    <div className="text-xs text-muted-foreground">
-                      {dive.notes}
-                    </div>
+                  {cover && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={cover}
+                      alt=""
+                      className="mt-1 h-16 w-full rounded object-cover"
+                    />
                   )}
+                  <button
+                    type="button"
+                    className="mt-1 text-xs font-medium text-blue-600 hover:underline"
+                    onClick={() => onSelectSite?.(site.id)}
+                  >
+                    Open memories
+                  </button>
                 </div>
               </Popup>
             </Marker>
-          ))}
+          );
+        })}
       </MapContainer>
     </div>
   );

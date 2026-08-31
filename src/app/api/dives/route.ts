@@ -1,10 +1,13 @@
-'use server';
-
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireDbUser } from '@/lib/auth';
+import { serializeDive } from '@/lib/logbook';
 
-// Create a new dive
+const diveInclude = {
+  site: true,
+  photos: { orderBy: { createdAt: 'asc' as const } },
+};
+
 export async function POST(req: NextRequest) {
   try {
     const { user } = await requireDbUser();
@@ -27,10 +30,23 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    if (siteId) {
+      const site = await prisma.diveSite.findFirst({
+        where: { id: siteId, userId: user.id },
+        select: { id: true },
+      });
+      if (!site) {
+        return NextResponse.json(
+          { error: 'Dive site not found for current user' },
+          { status: 404 }
+        );
+      }
+    }
+
     const dive = await prisma.dive.create({
       data: {
         userId: user.id,
-        siteId,
+        siteId: siteId || null,
         diveDate: new Date(diveDate),
         depthMeters,
         bottomTimeMinutes,
@@ -38,58 +54,61 @@ export async function POST(req: NextRequest) {
         conditions,
         notes,
       },
-      include: {
-        site: true,
-      },
+      include: diveInclude,
     });
 
-    return NextResponse.json(dive, { status: 201 });
-  } catch (error: any) {
-    const status = error?.status || 500;
-    return NextResponse.json({ error: error.message || 'Server error' }, { status });
+    return NextResponse.json(serializeDive(dive), { status: 201 });
+  } catch (error: unknown) {
+    const err = error as { status?: number; message?: string };
+    const status = err?.status || 500;
+    return NextResponse.json(
+      { error: err.message || 'Server error' },
+      { status }
+    );
   }
 }
 
-// List dives for the authenticated user
 export async function GET(req: NextRequest) {
   try {
     const { user } = await requireDbUser();
     const { searchParams } = new URL(req.url);
 
-    // Optional bounding box filter for map views
     const minLat = searchParams.get('minLat');
     const maxLat = searchParams.get('maxLat');
     const minLng = searchParams.get('minLng');
     const maxLng = searchParams.get('maxLng');
+    const siteId = searchParams.get('siteId');
 
     const dives = await prisma.dive.findMany({
       where: {
         userId: user.id,
+        ...(siteId ? { siteId } : {}),
         ...(minLat && maxLat && minLng && maxLng
           ? {
               site: {
                 latitude: {
-                  gte: minLat ? parseFloat(minLat) : undefined,
-                  lte: maxLat ? parseFloat(maxLat) : undefined,
+                  gte: parseFloat(minLat),
+                  lte: parseFloat(maxLat),
                 },
                 longitude: {
-                  gte: minLng ? parseFloat(minLng) : undefined,
-                  lte: maxLng ? parseFloat(maxLng) : undefined,
+                  gte: parseFloat(minLng),
+                  lte: parseFloat(maxLng),
                 },
               },
             }
           : {}),
       },
-      include: {
-        site: true,
-        photos: true,
-      },
+      include: diveInclude,
       orderBy: { diveDate: 'desc' },
     });
 
-    return NextResponse.json(dives);
-  } catch (error: any) {
-    const status = error?.status || 500;
-    return NextResponse.json({ error: error.message || 'Server error' }, { status });
+    return NextResponse.json(dives.map(serializeDive));
+  } catch (error: unknown) {
+    const err = error as { status?: number; message?: string };
+    const status = err?.status || 500;
+    return NextResponse.json(
+      { error: err.message || 'Server error' },
+      { status }
+    );
   }
 }
