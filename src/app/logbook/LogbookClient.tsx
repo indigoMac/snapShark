@@ -5,8 +5,9 @@ import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { SignInButton, useUser } from '@clerk/nextjs';
-import { ArrowLeft, Compass, Waves, X } from 'lucide-react';
+import { ArrowLeft, Compass, Pencil, Trash2, Waves, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
   clearPendingPhoto,
   coverPhotoForSite,
@@ -34,6 +35,9 @@ export default function LogbookClient() {
     lng: number;
   } | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
+  const [renaming, setRenaming] = useState(false);
+  const [placeNameDraft, setPlaceNameDraft] = useState('');
+  const [placeBusy, setPlaceBusy] = useState(false);
   const [pendingPhoto, setPendingPhoto] = useState<PendingLogbookPhoto | null>(
     null
   );
@@ -114,6 +118,92 @@ export default function LogbookClient() {
         d.id === diveId ? { ...d, photos: [...d.photos, photo] } : d
       )
     );
+  };
+
+  const handlePhotoRemoved = (diveId: string, photoId: string) => {
+    if (!selectedSiteId) return;
+    updateSiteDives(selectedSiteId, (dives) =>
+      dives.map((d) =>
+        d.id === diveId
+          ? { ...d, photos: d.photos.filter((p) => p.id !== photoId) }
+          : d
+      )
+    );
+  };
+
+  const handleMemoryUpdated = (dive: LogbookDive) => {
+    if (!selectedSiteId) return;
+    updateSiteDives(selectedSiteId, (dives) =>
+      dives.map((d) => (d.id === dive.id ? dive : d))
+    );
+  };
+
+  const handleMemoryDeleted = (diveId: string) => {
+    if (!selectedSiteId) return;
+    updateSiteDives(selectedSiteId, (dives) =>
+      dives.filter((d) => d.id !== diveId)
+    );
+  };
+
+  const startRename = () => {
+    if (!selectedSite) return;
+    setPlaceNameDraft(selectedSite.name);
+    setRenaming(true);
+  };
+
+  const saveRename = async () => {
+    if (!selectedSiteId || !placeNameDraft.trim()) return;
+    setPlaceBusy(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/dive-sites/${selectedSiteId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: placeNameDraft.trim() }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Failed to rename place');
+      }
+      const updated = (await res.json()) as LogbookSite;
+      setSites((prev) =>
+        prev.map((s) => (s.id === updated.id ? { ...s, ...updated } : s))
+      );
+      setRenaming(false);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to rename place');
+    } finally {
+      setPlaceBusy(false);
+    }
+  };
+
+  const deletePlace = async () => {
+    if (!selectedSiteId || !selectedSite) return;
+    if (
+      !window.confirm(
+        `Delete “${selectedSite.name}” and all memories there? This cannot be undone.`
+      )
+    ) {
+      return;
+    }
+    setPlaceBusy(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/dive-sites/${selectedSiteId}`, {
+        method: 'DELETE',
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Failed to delete place');
+      }
+      setSites((prev) => prev.filter((s) => s.id !== selectedSiteId));
+      setSelectedSiteId(null);
+      setRenaming(false);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to delete place');
+    } finally {
+      setPlaceBusy(false);
+    }
   };
 
   if (!isLoaded) {
@@ -201,7 +291,10 @@ export default function LogbookClient() {
               selectedSiteId={selectedSiteId}
               pendingPin={pendingPin}
               onMapClick={handleMapClick}
-              onSelectSite={setSelectedSiteId}
+              onSelectSite={(id) => {
+                setSelectedSiteId(id);
+                setRenaming(false);
+              }}
             />
           </div>
         </div>
@@ -211,7 +304,10 @@ export default function LogbookClient() {
             <div className="space-y-4">
               <button
                 type="button"
-                onClick={() => setSelectedSiteId(null)}
+                onClick={() => {
+                  setSelectedSiteId(null);
+                  setRenaming(false);
+                }}
                 className="inline-flex items-center text-sm text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
               >
                 <ArrowLeft className="mr-1 h-4 w-4" />
@@ -231,12 +327,69 @@ export default function LogbookClient() {
                     <Compass className="h-10 w-10 text-blue-500/70" />
                   </div>
                 )}
-                <div className="space-y-1 p-4">
-                  <h2 className="text-xl font-semibold">{selectedSite.name}</h2>
-                  <p className="text-xs text-slate-500">
-                    {selectedSite.latitude.toFixed(4)},{' '}
-                    {selectedSite.longitude.toFixed(4)}
-                  </p>
+                <div className="space-y-2 p-4">
+                  {renaming ? (
+                    <div className="flex gap-2">
+                      <Input
+                        value={placeNameDraft}
+                        onChange={(e) => setPlaceNameDraft(e.target.value)}
+                        disabled={placeBusy}
+                        autoFocus
+                      />
+                      <Button
+                        type="button"
+                        size="sm"
+                        disabled={placeBusy}
+                        onClick={saveRename}
+                      >
+                        Save
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        disabled={placeBusy}
+                        onClick={() => setRenaming(false)}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <h2 className="text-xl font-semibold">
+                          {selectedSite.name}
+                        </h2>
+                        <p className="text-xs text-slate-500">
+                          {selectedSite.latitude.toFixed(4)},{' '}
+                          {selectedSite.longitude.toFixed(4)}
+                        </p>
+                      </div>
+                      <div className="flex shrink-0 gap-1">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          disabled={placeBusy}
+                          onClick={startRename}
+                          title="Rename place"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          disabled={placeBusy}
+                          onClick={deletePlace}
+                          title="Delete place"
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -258,6 +411,11 @@ export default function LogbookClient() {
                       onPhotoAdded={(photo) =>
                         handlePhotoAdded(dive.id, photo)
                       }
+                      onPhotoRemoved={(photoId) =>
+                        handlePhotoRemoved(dive.id, photoId)
+                      }
+                      onUpdated={handleMemoryUpdated}
+                      onDeleted={handleMemoryDeleted}
                       onAttachedPending={dismissPendingPhoto}
                     />
                   ))

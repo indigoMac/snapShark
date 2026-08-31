@@ -1,0 +1,69 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/db';
+import { requireDbUser } from '@/lib/auth';
+import { serializeDive } from '@/lib/logbook';
+
+const diveInclude = {
+  site: true,
+  photos: { orderBy: { createdAt: 'asc' as const } },
+};
+
+type RouteContext = { params: { id: string } };
+
+export async function PATCH(req: NextRequest, { params }: RouteContext) {
+  try {
+    const { user } = await requireDbUser();
+    const body = await req.json();
+    const { diveDate, notes, depthMeters, bottomTimeMinutes } = body;
+
+    const existing = await prisma.dive.findFirst({
+      where: { id: params.id, userId: user.id },
+      select: { id: true },
+    });
+    if (!existing) {
+      return NextResponse.json({ error: 'Memory not found' }, { status: 404 });
+    }
+
+    const dive = await prisma.dive.update({
+      where: { id: params.id },
+      data: {
+        ...(diveDate !== undefined ? { diveDate: new Date(diveDate) } : {}),
+        ...(notes !== undefined ? { notes } : {}),
+        ...(depthMeters !== undefined ? { depthMeters } : {}),
+        ...(bottomTimeMinutes !== undefined ? { bottomTimeMinutes } : {}),
+      },
+      include: diveInclude,
+    });
+
+    return NextResponse.json(serializeDive(dive));
+  } catch (error: unknown) {
+    const err = error as { status?: number; message?: string };
+    return NextResponse.json(
+      { error: err.message || 'Server error' },
+      { status: err?.status || 500 }
+    );
+  }
+}
+
+export async function DELETE(_req: NextRequest, { params }: RouteContext) {
+  try {
+    const { user } = await requireDbUser();
+
+    const existing = await prisma.dive.findFirst({
+      where: { id: params.id, userId: user.id },
+      select: { id: true },
+    });
+    if (!existing) {
+      return NextResponse.json({ error: 'Memory not found' }, { status: 404 });
+    }
+
+    await prisma.dive.delete({ where: { id: params.id } });
+    return NextResponse.json({ ok: true });
+  } catch (error: unknown) {
+    const err = error as { status?: number; message?: string };
+    return NextResponse.json(
+      { error: err.message || 'Server error' },
+      { status: err?.status || 500 }
+    );
+  }
+}
