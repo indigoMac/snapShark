@@ -1,4 +1,4 @@
-import { put } from '@vercel/blob';
+import { del, put } from '@vercel/blob';
 
 /**
  * Store a compressed image for the logbook.
@@ -46,4 +46,20 @@ export async function storeLogbookPhoto(opts: {
   );
 
   return blob.url;
+}
+
+/**
+ * Removes stored photo objects so deleted logbook content is erased from Blob
+ * storage, not just from the database. Data URLs live only in the database row,
+ * so they need no extra cleanup.
+ */
+export async function deleteStoredLogbookPhotos(
+  urls: readonly string[]
+): Promise<void> {
+  if (!process.env.BLOB_READ_WRITE_TOKEN) return;
+
+  const blobUrls = urls.filter((url) => url.startsWith('https://'));
+  if (blobUrls.length === 0) return;
+
+  await del(blobUrls);
 }

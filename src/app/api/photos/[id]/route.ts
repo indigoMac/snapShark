@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireDbUser } from '@/lib/auth';
+import { deleteStoredLogbookPhotos } from '@/lib/store-logbook-photo';
 
 type RouteContext = { params: { id: string } };
 
@@ -10,13 +11,15 @@ export async function DELETE(_req: NextRequest, { params }: RouteContext) {
 
     const photo = await prisma.photo.findFirst({
       where: { id: params.id, dive: { userId: user.id } },
-      select: { id: true },
+      select: { id: true, url: true },
     });
     if (!photo) {
       return NextResponse.json({ error: 'Photo not found' }, { status: 404 });
     }
 
     await prisma.photo.delete({ where: { id: params.id } });
+    await deleteStoredLogbookPhotos([photo.url]);
+
     return NextResponse.json({ ok: true });
   } catch (error: unknown) {
     const err = error as { status?: number; message?: string };

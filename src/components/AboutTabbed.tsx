@@ -356,9 +356,11 @@ function WhatsDifferentTab() {
               SnapShark is built with modern web technologies including
               Next.js, TypeScript, and advanced Canvas APIs. All processing
               happens directly in your browser using Web Workers, so it's
-              fast and your images stay on your device. As a bonus, this
-              means your images never get uploaded anywhere - they're
-              processed locally.
+              fast and the images you process stay on your device rather than
+              being uploaded anywhere. The dive Logbook works differently by
+              design: the places, dives, and photos you save there are stored
+              on your account so they follow you between devices, and you can
+              export or delete them at any time.
             </p>
             <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-lg border-l-4 border-blue-500">
               <p className="font-medium text-slate-900 dark:text-white mb-2">

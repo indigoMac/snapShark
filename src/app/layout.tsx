@@ -118,7 +118,7 @@ export default function RootLayout({
                       </div>
 
                       <div className="flex items-center gap-6 text-sm text-slate-600 dark:text-slate-400">
-                        <span>🔒 100% Privacy - No uploads</span>
+                        <span>🔒 Images processed in your browser</span>
                         <span>🚀 Powered by your browser</span>
                         <span>⚡ Lightning fast</span>
                       </div>

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireDbUser } from '@/lib/auth';
 import { serializeDive } from '@/lib/logbook';
+import { deleteStoredLogbookPhotos } from '@/lib/store-logbook-photo';
 
 const diveInclude = {
   site: true,
@@ -62,13 +63,15 @@ export async function DELETE(_req: NextRequest, { params }: RouteContext) {
 
     const existing = await prisma.dive.findFirst({
       where: { id: params.id, userId: user.id },
-      select: { id: true },
+      select: { id: true, photos: { select: { url: true } } },
     });
     if (!existing) {
       return NextResponse.json({ error: 'Dive not found' }, { status: 404 });
     }
 
     await prisma.dive.delete({ where: { id: params.id } });
+    await deleteStoredLogbookPhotos(existing.photos.map((p) => p.url));
+
     return NextResponse.json({ ok: true });
   } catch (error: unknown) {
     const err = error as { status?: number; message?: string };

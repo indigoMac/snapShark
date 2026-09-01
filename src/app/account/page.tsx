@@ -21,11 +21,13 @@ import {
   Crown,
   Settings,
   CreditCard,
+  Database,
   Shield,
   Download,
   X,
   AlertTriangle,
 } from 'lucide-react';
+import Link from 'next/link';
 import { SubscriptionStatus } from '@/components/SubscriptionStatus';
 import { GracePeriodMessaging } from '@/components/GracePeriodMessaging';
 import { usePaywall } from '@/hooks/usePaywall';
@@ -56,6 +58,80 @@ function AccountPageContent() {
     type: 'success' | 'error';
     text: string;
   } | null>(null);
+
+  // Logbook data controls (export / erasure)
+  const [isExportingLogbook, setIsExportingLogbook] = useState(false);
+  const [isDeletingLogbook, setIsDeletingLogbook] = useState(false);
+  const [logbookMessage, setLogbookMessage] = useState<{
+    type: 'success' | 'error';
+    text: string;
+  } | null>(null);
+
+  const handleExportLogbook = async () => {
+    setIsExportingLogbook(true);
+    setLogbookMessage(null);
+    try {
+      const res = await fetch('/api/account/logbook');
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Export failed');
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'snapshark-logbook.json';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      setLogbookMessage({
+        type: 'success',
+        text: 'Your Logbook export has been downloaded.',
+      });
+    } catch (error: unknown) {
+      setLogbookMessage({
+        type: 'error',
+        text:
+          error instanceof Error
+            ? error.message
+            : 'Could not export your Logbook',
+      });
+    } finally {
+      setIsExportingLogbook(false);
+    }
+  };
+
+  const handleDeleteLogbook = async () => {
+    const confirmed = window.confirm(
+      'Permanently delete every place, dive, and photo in your Logbook? This cannot be undone.'
+    );
+    if (!confirmed) return;
+
+    setIsDeletingLogbook(true);
+    setLogbookMessage(null);
+    try {
+      const res = await fetch('/api/account/logbook', { method: 'DELETE' });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Delete failed');
+      }
+      setLogbookMessage({
+        type: 'success',
+        text: 'Your Logbook data has been deleted.',
+      });
+    } catch (error: unknown) {
+      setLogbookMessage({
+        type: 'error',
+        text:
+          error instanceof Error
+            ? error.message
+            : 'Could not delete your Logbook',
+      });
+    } finally {
+      setIsDeletingLogbook(false);
+    }
+  };
 
   // Handle successful payment return
   useEffect(() => {
@@ -261,10 +337,26 @@ function AccountPageContent() {
                   <Shield className="w-3 h-3 text-green-600" />
                 </div>
                 <div>
-                  <h4 className="font-medium">100% Client-Side Processing</h4>
+                  <h4 className="font-medium">
+                    Image tools stay on your device
+                  </h4>
                   <p className="text-sm text-muted-foreground">
-                    All image processing happens in your browser. No files are
-                    ever uploaded to our servers.
+                    Converting, background removal, and underwater correction
+                    all run in your browser. Those images are never uploaded.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <Shield className="w-3 h-3 text-blue-600" />
+                </div>
+                <div>
+                  <h4 className="font-medium">Logbook is saved to your account</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Places, dives, notes, and any photos you add to the Logbook
+                    are stored on our servers so they follow you between
+                    devices. You can export or delete them at any time below.
                   </p>
                 </div>
               </div>
@@ -274,26 +366,81 @@ function AccountPageContent() {
                   <Shield className="w-3 h-3 text-green-600" />
                 </div>
                 <div>
-                  <h4 className="font-medium">Local Storage Only</h4>
+                  <h4 className="font-medium">Minimal account data</h4>
                   <p className="text-sm text-muted-foreground">
-                    Settings and presets are saved locally in your browser. We
-                    never see your data.
+                    Beyond your Logbook, we only keep what is needed for
+                    sign-in and billing. See our{' '}
+                    <Link
+                      href="/legal/privacy"
+                      className="text-blue-600 hover:underline dark:text-blue-400"
+                    >
+                      Privacy Policy
+                    </Link>
+                    .
                   </p>
                 </div>
               </div>
+            </div>
+          </CardContent>
+        </Card>
 
-              <div className="flex items-start gap-3">
-                <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <Shield className="w-3 h-3 text-green-600" />
-                </div>
-                <div>
-                  <h4 className="font-medium">GDPR Compliant</h4>
-                  <p className="text-sm text-muted-foreground">
-                    We only collect the minimum data necessary for billing and
-                    account management.
-                  </p>
-                </div>
+        {/* Logbook data controls */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Database className="w-5 h-5" />
+              Your Logbook Data
+            </CardTitle>
+            <CardDescription>
+              Download a copy of everything we store, or erase it permanently
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {logbookMessage && (
+              <div
+                className={`rounded-lg p-3 text-sm ${
+                  logbookMessage.type === 'success'
+                    ? 'bg-green-50 text-green-800 dark:bg-green-900/20 dark:text-green-300'
+                    : 'bg-red-50 text-red-800 dark:bg-red-900/20 dark:text-red-300'
+                }`}
+              >
+                {logbookMessage.text}
               </div>
+            )}
+
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <h4 className="font-medium">Export Logbook</h4>
+                <p className="text-sm text-muted-foreground">
+                  Downloads your trips, places, dives, and photo links as JSON
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={isExportingLogbook}
+                onClick={handleExportLogbook}
+              >
+                {isExportingLogbook ? 'Preparing…' : 'Export'}
+              </Button>
+            </div>
+
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <h4 className="font-medium">Delete Logbook</h4>
+                <p className="text-sm text-muted-foreground">
+                  Permanently removes every place, dive, and photo you have
+                  saved. This cannot be undone.
+                </p>
+              </div>
+              <Button
+                variant="destructive"
+                size="sm"
+                disabled={isDeletingLogbook}
+                onClick={handleDeleteLogbook}
+              >
+                {isDeletingLogbook ? 'Deleting…' : 'Delete'}
+              </Button>
             </div>
           </CardContent>
         </Card>
