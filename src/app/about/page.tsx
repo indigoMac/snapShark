@@ -1,29 +1,29 @@
 import type { Metadata } from 'next';
 import { AboutTabbed } from '@/components/AboutTabbed';
 
+const description =
+  'SnapShark is a dive logbook and underwater photo toolkit: map the places you have dived, record the details that matter, and correct dive photos in your browser.';
+
 export const metadata: Metadata = {
-  title: 'About SnapShark - Professional Image Processing',
-  description:
-    'Learn about SnapShark, a privacy-first image processing tool built by developers for developers, designers, and professionals.',
+  title: 'About SnapShark - Dive Logbook & Photo Tools',
+  description,
   keywords: [
     'about snapshark',
-    'image processing',
-    'developer',
+    'dive logbook',
+    'scuba diving log',
+    'underwater photo correction',
     'privacy-first',
-    'client-side processing',
   ],
   openGraph: {
-    title: 'About SnapShark - Professional Image Processing',
-    description:
-      'Learn about SnapShark, a privacy-first image processing tool built by developers for developers, designers, and professionals.',
+    title: 'About SnapShark - Dive Logbook & Photo Tools',
+    description,
     type: 'website',
     url: 'https://www.snap-shark.com/about',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'About SnapShark - Professional Image Processing',
-    description:
-      'Learn about SnapShark, a privacy-first image processing tool built by developers for developers, designers, and professionals.',
+    title: 'About SnapShark - Dive Logbook & Photo Tools',
+    description,
   },
   alternates: {
     canonical: 'https://www.snap-shark.com/about',
@@ -42,8 +42,8 @@ export default function AboutPage() {
             <span className="text-blue-600 dark:text-blue-400">Shark</span>
           </h1>
           <p className="text-xl text-slate-600 dark:text-slate-300 max-w-2xl mx-auto">
-            Simple tools for everyday image tasks - no heavyweight software
-            required
+            A dive logbook worth revisiting, and photo tools that run in your
+            browser
           </p>
         </div>
 

@@ -8,7 +8,7 @@ export const LEGAL = {
   serviceName: 'SnapShark',
   siteUrl: 'https://www.snap-shark.com',
   /** Controller for UK GDPR purposes. Postal address is provided on request. */
-  controller: 'SnapShark, operated from the United Kingdom',
+  controller: 'SnapShark, a service operated by Mac Cox (sole trader, United Kingdom)',
   contactEmail: 'snapshark2025@gmail.com',
   responseTime: 'within 48 hours',
   /** Statutory deadline for responding to a data subject request. */
