@@ -226,7 +226,7 @@ export default function LogbookClient() {
           <p className="text-sm text-muted-foreground">
             Preview deployments need Clerk <span className="font-medium">Development</span> keys
             (production keys only work on snap-shark.com). Set Preview env vars in Vercel, or
-            test Memories locally with <code className="text-xs">npm run dev</code>.
+            test the logbook locally with <code className="text-xs">npm run dev</code>.
           </p>
         )}
       </div>
@@ -237,7 +237,7 @@ export default function LogbookClient() {
     return (
       <div className="mx-auto max-w-lg space-y-6 py-16 text-center">
         <Compass className="mx-auto h-12 w-12 text-blue-500" />
-        <h1 className="text-3xl font-bold tracking-tight">Dive memories</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Dive logbook</h1>
         <p className="text-muted-foreground">
           Sign in to pin the places you&apos;ve dived and collect the memories
           that go with them.
@@ -253,7 +253,7 @@ export default function LogbookClient() {
     <div className="space-y-6">
       <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div className="space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight">Dive memories</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Dive logbook</h1>
           <p className="max-w-xl text-muted-foreground">
             A map of where you&apos;ve been — pin places, add notes, and attach
             photos so each dive stays easy to revisit.
@@ -416,11 +416,11 @@ export default function LogbookClient() {
 
               <div className="space-y-3">
                 <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
-                  Memories
+                  Dive entries
                 </h3>
                 {selectedSite.dives.length === 0 ? (
                   <p className="text-sm text-slate-500">
-                    No memories here yet — add the first one below.
+                    No dives logged here yet — add the first one below.
                   </p>
                 ) : (
                   selectedSite.dives.map((dive) => (

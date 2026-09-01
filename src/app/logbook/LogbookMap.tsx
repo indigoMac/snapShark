@@ -176,8 +176,8 @@ export default function LogbookMap({
                   <div className="font-semibold text-slate-900">{site.name}</div>
                   <div className="text-xs text-slate-600">
                     {diveCount === 0
-                      ? 'No memories yet'
-                      : `${diveCount} memor${diveCount === 1 ? 'y' : 'ies'}`}
+                      ? 'No dives yet'
+                      : `${diveCount} dive${diveCount === 1 ? '' : 's'}`}
                   </div>
                   {latest && (
                     <div className="text-xs text-slate-500">
@@ -202,7 +202,7 @@ export default function LogbookMap({
                     className="mt-1 text-xs font-medium text-blue-600 hover:underline"
                     onClick={() => onSelectSite?.(site.id)}
                   >
-                    Open memories
+                    Open logbook
                   </button>
                 </div>
               </Popup>

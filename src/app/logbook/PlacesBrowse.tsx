@@ -73,8 +73,8 @@ export function PlacesBrowse({
                   </div>
                   <div className="text-xs text-slate-500">
                     {diveCount === 0
-                      ? 'Waiting for a memory'
-                      : `${diveCount} memor${diveCount === 1 ? 'y' : 'ies'}`}
+                      ? 'Waiting for a dive'
+                      : `${diveCount} dive${diveCount === 1 ? '' : 's'}`}
                   </div>
                   {(site.region || site.country) && (
                     <div className="truncate text-xs text-slate-400">
