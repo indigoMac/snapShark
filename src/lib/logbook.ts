@@ -54,6 +54,15 @@ export type LogbookTrip = {
 
 export const PENDING_PHOTO_KEY = 'snapshark:pendingLogbookPhoto';
 
+/** Prisma include used when loading a place with its dives/photos. */
+export const diveSiteInclude = {
+  trip: { select: { id: true, name: true } },
+  dives: {
+    include: { photos: { orderBy: { createdAt: 'asc' as const } } },
+    orderBy: { diveDate: 'desc' as const },
+  },
+};
+
 export type PendingLogbookPhoto = {
   dataUrl: string;
   filename?: string;

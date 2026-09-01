@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireDbUser } from '@/lib/auth';
-import { serializeSite } from '@/lib/logbook';
-import { diveInclude } from '../route';
+import { diveSiteInclude, serializeSite } from '@/lib/logbook';
 
 type RouteContext = { params: { id: string } };
 
@@ -73,7 +72,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
           ? { tripId: tripId === null || tripId === '' ? null : tripId }
           : {}),
       },
-      include: diveInclude,
+      include: diveSiteInclude,
     });
 
     return NextResponse.json(serializeSite(site));

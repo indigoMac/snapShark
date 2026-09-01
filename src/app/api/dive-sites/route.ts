@@ -1,15 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireDbUser } from '@/lib/auth';
-import { serializeSite } from '@/lib/logbook';
-
-export const diveInclude = {
-  trip: { select: { id: true, name: true } },
-  dives: {
-    include: { photos: { orderBy: { createdAt: 'asc' as const } } },
-    orderBy: { diveDate: 'desc' as const },
-  },
-};
+import { diveSiteInclude, serializeSite } from '@/lib/logbook';
 
 export async function POST(req: NextRequest) {
   try {
@@ -53,7 +45,7 @@ export async function POST(req: NextRequest) {
         region,
         tripId: tripId || null,
       },
-      include: diveInclude,
+      include: diveSiteInclude,
     });
 
     return NextResponse.json(serializeSite(site), { status: 201 });
@@ -99,7 +91,7 @@ export async function GET(req: NextRequest) {
             }
           : {}),
       },
-      include: diveInclude,
+      include: diveSiteInclude,
       orderBy: { updatedAt: 'desc' },
     });
 
