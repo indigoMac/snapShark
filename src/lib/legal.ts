@@ -48,7 +48,8 @@ export const SUB_PROCESSORS = [
   },
   {
     name: 'Vercel',
-    purpose: 'Website hosting, Blob storage for Logbook photos, and cookieless analytics',
+    purpose:
+      'Website hosting, private Blob storage for Logbook photos, and cookieless analytics',
     data: 'Logbook photos, request logs, aggregate page analytics',
     url: 'https://vercel.com/legal/privacy-policy',
   },

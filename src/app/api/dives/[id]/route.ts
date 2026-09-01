@@ -63,14 +63,14 @@ export async function DELETE(_req: NextRequest, { params }: RouteContext) {
 
     const existing = await prisma.dive.findFirst({
       where: { id: params.id, userId: user.id },
-      select: { id: true, photos: { select: { url: true } } },
+      select: { id: true, photos: { select: { storageRef: true } } },
     });
     if (!existing) {
       return NextResponse.json({ error: 'Dive not found' }, { status: 404 });
     }
 
     await prisma.dive.delete({ where: { id: params.id } });
-    await deleteStoredLogbookPhotos(existing.photos.map((p) => p.url));
+    await deleteStoredLogbookPhotos(existing.photos.map((p) => p.storageRef));
 
     return NextResponse.json({ ok: true });
   } catch (error: unknown) {

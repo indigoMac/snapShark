@@ -80,7 +80,8 @@ model Dive {
 model Photo {
   id         String    @id @default(uuid())
   diveId     String
-  url        String
+  /// Blob pathname for private storage, or a data URL on installs without blob storage.
+  storageRef String
   caption    String?
   takenAt    DateTime?
   latitude   Decimal?  @db.Decimal(9, 6)

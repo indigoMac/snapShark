@@ -11,14 +11,14 @@ export async function DELETE(_req: NextRequest, { params }: RouteContext) {
 
     const photo = await prisma.photo.findFirst({
       where: { id: params.id, dive: { userId: user.id } },
-      select: { id: true, url: true },
+      select: { id: true, storageRef: true },
     });
     if (!photo) {
       return NextResponse.json({ error: 'Photo not found' }, { status: 404 });
     }
 
     await prisma.photo.delete({ where: { id: params.id } });
-    await deleteStoredLogbookPhotos([photo.url]);
+    await deleteStoredLogbookPhotos([photo.storageRef]);
 
     return NextResponse.json({ ok: true });
   } catch (error: unknown) {

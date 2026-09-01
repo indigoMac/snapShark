@@ -68,12 +68,12 @@ export async function POST(req: NextRequest) {
 
   const photos = await prisma.photo.findMany({
     where: { dive: { userId: user.id } },
-    select: { url: true },
+    select: { storageRef: true },
   });
 
   // Dives, sites, trips, and photos cascade from the user row.
   await prisma.user.delete({ where: { id: user.id } });
-  await deleteStoredLogbookPhotos(photos.map((photo) => photo.url));
+  await deleteStoredLogbookPhotos(photos.map((photo) => photo.storageRef));
 
   return NextResponse.json({ ok: true, deletedPhotos: photos.length });
 }

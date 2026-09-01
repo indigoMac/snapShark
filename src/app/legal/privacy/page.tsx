@@ -221,13 +221,12 @@ export default function PrivacyPolicyPage() {
                 <h3 className="font-semibold mb-1">How Logbook photos are stored</h3>
                 <p className="text-sm text-muted-foreground">
                   Photos you attach to a dive are resized in your browser and
-                  then uploaded to our storage provider (Vercel Blob). They are
-                  saved at long, randomly generated web addresses that are not
-                  listed or searchable, but anyone given the exact link could
-                  open the file. Please keep that in mind before adding photos
-                  you consider sensitive. Deleting a photo, a dive, or your
-                  Logbook removes the stored file as well as the database
-                  record.
+                  then uploaded to private storage (Vercel Blob). They have no
+                  public web address: every request goes through our server,
+                  which checks that you are signed in and that the photo belongs
+                  to your account before sending it back. Deleting a photo, a
+                  dive, or your Logbook removes the stored file as well as the
+                  database record.
                 </p>
               </div>
               <div>
@@ -446,8 +445,9 @@ export default function PrivacyPolicyPage() {
                   <li>• HTTPS encryption for all traffic</li>
                   <li>• Authentication handled by Clerk</li>
                   <li>
-                    • Every Logbook request is checked against the signed-in
-                    account, so users cannot read each other&apos;s entries
+                    • Every Logbook request, including each photo, is checked
+                    against the signed-in account, so users cannot read each
+                    other&apos;s entries
                   </li>
                   <li>• Payments handled by Stripe; we never see card details</li>
                 </ul>

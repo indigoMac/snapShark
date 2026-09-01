@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireDbUser } from '@/lib/auth';
 import { storeLogbookPhoto } from '@/lib/store-logbook-photo';
+import { photoSrc } from '@/lib/logbook';
 
 const MAX_DATA_URL_CHARS = 1_200_000;
 
@@ -38,7 +39,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const storedUrl = await storeLogbookPhoto({
+    const storageRef = await storeLogbookPhoto({
       userId: user.id,
       diveId,
       dataUrl: url,
@@ -47,7 +48,7 @@ export async function POST(req: NextRequest) {
     const photo = await prisma.photo.create({
       data: {
         diveId,
-        url: storedUrl,
+        storageRef,
         caption,
         takenAt: takenAt ? new Date(takenAt) : undefined,
         latitude,
@@ -58,7 +59,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         id: photo.id,
-        url: photo.url,
+        url: photoSrc(photo.id),
         caption: photo.caption,
         takenAt: photo.takenAt?.toISOString() ?? null,
       },
@@ -106,7 +107,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(
       photos.map((photo) => ({
         id: photo.id,
-        url: photo.url,
+        url: photoSrc(photo.id),
         caption: photo.caption,
         takenAt: photo.takenAt?.toISOString() ?? null,
       }))

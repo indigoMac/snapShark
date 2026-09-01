@@ -77,15 +77,22 @@ export function toNumber(value: unknown): number {
   return Number(value);
 }
 
+/**
+ * Photos are held in private storage, so clients always load them through the
+ * owner-checked streaming route rather than a direct storage URL.
+ */
+export function photoSrc(photoId: string): string {
+  return `/api/photos/${photoId}/file`;
+}
+
 function serializePhoto(photo: {
   id: string;
-  url: string;
   caption?: string | null;
   takenAt?: Date | string | null;
 }): LogbookPhoto {
   return {
     id: photo.id,
-    url: photo.url,
+    url: photoSrc(photo.id),
     caption: photo.caption ?? null,
     takenAt: photo.takenAt ? new Date(photo.takenAt).toISOString() : null,
   };
@@ -103,7 +110,6 @@ export function serializeDive(dive: {
   siteId?: string | null;
   photos?: Array<{
     id: string;
-    url: string;
     caption?: string | null;
     takenAt?: Date | string | null;
   }>;
@@ -173,7 +179,7 @@ export function serializeTrip(trip: {
   startDate?: Date | string | null;
   endDate?: Date | string | null;
   places?: Array<{
-    dives?: Array<{ photos?: Array<{ url: string }> }>;
+    dives?: Array<{ photos?: Array<{ id: string }> }>;
   }>;
 }): LogbookTrip {
   const places = trip.places ?? [];
@@ -182,8 +188,8 @@ export function serializeTrip(trip: {
   for (const place of places) {
     for (const dive of place.dives ?? []) {
       diveCount += 1;
-      if (!coverUrl && dive.photos?.[0]?.url) {
-        coverUrl = dive.photos[0].url;
+      if (!coverUrl && dive.photos?.[0]?.id) {
+        coverUrl = photoSrc(dive.photos[0].id);
       }
     }
   }

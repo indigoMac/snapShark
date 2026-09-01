@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireDbUser } from '@/lib/auth';
-import { serializeSite, serializeTrip } from '@/lib/logbook';
+import { photoSrc, serializeSite, serializeTrip } from '@/lib/logbook';
 import { deleteStoredLogbookPhotos } from '@/lib/store-logbook-photo';
 
 /**
@@ -27,7 +27,10 @@ export async function GET() {
         where: { userId: user.id },
         include: {
           places: {
-            select: { id: true, dives: { select: { photos: { select: { url: true } } } } },
+            select: {
+              id: true,
+              dives: { select: { photos: { select: { id: true } } } },
+            },
           },
         },
         orderBy: { createdAt: 'asc' },
@@ -49,7 +52,7 @@ export async function GET() {
         diveDate: dive.diveDate.toISOString(),
         diveType: dive.diveType,
         notes: dive.notes,
-        photos: dive.photos.map((photo) => photo.url),
+        photos: dive.photos.map((photo) => photoSrc(photo.id)),
       })),
     };
 
@@ -79,7 +82,7 @@ export async function DELETE() {
 
     const photos = await prisma.photo.findMany({
       where: { dive: { userId: user.id } },
-      select: { url: true },
+      select: { storageRef: true },
     });
 
     await prisma.$transaction([
@@ -88,7 +91,7 @@ export async function DELETE() {
       prisma.trip.deleteMany({ where: { userId: user.id } }),
     ]);
 
-    await deleteStoredLogbookPhotos(photos.map((photo) => photo.url));
+    await deleteStoredLogbookPhotos(photos.map((photo) => photo.storageRef));
 
     return NextResponse.json({ ok: true, deletedPhotos: photos.length });
   } catch (error: unknown) {
