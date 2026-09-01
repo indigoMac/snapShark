@@ -12,6 +12,8 @@ import {
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import type { LogbookSite } from '@/lib/logbook';
+import type { GeocodeResult } from '@/lib/geocode';
+import { MapSearch } from './MapSearch';
 
 const defaultCenter: [number, number] = [20, 0];
 
@@ -91,6 +93,23 @@ function FitSites({
   return null;
 }
 
+function FlyToTarget({
+  target,
+}: {
+  target: { lat: number; lng: number; zoom: number; token: number } | null;
+}) {
+  const map = useMap();
+  const lastToken = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (!target || lastToken.current === target.token) return;
+    lastToken.current = target.token;
+    map.flyTo([target.lat, target.lng], target.zoom, { duration: 1.1 });
+  }, [target, map]);
+
+  return null;
+}
+
 type LogbookMapProps = {
   sites: LogbookSite[];
   selectedSiteId?: string | null;
@@ -109,6 +128,12 @@ export default function LogbookMap({
   onSelectSite,
 }: LogbookMapProps) {
   const [ready, setReady] = useState(false);
+  const [flyTarget, setFlyTarget] = useState<{
+    lat: number;
+    lng: number;
+    zoom: number;
+    token: number;
+  } | null>(null);
 
   useEffect(() => {
     setReady(true);
@@ -123,6 +148,15 @@ export default function LogbookMap({
     return defaultCenter;
   }, [sites, selectedSiteId]);
 
+  const handleSearchSelect = (result: GeocodeResult) => {
+    setFlyTarget({
+      lat: result.latitude,
+      lng: result.longitude,
+      zoom: result.kind === 'coordinates' ? 12 : 11,
+      token: Date.now(),
+    });
+  };
+
   if (!ready) {
     return (
       <div className="flex h-full w-full items-center justify-center bg-slate-100 text-sm text-slate-500 dark:bg-slate-800 dark:text-slate-300">
@@ -133,11 +167,14 @@ export default function LogbookMap({
 
   return (
     <div className="relative h-full w-full">
-      {clickToCreate && (
-        <div className="pointer-events-none absolute left-3 top-3 z-[1000] rounded-md bg-white/95 px-3 py-2 text-xs font-medium text-slate-700 shadow dark:bg-slate-900/95 dark:text-slate-200">
-          Click the map to pin a dive place
-        </div>
-      )}
+      <div className="absolute left-3 right-3 top-3 z-[1000] flex flex-col gap-2 sm:right-auto sm:w-[min(100%,28rem)]">
+        <MapSearch onSelect={handleSearchSelect} />
+        {clickToCreate && (
+          <div className="pointer-events-none w-fit rounded-md bg-white/95 px-3 py-2 text-xs font-medium text-slate-700 shadow dark:bg-slate-900/95 dark:text-slate-200">
+            Search to find an area, then click the map to pin your dive place
+          </div>
+        )}
+      </div>
       <MapContainer
         center={center}
         zoom={sites.length ? 4 : 2}
@@ -153,9 +190,13 @@ export default function LogbookMap({
           onPlaceClick={(lat, lng) => onMapClick?.(lat, lng)}
         />
         <FitSites sites={sites} focusSiteId={selectedSiteId} />
+        <FlyToTarget target={flyTarget} />
 
         {pendingPin && (
-          <Marker position={[pendingPin.lat, pendingPin.lng]} icon={pendingIcon} />
+          <Marker
+            position={[pendingPin.lat, pendingPin.lng]}
+            icon={pendingIcon}
+          />
         )}
 
         {sites.map((site) => {
