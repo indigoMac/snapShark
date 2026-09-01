@@ -10,13 +10,23 @@ datasource db {
 }
 
 model User {
-  id           String     @id @default(uuid())
-  clerkUserId  String     @unique
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-  dives        Dive[]
-  diveSites    DiveSite[]
-  trips        Trip[]
+  id          String @id @default(uuid())
+  clerkUserId String @unique
+
+  /// Billing state. Stripe is the origin of truth; these columns are the copy
+  /// the app reads, so entitlements can be enforced server-side.
+  stripeCustomerId     String?   @unique
+  stripeSubscriptionId String?
+  plan                 String    @default("free")
+  subscriptionStatus   String?
+  currentPeriodEnd     DateTime?
+  cancelAtPeriodEnd    Boolean   @default(false)
+
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  dives     Dive[]
+  diveSites DiveSite[]
+  trips     Trip[]
 }
 
 model Trip {

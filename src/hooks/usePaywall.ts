@@ -47,6 +47,46 @@ export function usePaywall() {
     }));
   }, [isLoaded, user]);
 
+  // Clerk metadata renders instantly but is only a cache of our billing records,
+  // so confirm entitlements against the database once the session is known.
+  useEffect(() => {
+    if (!isLoaded || !user) return;
+
+    let cancelled = false;
+
+    const confirmEntitlements = async () => {
+      try {
+        const res = await fetch('/api/account/entitlements');
+        if (!res.ok) return;
+
+        const entitlements = (await res.json()) as {
+          isPro: boolean;
+          subscriptionStatus: string | null;
+          currentPeriodEnd: string | null;
+          cancelAtPeriodEnd: boolean;
+        };
+        if (cancelled) return;
+
+        setPaywallState((prev) => ({
+          ...prev,
+          isPro: entitlements.isPro,
+          subscriptionStatus:
+            entitlements.subscriptionStatus ?? prev.subscriptionStatus,
+          currentPeriodEnd:
+            entitlements.currentPeriodEnd ?? prev.currentPeriodEnd,
+          cancelAtPeriodEnd: entitlements.cancelAtPeriodEnd,
+        }));
+      } catch {
+        // Keep the metadata-derived state; the next load will try again.
+      }
+    };
+
+    confirmEntitlements();
+    return () => {
+      cancelled = true;
+    };
+  }, [isLoaded, user]);
+
   const checkFeatureAccess = useCallback(
     (feature: PaywallFeature): boolean => {
       return paywallService.checkFeatureAccess(paywallState, feature);

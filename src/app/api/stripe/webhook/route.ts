@@ -3,6 +3,11 @@ import { headers } from 'next/headers';
 import { stripe } from '@/lib/stripe';
 import { clerkClient } from '@clerk/nextjs/server';
 import { RATE_LIMITS, createRateLimitHeaders } from '@/lib/rate-limit';
+import {
+  findClerkUserIdByCustomerId,
+  periodEndFromStripe,
+  syncSubscriptionToDb,
+} from '@/lib/subscription';
 import Stripe from 'stripe';
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
@@ -71,6 +76,13 @@ export async function POST(req: NextRequest) {
         const subscriptionId = session.subscription as string | undefined;
 
         if (userId && subscriptionId) {
+          await syncSubscriptionToDb({
+            clerkUserId: userId,
+            stripeCustomerId: customerId,
+            stripeSubscriptionId: subscriptionId,
+            status: 'active',
+          });
+
           try {
             const client = await clerkClient();
             const user = await client.users.getUser(userId);
@@ -116,7 +128,25 @@ export async function POST(req: NextRequest) {
       case 'customer.subscription.updated': {
         const subscription = event.data.object as Stripe.Subscription;
         const customerId = subscription.customer as string;
-        const userId = (subscription.metadata as any)?.userId as string | undefined;
+        const userId =
+          ((subscription.metadata as any)?.userId as string | undefined) ??
+          (await findClerkUserIdByCustomerId(customerId)) ??
+          undefined;
+
+        const periodEnd = periodEndFromStripe(
+          (subscription as any).current_period_end
+        );
+
+        if (userId) {
+          await syncSubscriptionToDb({
+            clerkUserId: userId,
+            stripeCustomerId: customerId,
+            stripeSubscriptionId: subscription.id,
+            status: subscription.status,
+            currentPeriodEnd: periodEnd,
+            cancelAtPeriodEnd: subscription.cancel_at_period_end,
+          });
+        }
 
         try {
           const client = await clerkClient();
@@ -134,9 +164,7 @@ export async function POST(req: NextRequest) {
             const currentPeriodStart = (subscription as any).current_period_start
               ? new Date((subscription as any).current_period_start * 1000).toISOString()
               : null;
-            const currentPeriodEnd = (subscription as any).current_period_end
-              ? new Date((subscription as any).current_period_end * 1000).toISOString()
-              : null;
+            const currentPeriodEnd = periodEnd ? periodEnd.toISOString() : null;
 
             await client.users.updateUserMetadata(user.id, {
               privateMetadata: {
@@ -186,7 +214,19 @@ export async function POST(req: NextRequest) {
       case 'customer.subscription.deleted': {
         const subscription = event.data.object as Stripe.Subscription;
         const customerId = subscription.customer as string;
-        const userId = (subscription.metadata as any)?.userId as string | undefined;
+        const userId =
+          ((subscription.metadata as any)?.userId as string | undefined) ??
+          (await findClerkUserIdByCustomerId(customerId)) ??
+          undefined;
+
+        if (userId) {
+          await syncSubscriptionToDb({
+            clerkUserId: userId,
+            stripeCustomerId: customerId,
+            stripeSubscriptionId: subscription.id,
+            status: 'canceled',
+          });
+        }
 
         try {
           const client = await clerkClient();

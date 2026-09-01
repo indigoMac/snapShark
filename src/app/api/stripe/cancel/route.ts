@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth, clerkClient } from '@clerk/nextjs/server';
 import { stripe } from '@/lib/stripe';
+import { periodEndFromStripe, syncSubscriptionToDb } from '@/lib/subscription';
 import Stripe from 'stripe';
 
 export async function POST(req: NextRequest) {
@@ -54,6 +55,17 @@ export async function POST(req: NextRequest) {
       // Cancel immediately
       subscription = await stripe.subscriptions.cancel(subscriptionId);
     }
+
+    await syncSubscriptionToDb({
+      clerkUserId: userId,
+      stripeCustomerId: subscription.customer as string,
+      stripeSubscriptionId: subscription.id,
+      status: subscription.status,
+      currentPeriodEnd: periodEndFromStripe(
+        (subscription as any).current_period_end
+      ),
+      cancelAtPeriodEnd: subscription.cancel_at_period_end,
+    });
 
     // Update Clerk metadata immediately so the UI reflects the cancel choice
     try {
