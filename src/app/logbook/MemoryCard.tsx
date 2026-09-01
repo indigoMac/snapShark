@@ -408,7 +408,7 @@ export function AddMemoryForm({
       className="space-y-3 rounded-xl border border-dashed border-slate-300 p-4 dark:border-slate-600"
     >
       <div className="text-sm font-medium text-slate-800 dark:text-slate-200">
-        Add a dive memory
+        Add a dive
       </div>
       <div className="space-y-2">
         <Label htmlFor="memory-date">When</Label>

@@ -116,6 +116,7 @@ type LogbookMapProps = {
   pendingPin?: { lat: number; lng: number } | null;
   clickToCreate?: boolean;
   onMapClick?: (lat: number, lng: number) => void;
+  onPendingPinMove?: (lat: number, lng: number) => void;
   onSelectSite?: (siteId: string) => void;
 };
 
@@ -125,6 +126,7 @@ export default function LogbookMap({
   pendingPin,
   clickToCreate = true,
   onMapClick,
+  onPendingPinMove,
   onSelectSite,
 }: LogbookMapProps) {
   const [ready, setReady] = useState(false);
@@ -171,7 +173,9 @@ export default function LogbookMap({
         <MapSearch onSelect={handleSearchSelect} />
         {clickToCreate && (
           <div className="pointer-events-none w-fit rounded-md bg-white/95 px-3 py-2 text-xs font-medium text-slate-700 shadow dark:bg-slate-900/95 dark:text-slate-200">
-            Search to find an area, then click the map to pin your dive place
+            {pendingPin
+              ? 'Drag the pin to fine-tune, then name this place'
+              : 'Search to find an area, then click the map to drop a pin'}
           </div>
         )}
       </div>
@@ -196,6 +200,13 @@ export default function LogbookMap({
           <Marker
             position={[pendingPin.lat, pendingPin.lng]}
             icon={pendingIcon}
+            draggable
+            eventHandlers={{
+              dragend: (event) => {
+                const { lat, lng } = event.target.getLatLng();
+                onPendingPinMove?.(lat, lng);
+              },
+            }}
           />
         )}
 

@@ -92,8 +92,14 @@ export default function LogbookClient() {
   };
 
   const handleMapClick = (lat: number, lng: number) => {
+    // Drop a draggable pin first — don't open the form until they confirm.
     setPendingPin({ lat, lng });
-    setCreateOpen(true);
+    setCreateOpen(false);
+  };
+
+  const clearPendingPin = () => {
+    setPendingPin(null);
+    setCreateOpen(false);
   };
 
   const handlePlaceCreated = (site: LogbookSite) => {
@@ -312,12 +318,40 @@ export default function LogbookClient() {
               selectedSiteId={selectedSiteId}
               pendingPin={pendingPin}
               onMapClick={handleMapClick}
+              onPendingPinMove={(lat, lng) => setPendingPin({ lat, lng })}
               onSelectSite={(id) => {
                 setSelectedSiteId(id);
                 setRenaming(false);
               }}
             />
           </div>
+          {pendingPin && !createOpen && (
+            <div className="flex flex-col gap-2 border-t border-slate-200 bg-white px-4 py-3 dark:border-slate-800 dark:bg-slate-900 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-sm text-slate-600 dark:text-slate-300">
+                Drag the pin to fine-tune ·{' '}
+                <span className="font-mono text-xs text-slate-500">
+                  {pendingPin.lat.toFixed(5)}, {pendingPin.lng.toFixed(5)}
+                </span>
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={clearPendingPin}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => setCreateOpen(true)}
+                >
+                  Name this place
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
 
         <aside className="space-y-4">
@@ -465,7 +499,7 @@ export default function LogbookClient() {
         lng={pendingPin?.lng ?? null}
         onOpenChange={(open) => {
           setCreateOpen(open);
-          if (!open) setPendingPin(null);
+          // Keep the pin if they close the form — they can still drag and try again.
         }}
         onCreated={handlePlaceCreated}
       />

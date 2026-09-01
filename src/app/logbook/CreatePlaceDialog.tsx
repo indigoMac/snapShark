@@ -116,7 +116,7 @@ export function CreatePlaceDialog({
           <DialogTitle>Pin a dive place</DialogTitle>
           <DialogDescription>
             {lat != null && lng != null
-              ? `Dropped at ${lat.toFixed(4)}, ${lng.toFixed(4)}. Name it and optionally add your first memory.`
+              ? `Pin at ${lat.toFixed(4)}, ${lng.toFixed(4)}. Name it and optionally log your first dive.`
               : 'Choose a spot on the map first.'}
           </DialogDescription>
         </DialogHeader>
@@ -140,7 +140,7 @@ export function CreatePlaceDialog({
               onChange={(e) => setAddMemory(e.target.checked)}
               className="rounded border-slate-300"
             />
-            Add a dive memory here
+            Log a dive here
           </label>
 
           {addMemory && (
@@ -155,7 +155,7 @@ export function CreatePlaceDialog({
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="place-notes">Memory note</Label>
+                <Label htmlFor="place-notes">What do you remember?</Label>
                 <Input
                   id="place-notes"
                   value={notes}
