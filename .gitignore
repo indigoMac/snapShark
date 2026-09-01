@@ -82,3 +82,7 @@ logs_result.csv
 
 # clerk configuration (can include secrets)
 /.clerk/
+
+# env files (keep the example committed)
+.env*
+!.env.example

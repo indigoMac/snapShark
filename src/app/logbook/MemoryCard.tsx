@@ -7,6 +7,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import type { LogbookDive, LogbookPhoto } from '@/lib/logbook';
 import { compressImageForLogbook } from '@/lib/compress-image';
+import {
+  detailsFromDive,
+  diveTypeLabel,
+  emptyDiveDetails,
+  parseDiveDetails,
+  type DiveDetailsInput,
+} from '@/lib/dive-details';
+import { DiveDetailsFields } from './DiveDetailsFields';
 
 type MemoryCardProps = {
   dive: LogbookDive;
@@ -47,12 +55,29 @@ export function MemoryCard({
     toDatetimeLocalValue(dive.diveDate)
   );
   const [notes, setNotes] = useState(dive.notes ?? '');
+  const [details, setDetails] = useState<DiveDetailsInput>(() =>
+    detailsFromDive(dive)
+  );
 
   useEffect(() => {
     setPhotos(dive.photos);
     setDiveDate(toDatetimeLocalValue(dive.diveDate));
     setNotes(dive.notes ?? '');
+    setDetails(detailsFromDive(dive));
   }, [dive]);
+
+  const detailLine = [
+    diveTypeLabel(dive.diveType),
+    dive.depthMeters != null ? `${dive.depthMeters} m` : null,
+    dive.bottomTimeMinutes != null ? `${dive.bottomTimeMinutes} min` : null,
+    dive.buddy ? `with ${dive.buddy}` : null,
+    dive.conditions?.visibilityMeters != null
+      ? `vis ${dive.conditions.visibilityMeters} m`
+      : null,
+    dive.conditions?.waterTempC != null
+      ? `${dive.conditions.waterTempC}°C`
+      : null,
+  ].filter(Boolean);
 
   const uploadDataUrl = async (dataUrl: string, caption?: string) => {
     setUploading(true);
@@ -105,12 +130,18 @@ export function MemoryCard({
     setBusy(true);
     setError(null);
     try {
+      const parsed = parseDiveDetails(details);
       const res = await fetch(`/api/dives/${dive.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           diveDate,
           notes: notes.trim() || null,
+          diveType: parsed.diveType ?? null,
+          depthMeters: parsed.depthMeters ?? null,
+          bottomTimeMinutes: parsed.bottomTimeMinutes ?? null,
+          buddy: parsed.buddy ?? null,
+          conditions: parsed.conditions ?? null,
         }),
       });
       if (!res.ok) {
@@ -258,6 +289,12 @@ export function MemoryCard({
                 placeholder="What do you remember?"
               />
             </div>
+            <DiveDetailsFields
+              idPrefix={`edit-dive-${dive.id}`}
+              value={details}
+              onChange={setDetails}
+              compact
+            />
             <div className="flex gap-2">
               <Button
                 type="button"
@@ -276,6 +313,7 @@ export function MemoryCard({
                   setEditing(false);
                   setDiveDate(toDatetimeLocalValue(dive.diveDate));
                   setNotes(dive.notes ?? '');
+                  setDetails(detailsFromDive(dive));
                 }}
               >
                 Cancel
@@ -310,16 +348,9 @@ export function MemoryCard({
               </p>
             )}
 
-            {(dive.depthMeters != null || dive.bottomTimeMinutes != null) && (
-              <p className="text-xs text-slate-500">
-                {[
-                  dive.depthMeters != null ? `${dive.depthMeters} m` : null,
-                  dive.bottomTimeMinutes != null
-                    ? `${dive.bottomTimeMinutes} min`
-                    : null,
-                ]
-                  .filter(Boolean)
-                  .join(' · ')}
+            {detailLine.length > 0 && (
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                {detailLine.join(' · ')}
               </p>
             )}
           </>
@@ -400,6 +431,7 @@ export function AddMemoryForm({
     () => new Date().toISOString().slice(0, 16)
   );
   const [notes, setNotes] = useState(defaultNote);
+  const [details, setDetails] = useState<DiveDetailsInput>(emptyDiveDetails);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -408,6 +440,7 @@ export function AddMemoryForm({
     setSaving(true);
     setError(null);
     try {
+      const parsed = parseDiveDetails(details);
       const res = await fetch('/api/dives', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -415,6 +448,7 @@ export function AddMemoryForm({
           siteId,
           diveDate,
           notes: notes.trim() || undefined,
+          ...parsed,
         }),
       });
       if (!res.ok) {
@@ -423,6 +457,7 @@ export function AddMemoryForm({
       }
       const dive = (await res.json()) as LogbookDive;
       setNotes('');
+      setDetails(emptyDiveDetails());
       onCreated(dive);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to save dive');
@@ -458,6 +493,12 @@ export function AddMemoryForm({
           placeholder="Turquoise water, curious turtles…"
         />
       </div>
+      <DiveDetailsFields
+        idPrefix={`add-dive-${siteId}`}
+        value={details}
+        onChange={setDetails}
+        compact
+      />
       {error && <p className="text-xs text-red-600">{error}</p>}
       <Button type="submit" disabled={saving} className="w-full">
         {saving ? 'Saving…' : 'Save dive'}

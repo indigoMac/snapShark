@@ -13,6 +13,12 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import type { LogbookDive, LogbookSite } from '@/lib/logbook';
+import {
+  emptyDiveDetails,
+  parseDiveDetails,
+  type DiveDetailsInput,
+} from '@/lib/dive-details';
+import { DiveDetailsFields } from './DiveDetailsFields';
 
 type CreatePlaceDialogProps = {
   open: boolean;
@@ -34,7 +40,8 @@ export function CreatePlaceDialog({
   const [diveDate, setDiveDate] = useState(
     () => new Date().toISOString().slice(0, 16)
   );
-  const [addMemory, setAddMemory] = useState(true);
+  const [details, setDetails] = useState<DiveDetailsInput>(emptyDiveDetails);
+  const [addDive, setAddDive] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -42,7 +49,8 @@ export function CreatePlaceDialog({
     setName('');
     setNotes('');
     setDiveDate(new Date().toISOString().slice(0, 16));
-    setAddMemory(true);
+    setDetails(emptyDiveDetails());
+    setAddDive(true);
     setError(null);
   };
 
@@ -72,7 +80,8 @@ export function CreatePlaceDialog({
       let site = (await siteRes.json()) as LogbookSite;
       let firstDive: LogbookDive | undefined;
 
-      if (addMemory) {
+      if (addDive) {
+        const parsed = parseDiveDetails(details);
         const diveRes = await fetch('/api/dives', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -80,6 +89,7 @@ export function CreatePlaceDialog({
             siteId: site.id,
             diveDate,
             notes: notes.trim() || undefined,
+            ...parsed,
           }),
         });
         if (!diveRes.ok) {
@@ -111,7 +121,7 @@ export function CreatePlaceDialog({
         onOpenChange(next);
       }}
     >
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Pin a dive place</DialogTitle>
           <DialogDescription>
@@ -136,14 +146,14 @@ export function CreatePlaceDialog({
           <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
             <input
               type="checkbox"
-              checked={addMemory}
-              onChange={(e) => setAddMemory(e.target.checked)}
+              checked={addDive}
+              onChange={(e) => setAddDive(e.target.checked)}
               className="rounded border-slate-300"
             />
             Log a dive here
           </label>
 
-          {addMemory && (
+          {addDive && (
             <div className="space-y-3 rounded-lg bg-slate-50 p-3 dark:bg-slate-800/60">
               <div className="space-y-2">
                 <Label htmlFor="place-dive-date">When</Label>
@@ -163,6 +173,12 @@ export function CreatePlaceDialog({
                   placeholder="What made this dive special?"
                 />
               </div>
+              <DiveDetailsFields
+                idPrefix="place-dive"
+                value={details}
+                onChange={setDetails}
+                compact
+              />
             </div>
           )}
 
@@ -178,7 +194,11 @@ export function CreatePlaceDialog({
           >
             Cancel
           </Button>
-          <Button type="button" onClick={handleSave} disabled={saving || lat == null}>
+          <Button
+            type="button"
+            onClick={handleSave}
+            disabled={saving || lat == null}
+          >
             {saving ? 'Saving…' : 'Save place'}
           </Button>
         </DialogFooter>

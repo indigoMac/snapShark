@@ -16,6 +16,7 @@ export async function POST(req: NextRequest) {
     const {
       siteId,
       diveDate,
+      diveType,
       depthMeters,
       bottomTimeMinutes,
       buddy,
@@ -48,6 +49,7 @@ export async function POST(req: NextRequest) {
         userId: user.id,
         siteId: siteId || null,
         diveDate: new Date(diveDate),
+        diveType: diveType || null,
         depthMeters,
         bottomTimeMinutes,
         buddy,

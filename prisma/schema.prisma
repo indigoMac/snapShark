@@ -60,6 +60,7 @@ model Dive {
   userId             String
   siteId             String?
   diveDate           DateTime
+  diveType           String?
   depthMeters        Decimal?  @db.Decimal(5, 2)
   bottomTimeMinutes  Int?
   buddy              String?

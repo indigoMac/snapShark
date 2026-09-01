@@ -14,7 +14,15 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
   try {
     const { user } = await requireDbUser();
     const body = await req.json();
-    const { diveDate, notes, depthMeters, bottomTimeMinutes } = body;
+    const {
+      diveDate,
+      notes,
+      diveType,
+      depthMeters,
+      bottomTimeMinutes,
+      buddy,
+      conditions,
+    } = body;
 
     const existing = await prisma.dive.findFirst({
       where: { id: params.id, userId: user.id },
@@ -29,8 +37,11 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       data: {
         ...(diveDate !== undefined ? { diveDate: new Date(diveDate) } : {}),
         ...(notes !== undefined ? { notes } : {}),
+        ...(diveType !== undefined ? { diveType: diveType || null } : {}),
         ...(depthMeters !== undefined ? { depthMeters } : {}),
         ...(bottomTimeMinutes !== undefined ? { bottomTimeMinutes } : {}),
+        ...(buddy !== undefined ? { buddy: buddy || null } : {}),
+        ...(conditions !== undefined ? { conditions } : {}),
       },
       include: diveInclude,
     });

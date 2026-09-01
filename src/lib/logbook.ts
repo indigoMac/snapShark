@@ -10,9 +10,15 @@ export type LogbookPhoto = {
 export type LogbookDive = {
   id: string;
   diveDate: string;
+  diveType?: string | null;
   notes?: string | null;
   depthMeters?: number | null;
   bottomTimeMinutes?: number | null;
+  buddy?: string | null;
+  conditions?: {
+    visibilityMeters?: number | null;
+    waterTempC?: number | null;
+  } | null;
   siteId?: string | null;
   photos: LogbookPhoto[];
 };
@@ -79,9 +85,12 @@ function serializePhoto(photo: {
 export function serializeDive(dive: {
   id: string;
   diveDate: Date | string;
+  diveType?: string | null;
   notes?: string | null;
   depthMeters?: unknown;
   bottomTimeMinutes?: number | null;
+  buddy?: string | null;
+  conditions?: unknown;
   siteId?: string | null;
   photos?: Array<{
     id: string;
@@ -90,15 +99,31 @@ export function serializeDive(dive: {
     takenAt?: Date | string | null;
   }>;
 }): LogbookDive {
+  const rawConditions =
+    dive.conditions && typeof dive.conditions === 'object'
+      ? (dive.conditions as {
+          visibilityMeters?: number | null;
+          waterTempC?: number | null;
+        })
+      : null;
+
   return {
     id: dive.id,
     diveDate: new Date(dive.diveDate).toISOString(),
+    diveType: dive.diveType ?? null,
     notes: dive.notes ?? null,
     depthMeters:
       dive.depthMeters === null || dive.depthMeters === undefined
         ? null
         : toNumber(dive.depthMeters),
     bottomTimeMinutes: dive.bottomTimeMinutes ?? null,
+    buddy: dive.buddy ?? null,
+    conditions: rawConditions
+      ? {
+          visibilityMeters: rawConditions.visibilityMeters ?? null,
+          waterTempC: rawConditions.waterTempC ?? null,
+        }
+      : null,
     siteId: dive.siteId ?? null,
     photos: (dive.photos ?? []).map(serializePhoto),
   };
