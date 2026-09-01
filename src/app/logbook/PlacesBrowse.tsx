@@ -76,6 +76,7 @@ export function PlacesBrowse({
                     {diveCount === 0
                       ? 'Waiting for a dive'
                       : `${diveCount} dive${diveCount === 1 ? '' : 's'}`}
+                    {site.trip?.name ? ` · ${site.trip.name}` : ''}
                   </div>
                   {(site.region || site.country) && (
                     <div className="truncate text-xs text-slate-400">

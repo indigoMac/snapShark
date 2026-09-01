@@ -17,6 +17,11 @@ export type LogbookDive = {
   photos: LogbookPhoto[];
 };
 
+export type LogbookTripSummary = {
+  id: string;
+  name: string;
+};
+
 export type LogbookSite = {
   id: string;
   name: string;
@@ -25,7 +30,20 @@ export type LogbookSite = {
   longitude: number;
   country?: string | null;
   region?: string | null;
+  tripId?: string | null;
+  trip?: LogbookTripSummary | null;
   dives: LogbookDive[];
+};
+
+export type LogbookTrip = {
+  id: string;
+  name: string;
+  description?: string | null;
+  startDate?: string | null;
+  endDate?: string | null;
+  placeCount: number;
+  diveCount: number;
+  coverUrl?: string | null;
 };
 
 export const PENDING_PHOTO_KEY = 'snapshark:pendingLogbookPhoto';
@@ -54,9 +72,7 @@ function serializePhoto(photo: {
     id: photo.id,
     url: photo.url,
     caption: photo.caption ?? null,
-    takenAt: photo.takenAt
-      ? new Date(photo.takenAt).toISOString()
-      : null,
+    takenAt: photo.takenAt ? new Date(photo.takenAt).toISOString() : null,
   };
 }
 
@@ -96,6 +112,8 @@ export function serializeSite(site: {
   longitude: unknown;
   country?: string | null;
   region?: string | null;
+  tripId?: string | null;
+  trip?: { id: string; name: string } | null;
   dives?: Array<Parameters<typeof serializeDive>[0]>;
 }): LogbookSite {
   return {
@@ -106,7 +124,46 @@ export function serializeSite(site: {
     longitude: toNumber(site.longitude),
     country: site.country ?? null,
     region: site.region ?? null,
+    tripId: site.tripId ?? null,
+    trip: site.trip
+      ? { id: site.trip.id, name: site.trip.name }
+      : null,
     dives: (site.dives ?? []).map(serializeDive),
+  };
+}
+
+export function serializeTrip(trip: {
+  id: string;
+  name: string;
+  description?: string | null;
+  startDate?: Date | string | null;
+  endDate?: Date | string | null;
+  places?: Array<{
+    dives?: Array<{ photos?: Array<{ url: string }> }>;
+  }>;
+}): LogbookTrip {
+  const places = trip.places ?? [];
+  let diveCount = 0;
+  let coverUrl: string | null = null;
+  for (const place of places) {
+    for (const dive of place.dives ?? []) {
+      diveCount += 1;
+      if (!coverUrl && dive.photos?.[0]?.url) {
+        coverUrl = dive.photos[0].url;
+      }
+    }
+  }
+  return {
+    id: trip.id,
+    name: trip.name,
+    description: trip.description ?? null,
+    startDate: trip.startDate
+      ? new Date(trip.startDate).toISOString()
+      : null,
+    endDate: trip.endDate ? new Date(trip.endDate).toISOString() : null,
+    placeCount: places.length,
+    diveCount,
+    coverUrl,
   };
 }
 

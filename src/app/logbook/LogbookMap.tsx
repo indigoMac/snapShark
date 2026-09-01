@@ -113,20 +113,24 @@ function FlyToTarget({
 type LogbookMapProps = {
   sites: LogbookSite[];
   selectedSiteId?: string | null;
+  relocatingSiteId?: string | null;
   pendingPin?: { lat: number; lng: number } | null;
   clickToCreate?: boolean;
   onMapClick?: (lat: number, lng: number) => void;
   onPendingPinMove?: (lat: number, lng: number) => void;
+  onRelocatePinMove?: (lat: number, lng: number) => void;
   onSelectSite?: (siteId: string) => void;
 };
 
 export default function LogbookMap({
   sites,
   selectedSiteId,
+  relocatingSiteId,
   pendingPin,
   clickToCreate = true,
   onMapClick,
   onPendingPinMove,
+  onRelocatePinMove,
   onSelectSite,
 }: LogbookMapProps) {
   const [ready, setReady] = useState(false);
@@ -171,13 +175,18 @@ export default function LogbookMap({
     <div className="relative h-full w-full">
       <div className="absolute left-3 right-3 top-3 z-[1000] flex flex-col gap-2 sm:right-auto sm:w-[min(100%,28rem)]">
         <MapSearch onSelect={handleSearchSelect} />
-        {clickToCreate && (
+        {clickToCreate && !relocatingSiteId && (
           <div className="pointer-events-none w-fit rounded-md bg-white/95 px-3 py-2 text-xs font-medium text-slate-700 shadow dark:bg-slate-900/95 dark:text-slate-200">
             {pendingPin
               ? 'Drag the pin to fine-tune, then name this place'
               : sites.length === 0
                 ? 'Search for where you dived, then click the map to drop your first pin'
                 : 'Search to find an area, then click the map to drop a pin'}
+          </div>
+        )}
+        {relocatingSiteId && (
+          <div className="pointer-events-none w-fit rounded-md bg-amber-50 px-3 py-2 text-xs font-medium text-amber-900 shadow dark:bg-amber-950/90 dark:text-amber-100">
+            Drag this place&apos;s pin, then save the new location
           </div>
         )}
       </div>
@@ -206,13 +215,13 @@ export default function LogbookMap({
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         <ClickToPlace
-          enabled={Boolean(clickToCreate && onMapClick)}
+          enabled={Boolean(clickToCreate && onMapClick && !relocatingSiteId)}
           onPlaceClick={(lat, lng) => onMapClick?.(lat, lng)}
         />
         <FitSites sites={sites} focusSiteId={selectedSiteId} />
         <FlyToTarget target={flyTarget} />
 
-        {pendingPin && (
+        {pendingPin && !relocatingSiteId && (
           <Marker
             position={[pendingPin.lat, pendingPin.lng]}
             icon={pendingIcon}
@@ -230,13 +239,22 @@ export default function LogbookMap({
           const diveCount = site.dives.length;
           const latest = site.dives[0];
           const cover = latest?.photos[0]?.url;
+          const relocating = site.id === relocatingSiteId;
           return (
             <Marker
-              key={site.id}
+              key={`${site.id}-${site.latitude}-${site.longitude}-${relocating ? 'move' : 'fixed'}`}
               position={[site.latitude, site.longitude]}
-              icon={markerIcon}
+              icon={relocating ? pendingIcon : markerIcon}
+              draggable={relocating}
               eventHandlers={{
-                click: () => onSelectSite?.(site.id),
+                click: () => {
+                  if (!relocating) onSelectSite?.(site.id);
+                },
+                dragend: (event) => {
+                  if (!relocating) return;
+                  const { lat, lng } = event.target.getLatLng();
+                  onRelocatePinMove?.(lat, lng);
+                },
               }}
             >
               <Popup>

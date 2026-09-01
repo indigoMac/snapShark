@@ -10,12 +10,29 @@ datasource db {
 }
 
 model User {
-  id           String   @id @default(uuid())
-  clerkUserId  String   @unique
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id           String     @id @default(uuid())
+  clerkUserId  String     @unique
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
   dives        Dive[]
   diveSites    DiveSite[]
+  trips        Trip[]
+}
+
+model Trip {
+  id          String     @id @default(uuid())
+  userId      String
+  name        String
+  description String?
+  startDate   DateTime?
+  endDate     DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  places      DiveSite[]
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model DiveSite {
@@ -23,6 +40,7 @@ model DiveSite {
   name        String
   description String?
   userId      String
+  tripId      String?
   latitude    Decimal   @db.Decimal(9, 6)
   longitude   Decimal   @db.Decimal(9, 6)
   country     String?
@@ -30,7 +48,11 @@ model DiveSite {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   dives       Dive[]
-  user        User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user        User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  trip        Trip? @relation(fields: [tripId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([tripId])
 }
 
 model Dive {
@@ -49,6 +71,9 @@ model Dive {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   site DiveSite? @relation(fields: [siteId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([siteId])
 }
 
 model Photo {
@@ -63,4 +88,6 @@ model Photo {
   updatedAt  DateTime  @updatedAt
 
   dive Dive @relation(fields: [diveId], references: [id], onDelete: Cascade)
+
+  @@index([diveId])
 }

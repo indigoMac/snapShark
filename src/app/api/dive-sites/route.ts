@@ -3,7 +3,8 @@ import { prisma } from '@/lib/db';
 import { requireDbUser } from '@/lib/auth';
 import { serializeSite } from '@/lib/logbook';
 
-const diveInclude = {
+export const diveInclude = {
+  trip: { select: { id: true, name: true } },
   dives: {
     include: { photos: { orderBy: { createdAt: 'asc' as const } } },
     orderBy: { diveDate: 'desc' as const },
@@ -14,13 +15,31 @@ export async function POST(req: NextRequest) {
   try {
     const { user } = await requireDbUser();
     const body = await req.json();
-    const { name, description, latitude, longitude, country, region } = body;
+    const {
+      name,
+      description,
+      latitude,
+      longitude,
+      country,
+      region,
+      tripId,
+    } = body;
 
     if (!name || latitude === undefined || longitude === undefined) {
       return NextResponse.json(
         { error: 'name, latitude, and longitude are required' },
         { status: 400 }
       );
+    }
+
+    if (tripId) {
+      const trip = await prisma.trip.findFirst({
+        where: { id: tripId, userId: user.id },
+        select: { id: true },
+      });
+      if (!trip) {
+        return NextResponse.json({ error: 'Trip not found' }, { status: 404 });
+      }
     }
 
     const site = await prisma.diveSite.create({
@@ -32,6 +51,7 @@ export async function POST(req: NextRequest) {
         longitude,
         country,
         region,
+        tripId: tripId || null,
       },
       include: diveInclude,
     });
@@ -56,10 +76,16 @@ export async function GET(req: NextRequest) {
     const maxLat = searchParams.get('maxLat');
     const minLng = searchParams.get('minLng');
     const maxLng = searchParams.get('maxLng');
+    const tripId = searchParams.get('tripId');
 
     const sites = await prisma.diveSite.findMany({
       where: {
         userId: user.id,
+        ...(tripId === 'none'
+          ? { tripId: null }
+          : tripId
+            ? { tripId }
+            : {}),
         ...(minLat && maxLat && minLng && maxLng
           ? {
               latitude: {

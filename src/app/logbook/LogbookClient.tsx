@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { SignInButton, useUser } from '@clerk/nextjs';
-import { ArrowLeft, CheckCircle2, Compass, Pencil, Trash2, Waves, X } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Compass, MapPinned, Pencil, Trash2, Waves, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -15,11 +15,13 @@ import {
   type LogbookDive,
   type LogbookPhoto,
   type LogbookSite,
+  type LogbookTrip,
   type PendingLogbookPhoto,
 } from '@/lib/logbook';
 import { CreatePlaceDialog } from './CreatePlaceDialog';
 import { AddMemoryForm, MemoryCard } from './MemoryCard';
 import { PlacesBrowse } from './PlacesBrowse';
+import { TripsBrowse } from './TripsBrowse';
 
 const LogbookMap = dynamic(() => import('./LogbookMap'), { ssr: false });
 
@@ -27,10 +29,19 @@ export default function LogbookClient() {
   const { isSignedIn, isLoaded } = useUser();
   const searchParams = useSearchParams();
   const [sites, setSites] = useState<LogbookSite[]>([]);
+  const [trips, setTrips] = useState<LogbookTrip[]>([]);
+  const [selectedTripFilter, setSelectedTripFilter] = useState<string | null>(
+    null
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [authTimedOut, setAuthTimedOut] = useState(false);
   const [selectedSiteId, setSelectedSiteId] = useState<string | null>(null);
+  const [relocatingSiteId, setRelocatingSiteId] = useState<string | null>(null);
+  const [relocateDraft, setRelocateDraft] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
   const [pendingPin, setPendingPin] = useState<{
     lat: number;
     lng: number;
@@ -48,19 +59,29 @@ export default function LogbookClient() {
   );
 
   const selectedSite = sites.find((s) => s.id === selectedSiteId) ?? null;
+  const visibleSites = selectedTripFilter
+    ? sites.filter((s) => s.tripId === selectedTripFilter)
+    : sites;
 
   const loadSites = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/dive-sites');
-      if (res.status === 401) {
+      const [sitesRes, tripsRes] = await Promise.all([
+        fetch('/api/dive-sites'),
+        fetch('/api/trips'),
+      ]);
+      if (sitesRes.status === 401) {
         setSites([]);
+        setTrips([]);
         return;
       }
-      if (!res.ok) throw new Error('Failed to load your places');
-      const json = (await res.json()) as LogbookSite[];
-      setSites(json);
+      if (!sitesRes.ok) throw new Error('Failed to load your places');
+      const sitesJson = (await sitesRes.json()) as LogbookSite[];
+      setSites(sitesJson);
+      if (tripsRes.ok) {
+        setTrips((await tripsRes.json()) as LogbookTrip[]);
+      }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to load logbook');
     } finally {
@@ -250,6 +271,81 @@ export default function LogbookClient() {
     }
   };
 
+  const startRelocate = () => {
+    if (!selectedSite) return;
+    setPendingPin(null);
+    setCreateOpen(false);
+    setRelocatingSiteId(selectedSite.id);
+    setRelocateDraft({
+      lat: selectedSite.latitude,
+      lng: selectedSite.longitude,
+    });
+  };
+
+  const cancelRelocate = () => {
+    setRelocatingSiteId(null);
+    setRelocateDraft(null);
+  };
+
+  const saveRelocate = async () => {
+    if (!relocatingSiteId || !relocateDraft) return;
+    setPlaceBusy(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/dive-sites/${relocatingSiteId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          latitude: relocateDraft.lat,
+          longitude: relocateDraft.lng,
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Failed to move place');
+      }
+      const updated = (await res.json()) as LogbookSite;
+      setSites((prev) =>
+        prev.map((s) => (s.id === updated.id ? { ...s, ...updated } : s))
+      );
+      setRelocatingSiteId(null);
+      setRelocateDraft(null);
+      setSuccessMessage(`Moved “${updated.name}” to the new spot.`);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to move place');
+    } finally {
+      setPlaceBusy(false);
+    }
+  };
+
+  const assignTrip = async (tripId: string) => {
+    if (!selectedSiteId) return;
+    setPlaceBusy(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/dive-sites/${selectedSiteId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tripId: tripId === '' ? null : tripId,
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Failed to update trip');
+      }
+      const updated = (await res.json()) as LogbookSite;
+      setSites((prev) =>
+        prev.map((s) => (s.id === updated.id ? { ...s, ...updated } : s))
+      );
+      await loadSites();
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to update trip');
+    } finally {
+      setPlaceBusy(false);
+    }
+  };
+
   if (!isLoaded) {
     return (
       <div className="mx-auto max-w-lg space-y-3 py-20 text-center">
@@ -357,18 +453,51 @@ export default function LogbookClient() {
         <div className="overflow-hidden rounded-2xl border border-slate-200 shadow-sm dark:border-slate-800">
           <div className="h-[min(70vh,640px)] min-h-[420px]">
             <LogbookMap
-              sites={sites}
+              sites={visibleSites}
               selectedSiteId={selectedSiteId}
+              relocatingSiteId={relocatingSiteId}
               pendingPin={pendingPin}
               onMapClick={handleMapClick}
               onPendingPinMove={(lat, lng) => setPendingPin({ lat, lng })}
+              onRelocatePinMove={(lat, lng) => setRelocateDraft({ lat, lng })}
               onSelectSite={(id) => {
                 setSelectedSiteId(id);
                 setRenaming(false);
+                setRelocatingSiteId(null);
+                setRelocateDraft(null);
               }}
             />
           </div>
-          {pendingPin && !createOpen && (
+          {relocatingSiteId && relocateDraft && (
+            <div className="flex flex-col gap-2 border-t border-amber-200 bg-amber-50 px-4 py-3 dark:border-amber-900 dark:bg-amber-950/40 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-sm text-amber-950 dark:text-amber-100">
+                Drag the pin ·{' '}
+                <span className="font-mono text-xs">
+                  {relocateDraft.lat.toFixed(5)}, {relocateDraft.lng.toFixed(5)}
+                </span>
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={placeBusy}
+                  onClick={cancelRelocate}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  disabled={placeBusy}
+                  onClick={saveRelocate}
+                >
+                  {placeBusy ? 'Saving…' : 'Save location'}
+                </Button>
+              </div>
+            </div>
+          )}
+          {pendingPin && !createOpen && !relocatingSiteId && (
             <div className="flex flex-col gap-2 border-t border-slate-200 bg-white px-4 py-3 dark:border-slate-800 dark:bg-slate-900 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-sm text-slate-600 dark:text-slate-300">
                 Drag the pin to fine-tune ·{' '}
@@ -468,6 +597,16 @@ export default function LogbookClient() {
                           type="button"
                           size="sm"
                           variant="ghost"
+                          disabled={placeBusy || !!relocatingSiteId}
+                          onClick={startRelocate}
+                          title="Move pin"
+                        >
+                          <MapPinned className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="ghost"
                           disabled={placeBusy}
                           onClick={startRename}
                           title="Rename place"
@@ -488,6 +627,28 @@ export default function LogbookClient() {
                       </div>
                     </div>
                   )}
+                  <div className="space-y-1 pt-1">
+                    <label
+                      htmlFor="place-trip"
+                      className="text-xs font-medium text-slate-500"
+                    >
+                      Trip
+                    </label>
+                    <select
+                      id="place-trip"
+                      className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900"
+                      value={selectedSite.tripId ?? ''}
+                      disabled={placeBusy}
+                      onChange={(e) => assignTrip(e.target.value)}
+                    >
+                      <option value="">No trip</option>
+                      {trips.map((trip) => (
+                        <option key={trip.id} value={trip.id}>
+                          {trip.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
               </div>
 
@@ -528,11 +689,38 @@ export default function LogbookClient() {
           ) : loading ? (
             <p className="text-sm text-slate-500">Loading places…</p>
           ) : (
-            <PlacesBrowse
-              sites={sites}
-              selectedSiteId={selectedSiteId}
-              onSelect={setSelectedSiteId}
-            />
+            <div className="space-y-6">
+              <TripsBrowse
+                trips={trips}
+                selectedTripId={selectedTripFilter}
+                onSelectTrip={setSelectedTripFilter}
+                onCreated={(trip) => {
+                  setTrips((prev) => [trip, ...prev]);
+                  setSelectedTripFilter(trip.id);
+                  setSuccessMessage(
+                    `Trip “${trip.name}” created — assign places to it from a place’s details.`
+                  );
+                }}
+                onDeleted={(tripId) => {
+                  setTrips((prev) => prev.filter((t) => t.id !== tripId));
+                  setSites((prev) =>
+                    prev.map((s) =>
+                      s.tripId === tripId
+                        ? { ...s, tripId: null, trip: null }
+                        : s
+                    )
+                  );
+                  if (selectedTripFilter === tripId) {
+                    setSelectedTripFilter(null);
+                  }
+                }}
+              />
+              <PlacesBrowse
+                sites={visibleSites}
+                selectedSiteId={selectedSiteId}
+                onSelect={setSelectedSiteId}
+              />
+            </div>
           )}
         </aside>
       </div>

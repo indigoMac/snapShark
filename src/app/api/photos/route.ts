@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireDbUser } from '@/lib/auth';
+import { storeLogbookPhoto } from '@/lib/store-logbook-photo';
 
-const MAX_DATA_URL_CHARS = 1_200_000; // ~900KB binary after base64
+const MAX_DATA_URL_CHARS = 1_200_000;
 
 export async function POST(req: NextRequest) {
   try {
@@ -25,13 +26,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (!url.startsWith('data:image/') && !url.startsWith('https://')) {
-      return NextResponse.json(
-        { error: 'Photo must be a data URL or https image URL' },
-        { status: 400 }
-      );
-    }
-
     const dive = await prisma.dive.findFirst({
       where: { id: diveId, userId: user.id },
       select: { id: true },
@@ -44,10 +38,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const storedUrl = await storeLogbookPhoto({
+      userId: user.id,
+      diveId,
+      dataUrl: url,
+    });
+
     const photo = await prisma.photo.create({
       data: {
         diveId,
-        url,
+        url: storedUrl,
         caption,
         takenAt: takenAt ? new Date(takenAt) : undefined,
         latitude,

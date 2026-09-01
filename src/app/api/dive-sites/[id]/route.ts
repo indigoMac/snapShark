@@ -2,13 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireDbUser } from '@/lib/auth';
 import { serializeSite } from '@/lib/logbook';
-
-const diveInclude = {
-  dives: {
-    include: { photos: { orderBy: { createdAt: 'asc' as const } } },
-    orderBy: { diveDate: 'desc' as const },
-  },
-};
+import { diveInclude } from '../route';
 
 type RouteContext = { params: { id: string } };
 
@@ -16,7 +10,15 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
   try {
     const { user } = await requireDbUser();
     const body = await req.json();
-    const { name, description, country, region } = body;
+    const {
+      name,
+      description,
+      country,
+      region,
+      latitude,
+      longitude,
+      tripId,
+    } = body;
 
     const existing = await prisma.diveSite.findFirst({
       where: { id: params.id, userId: user.id },
@@ -30,6 +32,34 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       return NextResponse.json({ error: 'Name cannot be empty' }, { status: 400 });
     }
 
+    if (latitude !== undefined || longitude !== undefined) {
+      const lat = Number(latitude);
+      const lng = Number(longitude);
+      if (
+        Number.isNaN(lat) ||
+        Number.isNaN(lng) ||
+        lat < -90 ||
+        lat > 90 ||
+        lng < -180 ||
+        lng > 180
+      ) {
+        return NextResponse.json(
+          { error: 'Valid latitude and longitude are required' },
+          { status: 400 }
+        );
+      }
+    }
+
+    if (tripId) {
+      const trip = await prisma.trip.findFirst({
+        where: { id: tripId, userId: user.id },
+        select: { id: true },
+      });
+      if (!trip) {
+        return NextResponse.json({ error: 'Trip not found' }, { status: 404 });
+      }
+    }
+
     const site = await prisma.diveSite.update({
       where: { id: params.id },
       data: {
@@ -37,6 +67,11 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
         ...(description !== undefined ? { description } : {}),
         ...(country !== undefined ? { country } : {}),
         ...(region !== undefined ? { region } : {}),
+        ...(latitude !== undefined ? { latitude: Number(latitude) } : {}),
+        ...(longitude !== undefined ? { longitude: Number(longitude) } : {}),
+        ...(tripId !== undefined
+          ? { tripId: tripId === null || tripId === '' ? null : tripId }
+          : {}),
       },
       include: diveInclude,
     });
