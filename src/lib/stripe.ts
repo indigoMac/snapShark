@@ -56,6 +56,19 @@ export const STRIPE_CONFIG = {
   WEBHOOK_URL: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/stripe/webhook`,
 };
 
+/**
+ * Prices a customer is allowed to check out with. Checkout must never accept an
+ * arbitrary price id from the client, or a caller could subscribe on terms we
+ * never offered.
+ */
+export function isAllowedPriceId(priceId: unknown): priceId is string {
+  if (typeof priceId !== 'string' || priceId.length === 0) return false;
+
+  return [STRIPE_CONFIG.PRO_PRICE_ID, STRIPE_CONFIG.PRO_YEARLY_PRICE_ID]
+    .filter(Boolean)
+    .includes(priceId);
+}
+
 // Product configuration
 export const PRODUCTS = {
   PRO_MONTHLY: {

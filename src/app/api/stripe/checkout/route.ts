@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
-import { stripe, STRIPE_CONFIG } from '@/lib/stripe';
+import { stripe, STRIPE_CONFIG, isAllowedPriceId } from '@/lib/stripe';
 import { RATE_LIMITS, createRateLimitHeaders } from '@/lib/rate-limit';
 import { trackPaymentError, trackAPIError } from '@/lib/error-tracking';
 
@@ -42,6 +42,13 @@ export async function POST(req: NextRequest) {
     if (!priceId) {
       return NextResponse.json(
         { error: 'Price ID is required' },
+        { status: 400 }
+      );
+    }
+
+    if (!isAllowedPriceId(priceId)) {
+      return NextResponse.json(
+        { error: 'Unknown price' },
         { status: 400 }
       );
     }
