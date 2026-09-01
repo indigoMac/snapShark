@@ -175,10 +175,26 @@ export default function LogbookMap({
           <div className="pointer-events-none w-fit rounded-md bg-white/95 px-3 py-2 text-xs font-medium text-slate-700 shadow dark:bg-slate-900/95 dark:text-slate-200">
             {pendingPin
               ? 'Drag the pin to fine-tune, then name this place'
-              : 'Search to find an area, then click the map to drop a pin'}
+              : sites.length === 0
+                ? 'Search for where you dived, then click the map to drop your first pin'
+                : 'Search to find an area, then click the map to drop a pin'}
           </div>
         )}
       </div>
+
+      {sites.length === 0 && !pendingPin && (
+        <div className="pointer-events-none absolute inset-0 z-[900] flex items-center justify-center p-6">
+          <div className="max-w-sm rounded-2xl border border-white/40 bg-white/90 px-6 py-5 text-center shadow-lg backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/90">
+            <p className="text-lg font-semibold text-slate-900 dark:text-slate-50">
+              Pin your first dive
+            </p>
+            <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+              Search for a place you&apos;ve been, click the map to drop a pin,
+              then drag it until it feels right.
+            </p>
+          </div>
+        </div>
+      )}
       <MapContainer
         center={center}
         zoom={sites.length ? 4 : 2}

@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { SignInButton, useUser } from '@clerk/nextjs';
-import { ArrowLeft, Compass, Pencil, Trash2, Waves, X } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Compass, Pencil, Trash2, Waves, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -40,6 +40,10 @@ export default function LogbookClient() {
   const [placeNameDraft, setPlaceNameDraft] = useState('');
   const [placeBusy, setPlaceBusy] = useState(false);
   const [pendingPhoto, setPendingPhoto] = useState<PendingLogbookPhoto | null>(
+    null
+  );
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [highlightedDiveId, setHighlightedDiveId] = useState<string | null>(
     null
   );
 
@@ -86,6 +90,18 @@ export default function LogbookClient() {
     if (pending) setPendingPhoto(pending);
   }, [searchParams]);
 
+  useEffect(() => {
+    if (!successMessage) return;
+    const timer = window.setTimeout(() => setSuccessMessage(null), 4500);
+    return () => window.clearTimeout(timer);
+  }, [successMessage]);
+
+  useEffect(() => {
+    if (!highlightedDiveId) return;
+    const timer = window.setTimeout(() => setHighlightedDiveId(null), 4500);
+    return () => window.clearTimeout(timer);
+  }, [highlightedDiveId]);
+
   const dismissPendingPhoto = () => {
     clearPendingPhoto();
     setPendingPhoto(null);
@@ -109,6 +125,16 @@ export default function LogbookClient() {
     });
     setSelectedSiteId(site.id);
     setPendingPin(null);
+    setCreateOpen(false);
+    const firstDive = site.dives[0];
+    if (firstDive) {
+      setHighlightedDiveId(firstDive.id);
+      setSuccessMessage(
+        `Saved “${site.name}”. Add a photo to bring this dive to life.`
+      );
+    } else {
+      setSuccessMessage(`Saved “${site.name}” to your logbook.`);
+    }
   };
 
   const updateSiteDives = (
@@ -125,6 +151,8 @@ export default function LogbookClient() {
   const handleMemoryCreated = (dive: LogbookDive) => {
     if (!selectedSiteId) return;
     updateSiteDives(selectedSiteId, (dives) => [dive, ...dives]);
+    setHighlightedDiveId(dive.id);
+    setSuccessMessage('Dive saved. Add a photo when you have one.');
   };
 
   const handlePhotoAdded = (diveId: string, photo: LogbookPhoto) => {
@@ -197,7 +225,7 @@ export default function LogbookClient() {
     if (!selectedSiteId || !selectedSite) return;
     if (
       !window.confirm(
-        `Delete “${selectedSite.name}” and all memories there? This cannot be undone.`
+        `Delete “${selectedSite.name}” and all dives there? This cannot be undone.`
       )
     ) {
       return;
@@ -245,8 +273,8 @@ export default function LogbookClient() {
         <Compass className="mx-auto h-12 w-12 text-blue-500" />
         <h1 className="text-3xl font-bold tracking-tight">Dive logbook</h1>
         <p className="text-muted-foreground">
-          Sign in to pin the places you&apos;ve dived and collect the memories
-          that go with them.
+          Sign in to pin the places you&apos;ve dived and keep a logbook of
+          where you&apos;ve been.
         </p>
         <SignInButton mode="modal">
           <Button size="lg">Sign in to open logbook</Button>
@@ -287,7 +315,7 @@ export default function LogbookClient() {
                 Corrected photo ready to attach
               </p>
               <p className="text-xs text-cyan-800 dark:text-cyan-300">
-                Open a place, pick a memory, then tap &quot;Attach corrected
+                Open a place, pick a dive, then tap &quot;Attach corrected
                 photo&quot;.
               </p>
             </div>
@@ -301,6 +329,21 @@ export default function LogbookClient() {
             <X className="mr-1 h-4 w-4" />
             Dismiss
           </Button>
+        </div>
+      )}
+
+      {successMessage && (
+        <div className="flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-100">
+          <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
+          <p className="flex-1">{successMessage}</p>
+          <button
+            type="button"
+            className="text-emerald-700/70 hover:text-emerald-900 dark:text-emerald-200/70"
+            onClick={() => setSuccessMessage(null)}
+            aria-label="Dismiss"
+          >
+            <X className="h-4 w-4" />
+          </button>
         </div>
       )}
 
@@ -462,6 +505,7 @@ export default function LogbookClient() {
                       key={dive.id}
                       dive={dive}
                       placeName={selectedSite.name}
+                      highlight={dive.id === highlightedDiveId}
                       pendingPhotoDataUrl={pendingPhoto?.dataUrl}
                       onPhotoAdded={(photo) =>
                         handlePhotoAdded(dive.id, photo)

@@ -11,6 +11,7 @@ import { compressImageForLogbook } from '@/lib/compress-image';
 type MemoryCardProps = {
   dive: LogbookDive;
   placeName?: string;
+  highlight?: boolean;
   pendingPhotoDataUrl?: string | null;
   onPhotoAdded?: (photo: LogbookPhoto) => void;
   onPhotoRemoved?: (photoId: string) => void;
@@ -28,6 +29,7 @@ function toDatetimeLocalValue(iso: string) {
 export function MemoryCard({
   dive,
   placeName,
+  highlight = false,
   pendingPhotoDataUrl,
   onPhotoAdded,
   onPhotoRemoved,
@@ -113,13 +115,13 @@ export function MemoryCard({
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || 'Failed to update memory');
+        throw new Error(data.error || 'Failed to update dive');
       }
       const updated = (await res.json()) as LogbookDive;
       onUpdated?.(updated);
       setEditing(false);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Failed to update memory');
+      setError(err instanceof Error ? err.message : 'Failed to update dive');
     } finally {
       setBusy(false);
     }
@@ -128,7 +130,7 @@ export function MemoryCard({
   const handleDelete = async () => {
     if (
       !window.confirm(
-        'Delete this dive memory? Photos attached to it will be removed too.'
+        'Delete this dive? Photos attached to it will be removed too.'
       )
     ) {
       return;
@@ -139,17 +141,17 @@ export function MemoryCard({
       const res = await fetch(`/api/dives/${dive.id}`, { method: 'DELETE' });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || 'Failed to delete memory');
+        throw new Error(data.error || 'Failed to delete dive');
       }
       onDeleted?.(dive.id);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Failed to delete memory');
+      setError(err instanceof Error ? err.message : 'Failed to delete dive');
       setBusy(false);
     }
   };
 
   const handleDeletePhoto = async (photoId: string) => {
-    if (!window.confirm('Remove this photo from the memory?')) return;
+    if (!window.confirm('Remove this photo from the dive?')) return;
     setBusy(true);
     setError(null);
     try {
@@ -168,7 +170,20 @@ export function MemoryCard({
   };
 
   return (
-    <article className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
+    <article
+      className={`overflow-hidden rounded-xl border bg-white shadow-sm transition dark:bg-slate-900 ${
+        highlight
+          ? 'border-blue-400 ring-2 ring-blue-400/40 dark:border-blue-400'
+          : 'border-slate-200 dark:border-slate-700'
+      }`}
+    >
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => handleFile(e.target.files?.[0] ?? null)}
+      />
       {photos.length > 0 ? (
         <div
           className={`grid gap-0.5 ${
@@ -180,7 +195,7 @@ export function MemoryCard({
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={photo.url}
-                alt={photo.caption || 'Dive memory'}
+                alt={photo.caption || 'Dive photo'}
                 className={`w-full object-cover ${
                   photos.length === 1 ? 'max-h-56' : 'h-28'
                 }`}
@@ -198,9 +213,28 @@ export function MemoryCard({
           ))}
         </div>
       ) : (
-        <div className="flex h-28 items-center justify-center bg-gradient-to-br from-sky-50 to-cyan-100 text-slate-400 dark:from-slate-800 dark:to-slate-700">
-          <Camera className="h-8 w-8 opacity-50" />
-        </div>
+        <button
+          type="button"
+          disabled={uploading || busy}
+          onClick={() => fileRef.current?.click()}
+          className="group flex h-36 w-full flex-col items-center justify-center gap-2 bg-gradient-to-br from-sky-50 via-cyan-50 to-teal-100 px-4 text-center transition hover:from-sky-100 hover:to-teal-100 dark:from-slate-800 dark:via-slate-800 dark:to-slate-700 dark:hover:from-slate-700"
+        >
+          {uploading ? (
+            <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+          ) : (
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/80 shadow-sm ring-1 ring-blue-100 transition group-hover:scale-105 dark:bg-slate-900/80 dark:ring-slate-600">
+              <Camera className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+            </div>
+          )}
+          <div>
+            <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">
+              {uploading ? 'Adding photo…' : 'Add a photo of this dive'}
+            </p>
+            <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+              Make this entry feel like you were there
+            </p>
+          </div>
+        </button>
       )}
 
       <div className="space-y-3 p-4">
@@ -216,7 +250,7 @@ export function MemoryCard({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor={`edit-notes-${dive.id}`}>Memory note</Label>
+              <Label htmlFor={`edit-notes-${dive.id}`}>Dive note</Label>
               <Input
                 id={`edit-notes-${dive.id}`}
                 value={notes}
@@ -297,27 +331,22 @@ export function MemoryCard({
 
         {!editing && (
           <div className="flex flex-wrap gap-2">
-            <input
-              ref={fileRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={(e) => handleFile(e.target.files?.[0] ?? null)}
-            />
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              disabled={uploading || busy}
-              onClick={() => fileRef.current?.click()}
-            >
-              {uploading ? (
-                <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-              ) : (
-                <ImagePlus className="mr-1.5 h-3.5 w-3.5" />
-              )}
-              Add photo
-            </Button>
+            {photos.length > 0 && (
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                disabled={uploading || busy}
+                onClick={() => fileRef.current?.click()}
+              >
+                {uploading ? (
+                  <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <ImagePlus className="mr-1.5 h-3.5 w-3.5" />
+                )}
+                Add photo
+              </Button>
+            )}
             {pendingPhotoDataUrl && (
               <Button
                 type="button"
@@ -390,13 +419,13 @@ export function AddMemoryForm({
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || 'Failed to save memory');
+        throw new Error(data.error || 'Failed to save dive');
       }
       const dive = (await res.json()) as LogbookDive;
       setNotes('');
       onCreated(dive);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Failed to save memory');
+      setError(err instanceof Error ? err.message : 'Failed to save dive');
     } finally {
       setSaving(false);
     }
@@ -408,12 +437,12 @@ export function AddMemoryForm({
       className="space-y-3 rounded-xl border border-dashed border-slate-300 p-4 dark:border-slate-600"
     >
       <div className="text-sm font-medium text-slate-800 dark:text-slate-200">
-        Add a dive
+        Log another dive
       </div>
       <div className="space-y-2">
-        <Label htmlFor="memory-date">When</Label>
+        <Label htmlFor="dive-date">When</Label>
         <Input
-          id="memory-date"
+          id="dive-date"
           type="datetime-local"
           value={diveDate}
           onChange={(e) => setDiveDate(e.target.value)}
@@ -421,9 +450,9 @@ export function AddMemoryForm({
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="memory-note">What do you remember?</Label>
+        <Label htmlFor="dive-note">What do you remember?</Label>
         <Input
-          id="memory-note"
+          id="dive-note"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           placeholder="Turquoise water, curious turtles…"
@@ -431,7 +460,7 @@ export function AddMemoryForm({
       </div>
       {error && <p className="text-xs text-red-600">{error}</p>}
       <Button type="submit" disabled={saving} className="w-full">
-        {saving ? 'Saving…' : 'Save memory'}
+        {saving ? 'Saving…' : 'Save dive'}
       </Button>
     </form>
   );

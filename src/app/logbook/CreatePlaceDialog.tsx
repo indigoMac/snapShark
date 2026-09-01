@@ -84,7 +84,7 @@ export function CreatePlaceDialog({
         });
         if (!diveRes.ok) {
           const data = await diveRes.json().catch(() => ({}));
-          throw new Error(data.error || 'Place saved, but memory failed');
+          throw new Error(data.error || 'Place saved, but dive failed');
         }
         firstDive = (await diveRes.json()) as LogbookDive;
         site = {

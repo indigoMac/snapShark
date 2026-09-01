@@ -18,12 +18,13 @@ export function PlacesBrowse({
   if (sites.length === 0) {
     return (
       <div className="rounded-xl border border-dashed border-slate-300 p-6 text-center dark:border-slate-600">
-        <MapPin className="mx-auto mb-2 h-8 w-8 text-slate-400" />
+        <MapPin className="mx-auto mb-2 h-8 w-8 text-blue-500" />
         <p className="text-sm font-medium text-slate-700 dark:text-slate-200">
-          No places yet
+          Your logbook is empty
         </p>
-        <p className="mt-1 text-xs text-slate-500">
-          Click the map to pin where you&apos;ve dived.
+        <p className="mt-1 text-xs leading-relaxed text-slate-500">
+          Search the map for a dive site you know, drop a pin, and start your
+          first place.
         </p>
       </div>
     );

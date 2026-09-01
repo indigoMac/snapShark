@@ -21,7 +21,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       select: { id: true },
     });
     if (!existing) {
-      return NextResponse.json({ error: 'Memory not found' }, { status: 404 });
+      return NextResponse.json({ error: 'Dive not found' }, { status: 404 });
     }
 
     const dive = await prisma.dive.update({
@@ -54,7 +54,7 @@ export async function DELETE(_req: NextRequest, { params }: RouteContext) {
       select: { id: true },
     });
     if (!existing) {
-      return NextResponse.json({ error: 'Memory not found' }, { status: 404 });
+      return NextResponse.json({ error: 'Dive not found' }, { status: 404 });
     }
 
     await prisma.dive.delete({ where: { id: params.id } });
