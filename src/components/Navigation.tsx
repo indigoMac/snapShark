@@ -5,8 +5,6 @@ import Link from 'next/link';
 import { LogoIcon } from '@/components/Logo';
 import { Button } from '@/components/ui/button';
 import {
-  Moon,
-  Sun,
   Menu,
   X,
   ChevronDown,
@@ -14,22 +12,15 @@ import {
   Waves,
   Zap,
 } from 'lucide-react';
-import { useTheme } from 'next-themes';
 import { useEffect, useState } from 'react';
 import { usePaywall } from '@/hooks/usePaywall';
 
 export function Navigation() {
   const { isSignedIn, user } = useUser();
   const { signOut } = useClerk();
-  const { theme, setTheme } = useTheme();
   const { isPro } = usePaywall();
-  const [mounted, setMounted] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [toolsDropdownOpen, setToolsDropdownOpen] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   // Close mobile menu when clicking outside or on links (but not on UserButton)
   useEffect(() => {
@@ -170,23 +161,6 @@ export function Navigation() {
               </Link>
             )}
 
-            {/* Theme Toggle */}
-            {mounted && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                className="h-9 w-9 text-slate-600 hover:text-blue-600 hover:bg-blue-50 dark:text-slate-300 dark:hover:text-blue-400 dark:hover:bg-blue-950/50"
-              >
-                {theme === 'dark' ? (
-                  <Sun className="h-4 w-4" />
-                ) : (
-                  <Moon className="h-4 w-4" />
-                )}
-                <span className="sr-only">Toggle theme</span>
-              </Button>
-            )}
-
             {isSignedIn ? (
               <>
                 <Link
@@ -222,23 +196,6 @@ export function Navigation() {
 
           {/* Mobile Hamburger Button */}
           <div className="md:hidden flex items-center gap-2">
-            {/* Theme toggle for mobile */}
-            {mounted && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                className="h-10 w-10 text-slate-600 hover:text-blue-600 hover:bg-blue-50 dark:text-slate-300 dark:hover:text-blue-400 dark:hover:bg-blue-950/50"
-              >
-                {theme === 'dark' ? (
-                  <Sun className="h-5 w-5" />
-                ) : (
-                  <Moon className="h-5 w-5" />
-                )}
-                <span className="sr-only">Toggle theme</span>
-              </Button>
-            )}
-
             {/* Hamburger Menu Button */}
             <Button
               variant="ghost"
