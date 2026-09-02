@@ -223,7 +223,10 @@ function AccountPageContent() {
     <div className="space-y-8 max-w-4xl mx-auto">
       {/* Page Header */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Account Settings</h1>
+        <h1 className="brand-title text-3xl sm:text-4xl">Account</h1>
+        <p className="brand-lede mt-2">
+          Subscription, logbook export, and account controls.
+        </p>
         <p className="text-muted-foreground">
           Manage your subscription and account preferences
         </p>

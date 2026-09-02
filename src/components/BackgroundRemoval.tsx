@@ -183,17 +183,14 @@ export function BackgroundRemoval({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="text-center">
-        <div className="flex items-center justify-center gap-2 mb-2">
-          <Scissors className="w-6 h-6 text-blue-600" />
-          <h2 className="text-2xl font-bold">Background Removal</h2>
-          {!isPro && <Crown className="w-5 h-5 text-amber-500" />}
-        </div>
-        <p className="text-muted-foreground">
+      <div className="flex flex-wrap items-center gap-2">
+        {!isPro && <Crown className="h-5 w-5 text-amber-500" />}
+        <p className="text-sm text-[#9bb8b3]">
           AI-powered background removal for professional results
+          {!isPro && ' · Pro feature'}
         </p>
         {!isPro && (
-          <Badge variant="outline" className="mt-2">
+          <Badge variant="outline" className="rounded-none">
             Pro Feature
           </Badge>
         )}

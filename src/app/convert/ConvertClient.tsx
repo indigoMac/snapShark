@@ -18,8 +18,6 @@ import { Badge } from '@/components/ui/badge';
 // Removed logo imports since we no longer show logo on homepage
 import {
   Zap,
-  Shield,
-  Cpu,
   Sparkles,
   Scissors,
   Waves,
@@ -112,62 +110,25 @@ export default function ConvertClient() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Enhanced Hero Section */}
-      <div className="relative bg-gradient-to-b from-blue-50 to-white dark:from-blue-950/20 dark:to-slate-900">
-        <div className="text-center py-12 px-4">
-          <div className="max-w-4xl mx-auto space-y-6">
-            <div className="space-y-4">
-              <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-                <span className="text-slate-900 dark:text-slate-100">
-                  Convert & Resize Images
-                </span>
-                <br />
-                <span className="bg-gradient-to-r from-blue-600 to-blue-700 dark:from-blue-400 dark:to-blue-500 bg-clip-text text-transparent">
-                  Instantly & Privately
-                </span>
-              </h1>
-              <p className="text-xl text-slate-600 dark:text-slate-300 max-w-2xl mx-auto">
-                Browser-based image processing when you need it.
-                <span className="block text-blue-600 dark:text-blue-400 font-semibold mt-1">
-                  No uploads • No tracking • Free to start
-                </span>
-              </p>
-            </div>
-
-            {/* Trust Indicators */}
-            <div className="flex flex-wrap items-center justify-center gap-8 pt-4">
-              <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
-                <div className="w-8 h-8 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center">
-                  <Shield className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                </div>
-                <span className="font-medium">100% Private</span>
-              </div>
-              <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
-                <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
-                  <Zap className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                </div>
-                <span className="font-medium">Lightning Fast</span>
-              </div>
-              <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
-                <div className="w-8 h-8 bg-indigo-100 dark:bg-indigo-900/30 rounded-full flex items-center justify-center">
-                  <Sparkles className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-                </div>
-                <span className="font-medium">Pro Quality</span>
-              </div>
-            </div>
-          </div>
-        </div>
+    <div className="space-y-8">
+      <div className="mx-auto max-w-2xl text-center sm:text-left">
+        <p className="brand-eyebrow">Photo tools</p>
+        <h1 className="brand-title mt-3 text-4xl sm:text-5xl">
+          Convert & resize images
+        </h1>
+        <p className="brand-lede mt-4">
+          Browser-based processing when you need it — no uploads, no tracking.
+        </p>
       </div>
 
       {/* Centered Main Upload Section */}
-      <div className="max-w-4xl mx-auto px-4 w-full">
-        <Card className="shadow-lg border border-blue-200/50 dark:border-blue-800/50 bg-white dark:bg-slate-800">
-          <CardHeader className="text-center pb-4">
-            <CardTitle className="text-2xl text-slate-800 dark:text-slate-100">
-              Drop Your Images Here
+      <div className="mx-auto w-full max-w-4xl">
+        <Card className="border-[rgb(126_200_192_/_0.2)] bg-[rgb(6_38_47_/_0.55)] shadow-none">
+          <CardHeader className="pb-4 text-center">
+            <CardTitle className="text-2xl text-[#e8f4f1]">
+              Drop your images here
             </CardTitle>
-            <CardDescription className="text-base text-slate-600 dark:text-slate-300">
+            <CardDescription className="text-base text-[#9bb8b3]">
               Supports PNG, JPG, WebP, and HEIC formats • Max{' '}
               {isPro ? '50' : '10'} files • 100% private processing
             </CardDescription>

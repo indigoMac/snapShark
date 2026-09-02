@@ -876,56 +876,20 @@ export default function UnderwaterPage() {
   // Memoized hero section to prevent unnecessary re-renders
   const heroSection = useMemo(
     () => (
-      <div className="relative overflow-hidden">
-        {/* Mobile-optimized background - Reduced effects on small screens */}
-        <div className="absolute inset-0 opacity-10">
-          {/* Reduce blur and animations on mobile for better performance */}
-          <div className="absolute top-20 left-20 w-32 h-32 bg-blue-400/20 rounded-full md:blur-3xl blur-xl md:animate-pulse will-change-transform"></div>
-          <div
-            className="absolute top-40 right-32 w-24 h-24 bg-cyan-400/20 rounded-full md:blur-2xl blur-lg md:animate-pulse will-change-transform"
-            style={{ animationDelay: '1s' }}
-          ></div>
-          <div
-            className="absolute bottom-32 left-1/3 w-40 h-40 bg-blue-500/20 rounded-full md:blur-3xl blur-xl md:animate-pulse will-change-transform"
-            style={{ animationDelay: '2s' }}
-          ></div>
-        </div>
-        <div className="relative max-w-4xl mx-auto px-4 py-16 text-center">
-          <div className="flex items-center justify-center gap-3 mb-6">
-            <Waves className="w-12 h-12 text-blue-400" />
-            <h1 className="text-4xl md:text-6xl font-bold text-white">
-              Underwater Color Correction
-            </h1>
-          </div>
-          <p className="text-xl text-blue-200 mb-8 max-w-2xl mx-auto">
-            Restore natural colors to your underwater photos and videos with advanced
-            algorithmic color correction
+      <div className="relative overflow-hidden pb-4 pt-6 sm:pt-10">
+        <div className="relative mx-auto max-w-3xl px-4 text-center sm:text-left">
+          <p className="brand-eyebrow">Colour Fix</p>
+          <h1 className="brand-title mt-3 text-4xl sm:text-5xl">
+            Underwater colour correction
+          </h1>
+          <p className="brand-lede mx-auto mt-4 max-w-2xl sm:mx-0">
+            Restore the reds lost underwater — in your browser, with no upload
+            and no watermark. Save the result straight into a dive.
           </p>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-            <div className="flex items-center gap-2 text-blue-200">
-              <div className="w-8 h-8 bg-blue-500/20 rounded-full flex items-center justify-center">
-                🌊
-              </div>
-              <span className="font-medium">Auto Detection</span>
-            </div>
-            <div className="flex items-center gap-2 text-blue-200">
-              <div className="w-8 h-8 bg-emerald-500/20 rounded-full flex items-center justify-center">
-                🎨
-              </div>
-              <span className="font-medium">Color Restoration</span>
-            </div>
-            <div className="flex items-center gap-2 text-blue-200">
-              <div className="w-8 h-8 bg-purple-500/20 rounded-full flex items-center justify-center">
-                ⚡
-              </div>
-              <span className="font-medium">Instant Preview</span>
-            </div>
-            <div className="flex items-center gap-2 text-blue-200">
-              <div className="w-8 h-8 bg-orange-500/20 rounded-full flex items-center justify-center">
-                🎯
-              </div>
-              <span className="font-medium">Adjustable</span>
-            </div>
+          <div className="mt-6 flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-[#9bb8b3] sm:justify-start">
+            <span>Instant preview</span>
+            <span>Adjustable intensity</span>
+            <span>Images & short video</span>
           </div>
         </div>
       </div>
@@ -934,22 +898,20 @@ export default function UnderwaterPage() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
+    <div className="min-h-screen">
       {/* Hero Section - Memoized for performance */}
       {heroSection}
 
       {/* Main Tool */}
-      <div className="max-w-6xl mx-auto px-4 pb-16">
-        <Card className="shadow-2xl border border-blue-800/50 bg-slate-800/80 md:backdrop-blur-sm relative overflow-hidden will-change-transform">
-          {/* Subtle animated background - mobile optimized */}
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-900/15 md:from-blue-900/20 via-transparent to-cyan-900/15 md:to-cyan-900/20"></div>
+      <div className="mx-auto max-w-6xl px-0 pb-16 sm:px-4">
+        <Card className="relative overflow-hidden border-[rgb(126_200_192_/_0.2)] bg-[rgb(6_38_47_/_0.65)] shadow-none">
           <div className="relative z-10">
-            <CardHeader className="text-center pb-4">
-              <CardTitle className="text-2xl text-white">
-                Upload Your Underwater Photo
+            <CardHeader className="pb-4 text-center">
+              <CardTitle className="text-2xl text-[#e8f4f1]">
+                Upload your underwater photo
               </CardTitle>
-              <p className="text-blue-300">
-                Automatically restores reds and balances colors lost underwater
+              <p className="text-[#9bb8b3]">
+                Automatically restores reds and balances colours lost underwater
               </p>
             </CardHeader>
             <CardContent>
