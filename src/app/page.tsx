@@ -4,7 +4,7 @@ import { HomeLanding } from '@/components/HomeLanding';
 export const metadata: Metadata = {
   title: 'SnapShark — Dive logbook & underwater photo tools',
   description:
-    'A dive logbook worth revisiting, and underwater colour correction that runs in your browser. Built for divers and snorkellers.',
+    'A dive logbook worth revisiting, and underwater colour correction that runs in your browser. Built for divers.',
   keywords: [
     'dive logbook',
     'scuba diving log',

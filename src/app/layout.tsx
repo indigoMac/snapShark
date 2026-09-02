@@ -166,8 +166,7 @@ export default function RootLayout({
                           </Link>
                         </div>
                         <div className="text-sm text-slate-400">
-                          © {new Date().getFullYear()} SnapShark. For divers
-                          and snorkellers.
+                          © {new Date().getFullYear()} SnapShark. For divers.
                         </div>
                       </div>
                     </div>

@@ -71,7 +71,7 @@
 @keyframes home-landing-hero-in {
   from {
     opacity: 0;
-    transform: translateY(18px);
+    transform: translateY(22px);
   }
   to {
     opacity: 1;
@@ -88,19 +88,74 @@
   }
 }
 
-@keyframes home-landing-reveal {
+@keyframes home-landing-float {
   from {
-    opacity: 0;
-    transform: translateY(1.25rem);
+    transform: scale(1.04) translate3d(0, 0, 0);
   }
   to {
-    opacity: 1;
-    transform: translateY(0);
+    transform: scale(1.08) translate3d(1%, -1%, 0);
   }
 }
 
-.home-landing-hero-copy {
-  animation: home-landing-hero-in 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+@keyframes home-reveal-up {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 2.25rem, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes home-reveal-left {
+  from {
+    opacity: 0;
+    transform: translate3d(-2.5rem, 1rem, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes home-reveal-right {
+  from {
+    opacity: 0;
+    transform: translate3d(2.5rem, 1rem, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes home-reveal-scale {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translate3d(0, 1rem, 0);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translate3d(0, 0, 0);
+  }
+}
+
+.home-landing-hero-line {
+  opacity: 0;
+  animation: home-landing-hero-in 0.85s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.home-landing-hero-line-2 {
+  animation-delay: 0.12s;
+}
+
+.home-landing-hero-line-3 {
+  animation-delay: 0.24s;
+}
+
+.home-landing-hero-line-4 {
+  animation-delay: 0.36s;
 }
 
 .home-landing-hero-image {
@@ -108,19 +163,49 @@
   will-change: transform;
 }
 
-.home-landing-reveal {
-  animation: home-landing-reveal 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+.home-landing-float-image {
+  animation: home-landing-float 22s ease-in-out alternate infinite;
+  will-change: transform;
+}
+
+.home-reveal {
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+.home-reveal.is-visible {
+  animation-duration: 0.85s;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  animation-fill-mode: both;
+  animation-delay: var(--home-reveal-delay, 0ms);
+}
+
+.home-reveal-up.is-visible {
+  animation-name: home-reveal-up;
+}
+
+.home-reveal-left.is-visible {
+  animation-name: home-reveal-left;
+}
+
+.home-reveal-right.is-visible {
+  animation-name: home-reveal-right;
+}
+
+.home-reveal-scale.is-visible {
+  animation-name: home-reveal-scale;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .home-landing-hero-copy,
+  .home-landing-hero-line,
   .home-landing-hero-image,
-  .home-landing-reveal {
+  .home-landing-float-image,
+  .home-reveal.is-visible {
     animation: none !important;
   }
 
-  .home-landing-reveal,
-  .home-landing-hero-copy {
+  .home-landing-hero-line,
+  .home-reveal {
     opacity: 1 !important;
     transform: none !important;
   }
