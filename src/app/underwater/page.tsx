@@ -918,17 +918,17 @@ export default function UnderwaterPage() {
               {selectedFiles.length === 0 ? (
                 <div className="space-y-6">
                   <div
-                    className="border-2 border-dashed border-blue-400 rounded-lg p-12 text-center hover:border-blue-300 transition-colors cursor-pointer"
+                    className="cursor-pointer rounded-lg border-2 border-dashed border-[#7ec8c0]/50 p-8 text-center transition-colors hover:border-[#7ec8c0] sm:p-12"
                     onClick={() => fileInputRef.current?.click()}
                   >
-                    <Upload className="w-16 h-16 text-blue-400 mx-auto mb-4" />
-                    <p className="text-white text-lg mb-2">
-                      Click to upload your underwater photos or video
+                    <Upload className="mx-auto mb-4 h-12 w-12 text-[#7ec8c0] sm:h-16 sm:w-16" />
+                    <p className="mb-2 text-base text-[#e8f4f1] sm:text-lg">
+                      Tap to upload underwater photos or video
                     </p>
-                    <p className="text-blue-300 text-sm">
-                      Supports JPG, PNG, WebP images and MP4, WebM, MOV videos (max 100MB, 60 seconds)
+                    <p className="text-sm text-[#9bb8b3]">
+                      JPG, PNG, WebP · MP4, WebM, MOV (max 100MB, 60s)
                     </p>
-                    <p className="text-blue-200 text-xs mt-2">
+                    <p className="mt-2 text-xs text-[#7a9a95]">
                       Select multiple images for batch processing
                     </p>
                   </div>

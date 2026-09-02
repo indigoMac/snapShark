@@ -204,8 +204,8 @@ export default function PricingPage() {
           Feature Comparison
         </h2>
 
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse">
+        <div className="overflow-x-auto [-webkit-overflow-scrolling:touch]">
+          <table className="w-full min-w-[32rem] border-collapse">
             <thead>
               <tr className="border-b">
                 <th className="text-left p-4">Feature</th>

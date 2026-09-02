@@ -34,7 +34,7 @@ export function ExamplesTabbed() {
   return (
     <div className="space-y-10">
       <div
-        className="flex flex-wrap gap-2 border-b border-slate-700/80 pb-1"
+        className="-mx-1 flex gap-1 overflow-x-auto border-b border-slate-700/80 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         role="tablist"
         aria-label="Examples"
       >
@@ -47,7 +47,7 @@ export function ExamplesTabbed() {
               role="tab"
               aria-selected={active}
               onClick={() => setActiveTab(tab.id)}
-              className={`px-4 py-3 text-left transition-colors ${
+              className={`shrink-0 px-4 py-3 text-left transition-colors ${
                 active
                   ? 'border-b-2 border-[#7ec8c0] text-[#e8f4f1]'
                   : 'border-b-2 border-transparent text-slate-400 hover:text-slate-200'

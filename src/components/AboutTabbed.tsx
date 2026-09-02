@@ -66,7 +66,7 @@ export function AboutTabbed() {
       <div
         role="tablist"
         aria-label="About SnapShark"
-        className="flex flex-wrap gap-2 border-b border-[rgb(126_200_192_/_0.16)]"
+        className="-mx-1 flex gap-1 overflow-x-auto border-b border-[rgb(126_200_192_/_0.16)] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {TABS.map((tab) => {
           const Icon = tab.icon;
@@ -77,7 +77,7 @@ export function AboutTabbed() {
               role="tab"
               aria-selected={isActive}
               onClick={() => setActiveTab(tab.id)}
-              className={`brand-tab flex items-center gap-2 ${
+              className={`brand-tab flex shrink-0 items-center gap-2 ${
                 isActive ? 'brand-tab-active' : ''
               }`}
             >

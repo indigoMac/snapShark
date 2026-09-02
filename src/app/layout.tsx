@@ -73,6 +73,7 @@ export const metadata: Metadata = {
 export const viewport = {
   width: 'device-width',
   initialScale: 1,
+  viewportFit: 'cover' as const,
   themeColor: '#031820',
 };
 
@@ -116,11 +117,13 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             <ErrorTrackingProvider />
-            <div className="brand-shell min-h-screen">
+            <div className="brand-shell min-h-screen overflow-x-clip">
               <Navigation />
               <GlobalGracePeriodAlert />
 
-              <main className="container mx-auto px-4 py-6">{children}</main>
+              <main className="container mx-auto min-w-0 max-w-full px-4 py-6 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+                {children}
+              </main>
 
               <footer className="mt-8 border-t border-[rgb(126_200_192_/_0.14)] bg-[#02141a]">
                 <div className="container mx-auto px-4 py-10">

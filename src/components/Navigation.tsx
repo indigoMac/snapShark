@@ -55,11 +55,11 @@ export function Navigation() {
 
   return (
     <nav className="brand-nav relative z-30">
-      <div className="container mx-auto px-4">
-        <div className="flex h-16 items-center justify-between">
-          <Link href="/" className="flex items-center gap-3">
+      <div className="container mx-auto max-w-full px-4">
+        <div className="flex h-14 items-center justify-between sm:h-16">
+          <Link href="/" className="flex min-w-0 items-center gap-2 sm:gap-3">
             <LogoIcon size="2xl" priority />
-            <span className="brand-display text-xl tracking-tight sm:text-2xl">
+            <span className="brand-display truncate text-xl tracking-tight sm:text-2xl">
               <span className="text-[#e8f4f1]">Snap</span>
               <span className="text-[#7ec8c0]">Shark</span>
             </span>
@@ -198,7 +198,7 @@ export function Navigation() {
               className="fixed inset-0 z-40 bg-black/40 md:hidden"
               onClick={() => setMobileMenuOpen(false)}
             />
-            <div className="fixed left-0 right-0 top-16 z-40 max-h-[calc(100vh-4rem)] overflow-y-auto border-b border-[rgb(126_200_192_/_0.14)] bg-[#031820] md:hidden">
+            <div className="absolute left-0 right-0 top-full z-40 max-h-[min(32rem,calc(100dvh-4.5rem))] overflow-y-auto overscroll-contain border-b border-[rgb(126_200_192_/_0.14)] bg-[#031820] pb-[env(safe-area-inset-bottom)] md:hidden">
               <div className="px-4 py-4">
                 <div className="flex flex-col space-y-1">
                   {[

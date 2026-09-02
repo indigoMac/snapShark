@@ -13,8 +13,8 @@ import {
 type RevealDirection = 'up' | 'left' | 'right' | 'scale';
 
 function useInView<T extends HTMLElement>(
-  threshold = 0.18,
-  rootMargin = '0px 0px -8% 0px'
+  threshold = 0.12,
+  rootMargin = '0px 0px -6% 0px'
 ) {
   const ref = useRef<T | null>(null);
   const [visible, setVisible] = useState(false);
@@ -53,7 +53,7 @@ function Reveal({
   delayMs?: number;
   as?: 'div' | 'section' | 'figure' | 'p' | 'h2' | 'header';
 }) {
-  const { ref, visible } = useInView<HTMLElement>(0.15);
+  const { ref, visible } = useInView<HTMLElement>(0.12);
 
   return (
     <Tag
@@ -68,51 +68,53 @@ function Reveal({
   );
 }
 
+const sectionClass = 'relative w-full overflow-hidden';
+
 export function HomeLanding() {
   return (
-    <div className="home-landing -mx-4 -mt-6">
+    <div className="home-landing -mx-4 -mt-6 w-[calc(100%+2rem)] max-w-none">
       {/* Hero — one composition: brand, line, support, CTAs, full-bleed ocean */}
-      <section className="relative left-1/2 right-1/2 min-h-[100svh] w-screen max-w-[100vw] -ml-[50vw] -mr-[50vw] overflow-hidden bg-[#031820]">
+      <section className={`${sectionClass} min-h-[100svh] bg-[#031820]`}>
         <Image
           src="/marketing/hero-dive.jpg"
           alt="Scuba diver beside a school of bluestripe snappers on a coral reef"
           fill
           priority
           sizes="100vw"
-          className="object-cover object-[68%_center] sm:object-center home-landing-hero-image"
+          className="object-cover object-[72%_center] sm:object-center home-landing-hero-image"
         />
         <div
-          className="absolute inset-0 bg-gradient-to-t from-[#031820] via-[#031820]/55 to-[#031820]/25"
+          className="absolute inset-0 bg-gradient-to-t from-[#031820] via-[#031820]/60 to-[#031820]/30"
           aria-hidden
         />
         <div
-          className="absolute inset-0 bg-gradient-to-r from-[#031820]/80 via-[#031820]/35 to-transparent"
+          className="absolute inset-0 bg-gradient-to-r from-[#031820]/85 via-[#031820]/40 to-transparent sm:via-[#031820]/35"
           aria-hidden
         />
 
-        <div className="relative z-10 flex min-h-[100svh] flex-col justify-end px-6 pb-16 pt-28 sm:px-10 sm:pb-20 lg:px-16 lg:pb-24">
+        <div className="relative z-10 flex min-h-[100svh] flex-col justify-end px-5 pb-[max(4rem,env(safe-area-inset-bottom))] pt-24 sm:px-10 sm:pb-20 lg:px-16 lg:pb-24">
           <div className="max-w-2xl">
-            <p className="home-landing-hero-line font-landing-display text-[clamp(2.75rem,8vw,5.5rem)] leading-[0.95] tracking-tight text-[#f3faf8]">
+            <p className="home-landing-hero-line font-landing-display text-[clamp(2.5rem,11vw,5.5rem)] leading-[0.95] tracking-tight text-[#f3faf8]">
               Snap
               <span className="text-[#7ec8c0]">Shark</span>
             </p>
-            <h1 className="home-landing-hero-line home-landing-hero-line-2 mt-5 max-w-xl font-landing-display text-[clamp(1.5rem,3.4vw,2.35rem)] font-medium leading-snug tracking-tight text-[#e8f4f1]">
+            <h1 className="home-landing-hero-line home-landing-hero-line-2 mt-4 max-w-xl font-landing-display text-[clamp(1.35rem,5.5vw,2.35rem)] font-medium leading-snug tracking-tight text-[#e8f4f1] sm:mt-5">
               Your dives. Worth coming back to.
             </h1>
-            <p className="home-landing-hero-line home-landing-hero-line-3 mt-4 max-w-md text-base leading-relaxed text-[#b7d4cf] sm:text-lg">
+            <p className="home-landing-hero-line home-landing-hero-line-3 mt-4 max-w-md text-[0.95rem] leading-relaxed text-[#b7d4cf] sm:text-lg">
               A quiet logbook for the places you dive, and a colour fix that
               brings the reds back to your photos.
             </p>
-            <div className="home-landing-hero-line home-landing-hero-line-4 mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="home-landing-hero-line home-landing-hero-line-4 mt-7 flex w-full flex-col gap-3 sm:mt-8 sm:w-auto sm:flex-row sm:items-center">
               <Link
                 href="/logbook"
-                className="inline-flex items-center justify-center bg-[#e8f4f1] px-6 py-3.5 text-sm font-semibold tracking-wide text-[#06262f] transition hover:bg-white"
+                className="brand-cta w-full bg-[#e8f4f1] text-[#06262f] hover:bg-white sm:w-auto"
               >
                 Open the logbook
               </Link>
               <Link
                 href="/underwater"
-                className="inline-flex items-center justify-center border border-[#7ec8c0]/50 px-6 py-3.5 text-sm font-semibold tracking-wide text-[#e8f4f1] transition hover:border-[#7ec8c0] hover:bg-[#7ec8c0]/10"
+                className="brand-cta w-full border border-[#7ec8c0]/50 text-[#e8f4f1] hover:border-[#7ec8c0] hover:bg-[#7ec8c0]/10 sm:w-auto"
               >
                 Fix a dive photo
               </Link>
@@ -122,8 +124,8 @@ export function HomeLanding() {
       </section>
 
       {/* Logbook */}
-      <section className="relative left-1/2 right-1/2 w-screen max-w-[100vw] -ml-[50vw] -mr-[50vw] bg-[#f4f7f6] text-[#0b2a32]">
-        <div className="mx-auto grid max-w-6xl gap-10 px-6 py-20 sm:px-10 lg:grid-cols-2 lg:items-center lg:gap-16 lg:py-28">
+      <section className={`${sectionClass} bg-[#f4f7f6] text-[#0b2a32]`}>
+        <div className="mx-auto grid max-w-6xl gap-8 px-5 py-16 sm:gap-10 sm:px-10 sm:py-20 lg:grid-cols-2 lg:items-center lg:gap-16 lg:py-28">
           <div>
             <Reveal>
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#2f6f6a]">
@@ -131,7 +133,7 @@ export function HomeLanding() {
               </p>
             </Reveal>
             <Reveal delayMs={80}>
-              <h2 className="mt-3 font-landing-display text-3xl leading-tight tracking-tight sm:text-4xl lg:text-[2.75rem]">
+              <h2 className="mt-3 font-landing-display text-[1.75rem] leading-tight tracking-tight sm:text-4xl lg:text-[2.75rem]">
                 Map the places.
                 <br />
                 Keep the dive.
@@ -147,7 +149,7 @@ export function HomeLanding() {
             <Reveal delayMs={240}>
               <Link
                 href="/logbook"
-                className="mt-8 inline-flex text-sm font-semibold tracking-wide text-[#0b2a32] underline decoration-[#7ec8c0] decoration-2 underline-offset-4 transition hover:text-[#2f6f6a]"
+                className="mt-8 inline-flex min-h-11 items-center text-sm font-semibold tracking-wide text-[#0b2a32] underline decoration-[#7ec8c0] decoration-2 underline-offset-4 transition hover:text-[#2f6f6a]"
               >
                 Start your first pin
               </Link>
@@ -168,15 +170,15 @@ export function HomeLanding() {
       </section>
 
       {/* Underwater colour */}
-      <section className="relative left-1/2 right-1/2 w-screen max-w-[100vw] -ml-[50vw] -mr-[50vw] bg-[#06262f] text-[#e8f4f1]">
-        <div className="mx-auto max-w-6xl px-6 py-20 sm:px-10 lg:py-28">
+      <section className={`${sectionClass} bg-[#06262f] text-[#e8f4f1]`}>
+        <div className="mx-auto max-w-6xl px-5 py-16 sm:px-10 sm:py-20 lg:py-28">
           <Reveal>
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#7ec8c0]">
               Underwater colour
             </p>
           </Reveal>
           <Reveal delayMs={80}>
-            <h2 className="mt-3 max-w-xl font-landing-display text-3xl leading-tight tracking-tight sm:text-4xl lg:text-[2.75rem]">
+            <h2 className="mt-3 max-w-xl font-landing-display text-[1.75rem] leading-tight tracking-tight sm:text-4xl lg:text-[2.75rem]">
               Photos that look like what you saw.
             </h2>
           </Reveal>
@@ -187,7 +189,7 @@ export function HomeLanding() {
             </p>
           </Reveal>
 
-          <div className="mt-12 grid gap-4 sm:grid-cols-2 sm:gap-6">
+          <div className="mt-10 grid gap-4 sm:mt-12 sm:grid-cols-2 sm:gap-6">
             <Reveal direction="left" delayMs={80} as="figure" className="space-y-3">
               <div className="relative aspect-[4/3] overflow-hidden bg-[#031820]">
                 <Image
@@ -221,7 +223,7 @@ export function HomeLanding() {
           <Reveal delayMs={260}>
             <Link
               href="/underwater"
-              className="mt-10 inline-flex items-center justify-center bg-[#7ec8c0] px-6 py-3.5 text-sm font-semibold tracking-wide text-[#06262f] transition hover:bg-[#9ad6cf]"
+              className="brand-cta mt-8 w-full bg-[#7ec8c0] text-[#06262f] hover:bg-[#9ad6cf] sm:mt-10 sm:w-auto"
             >
               Correct a photo
             </Link>
@@ -230,10 +232,10 @@ export function HomeLanding() {
       </section>
 
       {/* Close */}
-      <section className="relative left-1/2 right-1/2 w-screen max-w-[100vw] -ml-[50vw] -mr-[50vw] bg-[#031820] text-[#e8f4f1]">
-        <div className="mx-auto max-w-3xl px-6 py-24 text-center sm:px-10 lg:py-32">
+      <section className={`${sectionClass} bg-[#031820] text-[#e8f4f1]`}>
+        <div className="mx-auto max-w-3xl px-5 py-20 text-center sm:px-10 sm:py-24 lg:py-32">
           <Reveal direction="scale">
-            <h2 className="font-landing-display text-3xl leading-tight tracking-tight sm:text-4xl lg:text-5xl">
+            <h2 className="font-landing-display text-[1.75rem] leading-tight tracking-tight sm:text-4xl lg:text-5xl">
               Built for divers and snorkellers.
             </h2>
           </Reveal>
@@ -244,23 +246,23 @@ export function HomeLanding() {
             </p>
           </Reveal>
           <Reveal delayMs={180}>
-            <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <div className="mt-8 flex w-full flex-col items-stretch justify-center gap-3 sm:mt-10 sm:flex-row sm:items-center">
               <Link
                 href="/logbook"
-                className="inline-flex w-full items-center justify-center bg-[#e8f4f1] px-6 py-3.5 text-sm font-semibold tracking-wide text-[#06262f] transition hover:bg-white sm:w-auto"
+                className="brand-cta w-full bg-[#e8f4f1] text-[#06262f] hover:bg-white sm:w-auto"
               >
                 Open the logbook
               </Link>
               <Link
                 href="/about"
-                className="inline-flex w-full items-center justify-center border border-[#7ec8c0]/40 px-6 py-3.5 text-sm font-semibold tracking-wide text-[#e8f4f1] transition hover:border-[#7ec8c0] sm:w-auto"
+                className="brand-cta w-full border border-[#7ec8c0]/40 text-[#e8f4f1] hover:border-[#7ec8c0] sm:w-auto"
               >
                 How it works
               </Link>
             </div>
           </Reveal>
           <Reveal delayMs={260}>
-            <p className="mt-14 text-sm text-[#5f7d78]">
+            <p className="mt-12 text-sm text-[#5f7d78] sm:mt-14">
               Still need a general image converter?{' '}
               <Link
                 href="/convert"

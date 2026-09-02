@@ -65,6 +65,15 @@
     @apply bg-background text-foreground antialiased;
     font-family: var(--font-landing-body), ui-sans-serif, system-ui, sans-serif;
   }
+
+  /* Avoid iOS zoom-on-focus while keeping readable controls */
+  @media (max-width: 767px) {
+    input,
+    select,
+    textarea {
+      font-size: 16px !important;
+    }
+  }
 }
 
 /* Shared brand chrome */
@@ -76,12 +85,14 @@
 .brand-shell {
   background-color: var(--brand-deep);
   color: var(--brand-foam);
+  overflow-x: clip;
 }
 
 .brand-nav {
   border-bottom: 1px solid rgb(126 200 192 / 0.14);
   background: rgb(3 24 32 / 0.92);
   backdrop-filter: blur(12px);
+  padding-top: env(safe-area-inset-top);
 }
 
 .brand-nav-link {
@@ -89,7 +100,11 @@
 }
 
 .brand-nav-cta {
-  @apply inline-flex items-center justify-center bg-[#e8f4f1] px-4 py-2 text-sm font-semibold tracking-wide text-[#06262f] transition hover:bg-white;
+  @apply inline-flex min-h-11 items-center justify-center bg-[#e8f4f1] px-4 py-2 text-sm font-semibold tracking-wide text-[#06262f] transition hover:bg-white;
+}
+
+.brand-cta {
+  @apply inline-flex min-h-11 items-center justify-center px-6 py-3.5 text-sm font-semibold tracking-wide transition;
 }
 
 .brand-eyebrow {
@@ -247,6 +262,18 @@
 
 .home-reveal-scale.is-visible {
   animation-name: home-reveal-scale;
+}
+
+@media (max-width: 640px) {
+  .home-reveal-left.is-visible,
+  .home-reveal-right.is-visible {
+    animation-name: home-reveal-up;
+  }
+
+  .home-landing-hero-image,
+  .home-landing-float-image {
+    animation: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

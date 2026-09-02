@@ -381,15 +381,20 @@ export default function LogbookClient() {
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight">Dive logbook</h1>
-          <p className="max-w-xl text-muted-foreground">
+          <p className="brand-eyebrow">Logbook</p>
+          <h1 className="brand-title text-3xl sm:text-4xl">Dive logbook</h1>
+          <p className="max-w-xl text-sm leading-relaxed text-[#9bb8b3] sm:text-base">
             A map of where you&apos;ve been — pin places, add notes, and attach
             photos so each dive stays easy to revisit.
           </p>
         </div>
-        <Button variant="outline" asChild>
+        <Button
+          variant="outline"
+          asChild
+          className="min-h-11 w-full rounded-none border-[rgb(126_200_192_/_0.35)] sm:w-auto"
+        >
           <Link href="/underwater">
             <Waves className="mr-2 h-4 w-4" />
             Fix a photo first
@@ -451,7 +456,7 @@ export default function LogbookClient() {
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
         <div className="overflow-hidden rounded-2xl border border-slate-200 shadow-sm dark:border-slate-800">
-          <div className="h-[min(70vh,640px)] min-h-[420px]">
+          <div className="h-[min(58dvh,560px)] min-h-[260px] sm:h-[min(70vh,640px)] sm:min-h-[420px]">
             <LogbookMap
               sites={visibleSites}
               selectedSiteId={selectedSiteId}
