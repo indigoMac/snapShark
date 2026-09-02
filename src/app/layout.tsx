@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import localFont from 'next/font/local';
+import { Fraunces, Manrope } from 'next/font/google';
 import { ClerkProvider } from '@clerk/nextjs';
 import Link from 'next/link';
 import { Navigation } from '@/components/Navigation';
@@ -17,17 +18,32 @@ const appFont = localFont({
   display: 'swap',
 });
 
+const landingDisplay = Fraunces({
+  subsets: ['latin'],
+  variable: '--font-landing-display',
+  display: 'swap',
+});
+
+const landingBody = Manrope({
+  subsets: ['latin'],
+  variable: '--font-landing-body',
+  display: 'swap',
+});
+
 export const metadata: Metadata = {
-  title: 'SnapShark - Privacy-First Image Converter',
+  title: {
+    default: 'SnapShark — Dive logbook & underwater photo tools',
+    template: '%s | SnapShark',
+  },
   description:
-    'Convert and resize images directly in your browser. No uploads, complete privacy.',
+    'A dive logbook worth revisiting, and underwater colour correction that runs in your browser. Built for divers and snorkellers.',
   keywords: [
-    'image converter',
-    'image resizer',
-    'privacy',
-    'client-side',
-    'webp',
-    'avif',
+    'dive logbook',
+    'scuba diving log',
+    'snorkeling log',
+    'underwater photo correction',
+    'dive photos',
+    'SnapShark',
   ],
   authors: [{ name: 'SnapShark' }],
   manifest: '/manifest.json',
@@ -57,7 +73,7 @@ export const metadata: Metadata = {
 export const viewport = {
   width: 'device-width',
   initialScale: 1,
-  themeColor: '#0f172a',
+  themeColor: '#031820',
 };
 
 export default function RootLayout({
@@ -88,7 +104,10 @@ export default function RootLayout({
           {/* Modern mobile web app capability */}
           <meta name="mobile-web-app-capable" content="yes" />
         </head>
-        <body className={appFont.className} suppressHydrationWarning={true}>
+        <body
+          className={`${appFont.className} ${landingDisplay.variable} ${landingBody.variable}`}
+          suppressHydrationWarning={true}
+        >
           <ThemeProvider
             attribute="class"
             defaultTheme="dark"
@@ -103,7 +122,7 @@ export default function RootLayout({
 
               <main className="container mx-auto px-4 py-6">{children}</main>
 
-              <footer className="border-t border-blue-800/30 bg-slate-800/50 mt-16">
+              <footer className="border-t border-blue-800/30 bg-slate-800/50 mt-8">
                 <div className="container mx-auto px-4 py-8">
                   <div className="flex flex-col gap-6">
                     {/* Main footer content */}
@@ -116,10 +135,10 @@ export default function RootLayout({
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-6 text-sm text-slate-400">
-                        <span>🔒 Images processed in your browser</span>
-                        <span>🚀 Powered by your browser</span>
-                        <span>⚡ Lightning fast</span>
+                      <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-slate-400">
+                        <span>Dive logbook</span>
+                        <span>Underwater colour fix</span>
+                        <span>Photo tools in your browser</span>
                       </div>
                     </div>
 
@@ -147,8 +166,8 @@ export default function RootLayout({
                           </Link>
                         </div>
                         <div className="text-sm text-slate-400">
-                          © {new Date().getFullYear()} SnapShark. Privacy-first
-                          image processing.
+                          © {new Date().getFullYear()} SnapShark. For divers
+                          and snorkellers.
                         </div>
                       </div>
                     </div>

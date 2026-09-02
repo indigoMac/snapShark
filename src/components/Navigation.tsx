@@ -70,6 +70,19 @@ export function Navigation() {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-4">
+            <Link
+              href="/logbook"
+              className="text-sm font-medium text-slate-600 hover:text-blue-600 dark:text-slate-300 dark:hover:text-blue-400 transition-colors"
+            >
+              Logbook
+            </Link>
+            <Link
+              href="/underwater"
+              className="text-sm font-medium text-slate-600 hover:text-blue-600 dark:text-slate-300 dark:hover:text-blue-400 transition-colors"
+            >
+              Colour Fix
+            </Link>
+
             {/* Tools Dropdown */}
             <div className="relative">
               <button
@@ -88,19 +101,18 @@ export function Navigation() {
                 <div className="absolute top-full left-0 mt-2 w-56 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg z-40">
                   <div className="py-2">
                     <Link
-                      href="/"
+                      href="/underwater"
                       onClick={() => setToolsDropdownOpen(false)}
                       className="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:text-blue-600 hover:bg-blue-50 dark:text-slate-300 dark:hover:text-blue-400 dark:hover:bg-blue-950/50 transition-colors"
                     >
-                      <Zap className="w-4 h-4 text-blue-600" />
+                      <Waves className="w-4 h-4 text-cyan-600" />
                       <div>
-                        <div className="font-medium">Image Processor</div>
+                        <div className="font-medium">Underwater Color Fix</div>
                         <div className="text-xs text-slate-500 dark:text-slate-400">
-                          Resize, convert & optimize
+                          Fix green/blue tints
                         </div>
                       </div>
                     </Link>
-                    <div className="h-px bg-slate-200 dark:bg-slate-700 mx-2 my-1"></div>
                     <Link
                       href="/background-removal"
                       onClick={() => setToolsDropdownOpen(false)}
@@ -114,16 +126,17 @@ export function Navigation() {
                         </div>
                       </div>
                     </Link>
+                    <div className="h-px bg-slate-200 dark:bg-slate-700 mx-2 my-1"></div>
                     <Link
-                      href="/underwater"
+                      href="/convert"
                       onClick={() => setToolsDropdownOpen(false)}
                       className="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:text-blue-600 hover:bg-blue-50 dark:text-slate-300 dark:hover:text-blue-400 dark:hover:bg-blue-950/50 transition-colors"
                     >
-                      <Waves className="w-4 h-4 text-cyan-600" />
+                      <Zap className="w-4 h-4 text-blue-600" />
                       <div>
-                        <div className="font-medium">Underwater Color Fix</div>
+                        <div className="font-medium">Image Processor</div>
                         <div className="text-xs text-slate-500 dark:text-slate-400">
-                          Fix green/blue tints
+                          Resize, convert & optimize
                         </div>
                       </div>
                     </Link>
@@ -143,12 +156,6 @@ export function Navigation() {
               className="text-sm font-medium text-slate-600 hover:text-blue-600 dark:text-slate-300 dark:hover:text-blue-400 transition-colors"
             >
               About
-            </Link>
-            <Link
-              href="/logbook"
-              className="text-sm font-medium text-slate-600 hover:text-blue-600 dark:text-slate-300 dark:hover:text-blue-400 transition-colors"
-            >
-              Logbook
             </Link>
 
             {/* Conditional Pricing - Hide for Pro users */}
@@ -228,18 +235,33 @@ export function Navigation() {
             <div className="md:hidden fixed top-16 left-0 right-0 bg-white dark:bg-slate-900 border-b border-blue-200/50 dark:border-blue-800/50 shadow-xl z-40 max-h-[calc(100vh-4rem)] overflow-y-auto">
               <div className="px-4 py-4">
                 <div className="flex flex-col space-y-2">
+                  <Link
+                    href="/logbook"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center h-12 px-4 text-base font-medium text-slate-800 hover:text-blue-600 hover:bg-blue-50 dark:text-slate-200 dark:hover:text-blue-400 dark:hover:bg-blue-950/50 rounded-lg transition-colors border border-transparent hover:border-blue-200 dark:hover:border-blue-800"
+                  >
+                    Logbook
+                  </Link>
+                  <Link
+                    href="/underwater"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center h-12 px-4 text-base font-medium text-slate-800 hover:text-blue-600 hover:bg-blue-50 dark:text-slate-200 dark:hover:text-blue-400 dark:hover:bg-blue-950/50 rounded-lg transition-colors border border-transparent hover:border-blue-200 dark:hover:border-blue-800"
+                  >
+                    Colour Fix
+                  </Link>
+
                   {/* Tools Section */}
                   <div className="pb-2 border-b border-slate-200 dark:border-slate-700">
                     <h3 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider px-4 pb-2">
                       Tools
                     </h3>
                     <Link
-                      href="/"
+                      href="/underwater"
                       onClick={() => setMobileMenuOpen(false)}
                       className="flex items-center gap-3 h-12 px-4 text-base font-medium text-slate-800 hover:text-blue-600 hover:bg-blue-50 dark:text-slate-200 dark:hover:text-blue-400 dark:hover:bg-blue-950/50 rounded-lg transition-colors border border-transparent hover:border-blue-200 dark:hover:border-blue-800"
                     >
-                      <Zap className="w-5 h-5 text-blue-600" />
-                      Image Processor
+                      <Waves className="w-5 h-5 text-cyan-600" />
+                      Underwater Color Fix
                     </Link>
                     <Link
                       href="/background-removal"
@@ -250,12 +272,12 @@ export function Navigation() {
                       Background Removal
                     </Link>
                     <Link
-                      href="/underwater"
+                      href="/convert"
                       onClick={() => setMobileMenuOpen(false)}
                       className="flex items-center gap-3 h-12 px-4 text-base font-medium text-slate-800 hover:text-blue-600 hover:bg-blue-50 dark:text-slate-200 dark:hover:text-blue-400 dark:hover:bg-blue-950/50 rounded-lg transition-colors border border-transparent hover:border-blue-200 dark:hover:border-blue-800"
                     >
-                      <Waves className="w-5 h-5 text-cyan-600" />
-                      Underwater Color Fix
+                      <Zap className="w-5 h-5 text-blue-600" />
+                      Image Processor
                     </Link>
                   </div>
 
@@ -265,21 +287,14 @@ export function Navigation() {
                     onClick={() => setMobileMenuOpen(false)}
                     className="flex items-center h-12 px-4 text-base font-medium text-slate-800 hover:text-blue-600 hover:bg-blue-50 dark:text-slate-200 dark:hover:text-blue-400 dark:hover:bg-blue-950/50 rounded-lg transition-colors border border-transparent hover:border-blue-200 dark:hover:border-blue-800"
                   >
-                    📸 Examples
+                    Examples
                   </Link>
                   <Link
                     href="/about"
                     onClick={() => setMobileMenuOpen(false)}
                     className="flex items-center h-12 px-4 text-base font-medium text-slate-800 hover:text-blue-600 hover:bg-blue-50 dark:text-slate-200 dark:hover:text-blue-400 dark:hover:bg-blue-950/50 rounded-lg transition-colors border border-transparent hover:border-blue-200 dark:hover:border-blue-800"
                   >
-                    ℹ️ About
-                  </Link>
-                  <Link
-                    href="/logbook"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center h-12 px-4 text-base font-medium text-slate-800 hover:text-blue-600 hover:bg-blue-50 dark:text-slate-200 dark:hover:text-blue-400 dark:hover:bg-blue-950/50 rounded-lg transition-colors border border-transparent hover:border-blue-200 dark:hover:border-blue-800"
-                  >
-                    🗺️ Logbook
+                    About
                   </Link>
 
                   {/* Conditional Pricing for Mobile */}

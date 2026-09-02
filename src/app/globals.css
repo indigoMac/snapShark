@@ -59,6 +59,73 @@
   }
 }
 
+/* Landing page — dive-focused home */
+.font-landing-display {
+  font-family: var(--font-landing-display), ui-serif, Georgia, serif;
+}
+
+.home-landing {
+  font-family: var(--font-landing-body), ui-sans-serif, system-ui, sans-serif;
+}
+
+@keyframes home-landing-hero-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes home-landing-drift {
+  from {
+    transform: scale(1.06) translate3d(0, 0, 0);
+  }
+  to {
+    transform: scale(1.12) translate3d(-1.5%, 1%, 0);
+  }
+}
+
+@keyframes home-landing-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(1.25rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.home-landing-hero-copy {
+  animation: home-landing-hero-in 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.home-landing-hero-image {
+  animation: home-landing-drift 28s ease-in-out alternate infinite;
+  will-change: transform;
+}
+
+.home-landing-reveal {
+  animation: home-landing-reveal 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-landing-hero-copy,
+  .home-landing-hero-image,
+  .home-landing-reveal {
+    animation: none !important;
+  }
+
+  .home-landing-reveal,
+  .home-landing-hero-copy {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
 /* Mobile performance optimizations */
 @media (max-width: 768px) {
   /* Reduce motion for better mobile performance - but preserve essential modal animations */

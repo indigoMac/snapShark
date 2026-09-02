@@ -251,7 +251,7 @@ function LogoPackageTab() {
 
         <div className="flex flex-col sm:flex-row gap-4">
           <a
-            href="/"
+            href="/convert"
             className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors text-center"
           >
             Try Logo Package
@@ -374,7 +374,7 @@ function PrintPackageTab() {
 
         <div className="flex flex-col sm:flex-row gap-4">
           <a
-            href="/"
+            href="/convert"
             className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-medium transition-colors text-center"
           >
             Try Print Package
@@ -541,7 +541,7 @@ function QuickToolsTab() {
 
         <div className="flex flex-col sm:flex-row gap-4">
           <a
-            href="/"
+            href="/convert"
             className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-colors text-center"
           >
             Try Image Processing
@@ -708,7 +708,7 @@ function SampleImagesSection() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a
-              href="/"
+              href="/convert"
               className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
             >
               Start Processing Images
