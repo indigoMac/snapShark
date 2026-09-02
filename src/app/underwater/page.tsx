@@ -4,8 +4,11 @@ import { useState, useRef, useCallback, useMemo, useEffect, memo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
-import { Download, Upload, RotateCcw, Waves } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { BookImage, Download, Upload, RotateCcw, Waves } from 'lucide-react';
 import { downloadFile, createZip, downloadZip } from '@/lib/zip';
+import { compressImageForLogbook } from '@/lib/compress-image';
+import { storePendingPhoto } from '@/lib/logbook';
 
 interface ProcessedResult {
   original: string;
@@ -16,11 +19,13 @@ interface ProcessedResult {
 }
 
 export default function UnderwaterPage() {
+  const router = useRouter();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [results, setResults] = useState<ProcessedResult[]>([]);
   const [intensity, setIntensity] = useState([100]);
   const [error, setError] = useState<string | null>(null);
+  const [savingToLogbook, setSavingToLogbook] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const processingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [isMobile, setIsMobile] = useState(false);
@@ -712,6 +717,43 @@ export default function UnderwaterPage() {
     }
   }, [results]);
 
+  const handleSaveToLogbook = useCallback(
+    async (result?: ProcessedResult) => {
+      const targetResult = result || results[0];
+      if (!targetResult || targetResult.isVideo) {
+        setError('Only photos can be saved to the dive logbook right now.');
+        return;
+      }
+
+      setSavingToLogbook(true);
+      setError(null);
+      try {
+        let source: Blob;
+        if (targetResult.correctedBlob) {
+          source = targetResult.correctedBlob;
+        } else {
+          source = await fetch(targetResult.corrected).then((r) => r.blob());
+        }
+        const dataUrl = await compressImageForLogbook(source);
+        storePendingPhoto({
+          dataUrl,
+          filename: targetResult.filename,
+        });
+        router.push('/logbook?attach=1');
+      } catch (err) {
+        console.error('Save to logbook failed:', err);
+        setError(
+          err instanceof Error
+            ? err.message
+            : 'Could not prepare photo for the logbook'
+        );
+      } finally {
+        setSavingToLogbook(false);
+      }
+    },
+    [results, router]
+  );
+
   const handleDownloadAll = useCallback(async () => {
     if (results.length === 0) return;
 
@@ -1015,16 +1057,32 @@ export default function UnderwaterPage() {
                         </Button>
                       )}
                       
-                      {/* Single Download Button */}
+                      {/* Single Download / Logbook Buttons */}
                       {!isBatchMode && results.length > 0 && (
-                        <Button
-                          onClick={() => handleDownload()}
-                          size="sm"
-                          className="w-full sm:w-auto"
-                        >
-                          <Download className="w-4 h-4 mr-2" />
-                          Download
-                        </Button>
+                        <>
+                          <Button
+                            onClick={() => handleDownload()}
+                            size="sm"
+                            className="w-full sm:w-auto"
+                          >
+                            <Download className="w-4 h-4 mr-2" />
+                            Download
+                          </Button>
+                          {!results[0]?.isVideo && (
+                            <Button
+                              onClick={() => handleSaveToLogbook()}
+                              size="sm"
+                              variant="outline"
+                              disabled={savingToLogbook}
+                              className="w-full sm:w-auto"
+                            >
+                              <BookImage className="w-4 h-4 mr-2" />
+                              {savingToLogbook
+                                ? 'Preparing…'
+                                : 'Save to Logbook'}
+                            </Button>
+                          )}
+                        </>
                       )}
                       
                       {/* Batch Download Buttons */}
@@ -1121,14 +1179,31 @@ export default function UnderwaterPage() {
                                   <span className="text-blue-200 text-sm truncate">
                                     {result.filename.replace('_underwater_corrected.jpg', '')}
                                   </span>
-                                  <Button
-                                    onClick={() => handleDownload(result)}
-                                    size="sm"
-                                    variant="ghost"
-                                    className="h-6 px-2 text-xs"
-                                  >
-                                    <Download className="w-3 h-3" />
-                                  </Button>
+                                  <div className="flex items-center gap-1">
+                                    <Button
+                                      onClick={() => handleDownload(result)}
+                                      size="sm"
+                                      variant="ghost"
+                                      className="h-6 px-2 text-xs"
+                                      title="Download"
+                                    >
+                                      <Download className="w-3 h-3" />
+                                    </Button>
+                                    {!result.isVideo && (
+                                      <Button
+                                        onClick={() =>
+                                          handleSaveToLogbook(result)
+                                        }
+                                        size="sm"
+                                        variant="ghost"
+                                        className="h-6 px-2 text-xs"
+                                        disabled={savingToLogbook}
+                                        title="Save to Logbook"
+                                      >
+                                        <BookImage className="w-3 h-3" />
+                                      </Button>
+                                    )}
+                                  </div>
                                 </div>
                                 <div className="grid grid-cols-2 gap-2">
                                   <div className="relative rounded-lg overflow-hidden bg-slate-700">

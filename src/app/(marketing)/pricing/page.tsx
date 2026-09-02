@@ -285,9 +285,12 @@ export default function PricingPage() {
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">
-                Absolutely! All image processing happens directly in your
-                browser. No files are ever uploaded to our servers. Your images
-                never leave your device.
+                All image processing happens directly in your browser, so the
+                files you convert, resize, or correct never leave your device.
+                The dive Logbook is the one exception: anything you choose to
+                save there, including photos you attach, is stored on your
+                account so it syncs across devices. You can export or delete it
+                whenever you like.
               </p>
             </CardContent>
           </Card>

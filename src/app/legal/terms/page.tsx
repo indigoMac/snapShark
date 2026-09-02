@@ -13,6 +13,7 @@ import {
   Users,
   Gavel,
 } from 'lucide-react';
+import { LEGAL } from '@/lib/legal';
 
 export default function TermsOfServicePage() {
   return (
@@ -30,7 +31,7 @@ export default function TermsOfServicePage() {
             and mutual respect.
           </p>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-4">
-            Last updated: {new Date().toLocaleDateString()}
+            Last updated: {LEGAL.termsLastUpdated}
           </p>
         </div>
 
@@ -53,7 +54,8 @@ export default function TermsOfServicePage() {
               <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
                 <p className="text-sm text-blue-800 dark:text-blue-300">
                   <strong>Key Point:</strong> These terms apply to all users,
-                  whether using free or paid features.
+                  whether using free or paid features. You must be at least{' '}
+                  {LEGAL.minimumAge} years old to create an account.
                 </p>
               </div>
             </CardContent>
@@ -79,14 +81,29 @@ export default function TermsOfServicePage() {
                     <li>• AI-powered background removal</li>
                     <li>• Underwater photo color correction</li>
                     <li>• Print package generation with multiple sizes</li>
+                    <li>
+                      • A personal dive Logbook that saves places, dives, notes,
+                      and photos to your account
+                    </li>
                   </ul>
                 </div>
                 <div>
-                  <h3 className="font-semibold">Privacy-First Approach</h3>
+                  <h3 className="font-semibold">
+                    Image Tools vs. the Logbook
+                  </h3>
                   <p className="text-sm text-muted-foreground">
-                    All image processing occurs locally in your browser. Your
-                    images never leave your device and are not stored on our
-                    servers.
+                    Image processing happens locally in your browser, and those
+                    images are never uploaded to us. The Logbook works
+                    differently: anything you choose to save there, including
+                    photos you attach, is stored on our servers so it is
+                    available across your devices. Our{' '}
+                    <a
+                      href="/legal/privacy"
+                      className="text-blue-600 hover:underline"
+                    >
+                      Privacy Policy
+                    </a>{' '}
+                    explains exactly what is stored and for how long.
                   </p>
                 </div>
               </div>
@@ -216,6 +233,19 @@ export default function TermsOfServicePage() {
                     store your payment information.
                   </p>
                 </div>
+                <div>
+                  <h3 className="font-semibold">
+                    Consumer Cancellation Rights (UK &amp; EU)
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    If you are a consumer in the UK or EEA you normally have 14
+                    days to cancel a new subscription and receive a refund. By
+                    starting to use Pro features straight away you ask us to
+                    begin the service immediately, and you may be charged for
+                    what you have used up to the point you cancel. To cancel
+                    within this period, email {LEGAL.contactEmail}.
+                  </p>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -229,10 +259,24 @@ export default function TermsOfServicePage() {
               <div className="space-y-3">
                 <div>
                   <h3 className="font-semibold">Your Content</h3>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    You keep all rights to your images and to everything you
+                    save in your Logbook. Images you run through the processing
+                    tools stay on your device and are never sent to us.
+                  </p>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    For Logbook content only, you give us a limited licence to
+                    store, copy, and display that content back to you so we can
+                    operate the feature. That licence exists purely to run the
+                    service: we do not publish your entries, sell them, or use
+                    them to train models. It ends when you delete the content or
+                    your account.
+                  </p>
                   <p className="text-sm text-muted-foreground">
-                    You retain all rights to images you process through
-                    SnapShark. Since processing happens locally, we never access
-                    or store your images.
+                    You are responsible for what you upload. Only add photos you
+                    have the right to use, and be careful about uploading images
+                    or details that identify other people without their
+                    agreement.
                   </p>
                 </div>
                 <div>
@@ -280,11 +324,30 @@ export default function TermsOfServicePage() {
                   </p>
                 </div>
                 <div>
+                  <h3 className="font-semibold">Keep Your Own Copies</h3>
+                  <p className="text-sm text-muted-foreground">
+                    The Logbook is a convenience, not a backup service or an
+                    official dive record. Please keep your own copies of photos
+                    and any dive information that matters to you, and do not
+                    rely on it for dive planning or safety decisions.
+                  </p>
+                </div>
+                <div>
                   <h3 className="font-semibold">Limitation of Liability</h3>
                   <p className="text-sm text-muted-foreground">
-                    Our liability is limited to the amount you paid for the
-                    service in the past 12 months. We are not liable for
-                    indirect, incidental, or consequential damages.
+                    Except as set out below, our liability is limited to the
+                    amount you paid for the service in the past 12 months, and
+                    we are not liable for indirect, incidental, or consequential
+                    damages.
+                  </p>
+                </div>
+                <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+                  <p className="text-sm text-blue-800 dark:text-blue-300">
+                    Nothing in these terms limits liability for death or
+                    personal injury caused by negligence, for fraud, or for
+                    anything else that cannot be limited by law. If you are a
+                    consumer, you keep all rights given to you by the consumer
+                    law of your home country, and nothing here overrides them.
                   </p>
                 </div>
               </div>
@@ -317,9 +380,13 @@ export default function TermsOfServicePage() {
                 <div>
                   <h3 className="font-semibold">Effect of Termination</h3>
                   <p className="text-sm text-muted-foreground">
-                    Upon termination, your access to Pro features will end.
-                    Since we don't store your images or processing history, no
-                    content deletion is necessary.
+                    When you close your account, your access to Pro features
+                    ends and your Logbook content is deleted, including photos
+                    held in our storage. You can also export or delete your
+                    Logbook at any time from your account page without closing
+                    your account. We keep billing records where the law requires
+                    it. Export anything you want to keep before you delete it,
+                    because deletion cannot be undone.
                   </p>
                 </div>
               </div>
@@ -364,18 +431,23 @@ export default function TermsOfServicePage() {
                   <h3 className="font-semibold mb-2">Questions About Terms?</h3>
                   <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-lg">
                     <p className="text-sm">
-                      <strong>Email:</strong> snapshark2025@gmail.com
+                      <strong>Operated by:</strong> {LEGAL.controller}
                       <br />
-                      <strong>Response Time:</strong> Within 48 hours
+                      <strong>Email:</strong> {LEGAL.contactEmail}
+                      <br />
+                      <strong>Response Time:</strong> {LEGAL.responseTime}
                     </p>
                   </div>
                 </div>
                 <div>
                   <h3 className="font-semibold mb-2">Governing Law</h3>
                   <p className="text-sm text-muted-foreground">
-                    These terms are governed by the laws of the jurisdiction
-                    where SnapShark operates. Any disputes will be resolved
-                    through binding arbitration.
+                    These terms are governed by the law of{' '}
+                    {LEGAL.governingLaw}, and the courts of{' '}
+                    {LEGAL.governingLaw} have jurisdiction. If you are a
+                    consumer living elsewhere, you keep the protection of the
+                    mandatory consumer laws of your country of residence and may
+                    bring a claim in your local courts.
                   </p>
                 </div>
               </div>

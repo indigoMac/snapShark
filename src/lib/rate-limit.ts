@@ -149,4 +149,24 @@ export const RATE_LIMITS = {
     maxRequests: 20,
     windowMs: 15 * 60 * 1000, // 15 minutes
   }),
+
+  // Logbook reads and edits. Generous, since panning the map and rendering a
+  // page of photos both make several requests.
+  LOGBOOK: createRateLimit({
+    maxRequests: 300,
+    windowMs: 15 * 60 * 1000, // 15 minutes
+  }),
+
+  // Photo uploads, which cost storage and bandwidth.
+  UPLOAD: createRateLimit({
+    maxRequests: 60,
+    windowMs: 15 * 60 * 1000, // 15 minutes
+  }),
+
+  // Unauthenticated proxy to OpenStreetMap, whose fair-use policy we have to
+  // respect on behalf of every visitor.
+  GEOCODE: createRateLimit({
+    maxRequests: 100,
+    windowMs: 15 * 60 * 1000, // 15 minutes
+  }),
 } as const;
