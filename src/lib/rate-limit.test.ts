@@ -41,4 +41,24 @@ describe('getRateLimitClientIdentifier', () => {
       )
     ).toBe('192.0.2.9');
   });
+
+  it('treats an empty first Vercel hop as missing', () => {
+    const req = requestWith({
+      'x-vercel-forwarded-for': '  , 203.0.113.10',
+      'x-real-ip': '192.0.2.9',
+    });
+    expect(getRateLimitClientIdentifier(req)).toBe('192.0.2.9');
+  });
+
+  it('ignores an empty X-Forwarded-For chain and uses req.ip', () => {
+    const req = requestWith({
+      'x-forwarded-for': ' , , ',
+    });
+    Object.defineProperty(req, 'ip', { value: '198.51.100.20' });
+    expect(getRateLimitClientIdentifier(req)).toBe('198.51.100.20');
+  });
+
+  it('falls back to unknown-ip when no client address is present', () => {
+    expect(getRateLimitClientIdentifier(requestWith({}))).toBe('unknown-ip');
+  });
 });
