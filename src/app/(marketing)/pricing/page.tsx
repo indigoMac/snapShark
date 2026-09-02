@@ -33,63 +33,63 @@ export default function PricingPage() {
   };
 
   return (
-    <div className="space-y-12">
-      {/* Hero Section */}
-      <div className="text-center space-y-4">
-        <h1 className="text-4xl font-bold tracking-tight">
-          Simple, Transparent Pricing
+    <div className="mx-auto max-w-5xl space-y-12 py-6 sm:py-10">
+      <div className="mx-auto max-w-2xl text-center">
+        <p className="brand-eyebrow">Pricing</p>
+        <h1 className="brand-title mt-3 text-4xl sm:text-5xl">
+          Free for diving. Pro when you need more.
         </h1>
-        <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-          Start free and upgrade when you need more power. No hidden fees,
-          cancel anytime.
+        <p className="brand-lede mt-4">
+          The logbook and colour fix stay free. Upgrade for batch tools and
+          advanced formats — cancel anytime.
         </p>
       </div>
 
       {/* Pricing Cards */}
-      <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+      <div className="mx-auto grid max-w-4xl gap-6 md:grid-cols-2">
         {/* Free Plan */}
-        <Card className="relative">
+        <Card className="brand-panel relative border-[rgb(126_200_192_/_0.18)] bg-[rgb(6_38_47_/_0.55)]">
           <CardHeader>
             <div className="flex items-center gap-2">
-              <Shield className="w-5 h-5 text-green-500" />
-              <CardTitle>Free</CardTitle>
+              <Shield className="h-5 w-5 text-[#7ec8c0]" />
+              <CardTitle className="text-[#e8f4f1]">Free</CardTitle>
             </div>
-            <CardDescription>
-              Perfect for personal use and trying out the app
+            <CardDescription className="text-[#9bb8b3]">
+              Logbook, colour fix, and core photo tools
             </CardDescription>
             <div className="pt-4">
-              <span className="text-3xl font-bold">£0</span>
-              <span className="text-muted-foreground">/forever</span>
+              <span className="brand-display text-3xl text-[#e8f4f1]">£0</span>
+              <span className="text-[#7a9a95]">/forever</span>
             </div>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-3">
               <div className="flex items-center gap-2">
-                <Check className="w-4 h-4 text-green-500" />
+                <Check className="h-4 w-4 text-[#7ec8c0]" />
                 <span className="text-sm">Single image processing</span>
               </div>
               <div className="flex items-center gap-2">
-                <Check className="w-4 h-4 text-green-500" />
+                <Check className="h-4 w-4 text-[#7ec8c0]" />
                 <span className="text-sm">Basic formats (JPG, PNG, WebP)</span>
               </div>
               <div className="flex items-center gap-2">
-                <Check className="w-4 h-4 text-green-500" />
+                <Check className="h-4 w-4 text-[#7ec8c0]" />
                 <span className="text-sm">Resize & scale images</span>
               </div>
               <div className="flex items-center gap-2">
-                <Check className="w-4 h-4 text-green-500" />
+                <Check className="h-4 w-4 text-[#7ec8c0]" />
                 <span className="text-sm">Quality control</span>
               </div>
               <div className="flex items-center gap-2">
-                <Check className="w-4 h-4 text-green-500" />
+                <Check className="h-4 w-4 text-[#7ec8c0]" />
                 <span className="text-sm">100% privacy (no uploads)</span>
               </div>
               <div className="flex items-center gap-2">
-                <Check className="w-4 h-4 text-green-500" />
+                <Check className="h-4 w-4 text-[#7ec8c0]" />
                 <span className="text-sm">PWA installable</span>
               </div>
               <div className="flex items-center gap-2">
-                <Check className="w-4 h-4 text-green-500" />
+                <Check className="h-4 w-4 text-[#7ec8c0]" />
                 <span className="text-sm">One-time trial (3 files batch)</span>
               </div>
             </div>
@@ -101,32 +101,35 @@ export default function PricingPage() {
         </Card>
 
         {/* Pro Plan */}
-        <Card className="relative border-primary shadow-lg">
+        <Card className="relative border-[rgb(126_200_192_/_0.35)] bg-[rgb(6_38_47_/_0.75)] shadow-none">
           <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-            <Badge className="bg-primary text-primary-foreground">
-              <Crown className="w-3 h-3 mr-1" />
+            <Badge className="rounded-none bg-[#7ec8c0] text-[#06262f] hover:bg-[#7ec8c0]">
+              <Crown className="mr-1 h-3 w-3" />
               Most Popular
             </Badge>
           </div>
 
           <CardHeader>
             <div className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-primary" />
-              <CardTitle>Pro</CardTitle>
+              <Sparkles className="h-5 w-5 text-[#7ec8c0]" />
+              <CardTitle className="text-[#e8f4f1]">Pro</CardTitle>
             </div>
-            <CardDescription>
-              For professionals and power users who need advanced features
+            <CardDescription className="text-[#9bb8b3]">
+              Batch processing and advanced formats when you need them
             </CardDescription>
-            <div className="pt-4 space-y-2">
+            <div className="space-y-2 pt-4">
               <div className="flex items-baseline gap-1">
-                <span className="text-3xl font-bold">£3</span>
-                <span className="text-muted-foreground">/month</span>
+                <span className="brand-display text-3xl text-[#e8f4f1]">£3</span>
+                <span className="text-[#7a9a95]">/month</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-lg font-semibold text-green-600">
+                <span className="text-lg font-semibold text-[#7ec8c0]">
                   £15/year
                 </span>
-                <Badge variant="secondary" className="text-xs">
+                <Badge
+                  variant="secondary"
+                  className="rounded-none text-xs"
+                >
                   Save 58%
                 </Badge>
               </div>
@@ -139,35 +142,35 @@ export default function PricingPage() {
               </div>
 
               <div className="flex items-center gap-2">
-                <Check className="w-4 h-4 text-primary" />
+                <Check className="h-4 w-4 text-[#7ec8c0]" />
                 <span className="text-sm">Batch process up to 50 images</span>
               </div>
               <div className="flex items-center gap-2">
-                <Check className="w-4 h-4 text-primary" />
+                <Check className="h-4 w-4 text-[#7ec8c0]" />
                 <span className="text-sm">
                   Smart print packages (auto-generates 7-10+ sizes)
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                <Check className="w-4 h-4 text-primary" />
+                <Check className="h-4 w-4 text-[#7ec8c0]" />
                 <span className="text-sm">
                   Advanced formats (AVIF, HEIC/HEIF)
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                <Check className="w-4 h-4 text-primary" />
+                <Check className="h-4 w-4 text-[#7ec8c0]" />
                 <span className="text-sm">ZIP download for batches</span>
               </div>
               <div className="flex items-center gap-2">
-                <Check className="w-4 h-4 text-primary" />
+                <Check className="h-4 w-4 text-[#7ec8c0]" />
                 <span className="text-sm">Metadata stripping (privacy)</span>
               </div>
               <div className="flex items-center gap-2">
-                <Check className="w-4 h-4 text-primary" />
+                <Check className="h-4 w-4 text-[#7ec8c0]" />
                 <span className="text-sm">Custom preset saving</span>
               </div>
               <div className="flex items-center gap-2">
-                <Check className="w-4 h-4 text-primary" />
+                <Check className="h-4 w-4 text-[#7ec8c0]" />
                 <span className="text-sm">Priority support</span>
               </div>
             </div>
@@ -175,16 +178,16 @@ export default function PricingPage() {
             <div className="space-y-2">
               <Button
                 onClick={() => handleUpgrade('yearly')}
-                className="w-full"
+                className="w-full rounded-none bg-[#e8f4f1] text-[#06262f] hover:bg-white"
                 disabled={isPro}
               >
-                <Crown className="w-4 h-4 mr-2" />
+                <Crown className="mr-2 h-4 w-4" />
                 {isPro ? 'Already Pro' : 'Get Pro - £15/year'}
               </Button>
               <Button
                 onClick={() => handleUpgrade('monthly')}
                 variant="outline"
-                className="w-full"
+                className="w-full rounded-none border-[rgb(126_200_192_/_0.35)] text-[#e8f4f1] hover:bg-[rgb(126_200_192_/_0.08)]"
                 size="sm"
                 disabled={isPro}
               >
@@ -197,10 +200,12 @@ export default function PricingPage() {
 
       {/* Features Comparison */}
       <div className="space-y-6">
-        <h2 className="text-2xl font-bold text-center">Feature Comparison</h2>
+        <h2 className="brand-display text-center text-2xl tracking-tight text-[#e8f4f1]">
+          Feature Comparison
+        </h2>
 
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse">
+        <div className="overflow-x-auto [-webkit-overflow-scrolling:touch]">
+          <table className="w-full min-w-[32rem] border-collapse">
             <thead>
               <tr className="border-b">
                 <th className="text-left p-4">Feature</th>
@@ -212,10 +217,10 @@ export default function PricingPage() {
               <tr className="border-b">
                 <td className="p-4">Single image processing</td>
                 <td className="text-center p-4">
-                  <Check className="w-4 h-4 text-green-500 mx-auto" />
+                  <Check className="mx-auto h-4 w-4 text-[#7ec8c0]" />
                 </td>
                 <td className="text-center p-4">
-                  <Check className="w-4 h-4 text-green-500 mx-auto" />
+                  <Check className="mx-auto h-4 w-4 text-[#7ec8c0]" />
                 </td>
               </tr>
               <tr className="border-b">
@@ -224,7 +229,7 @@ export default function PricingPage() {
                   Trial only
                 </td>
                 <td className="text-center p-4">
-                  <Check className="w-4 h-4 text-green-500 mx-auto" />
+                  <Check className="mx-auto h-4 w-4 text-[#7ec8c0]" />
                 </td>
               </tr>
               <tr className="border-b">
@@ -250,21 +255,21 @@ export default function PricingPage() {
                   Limited
                 </td>
                 <td className="text-center p-4">
-                  <Check className="w-4 h-4 text-green-500 mx-auto" />
+                  <Check className="mx-auto h-4 w-4 text-[#7ec8c0]" />
                 </td>
               </tr>
               <tr className="border-b">
                 <td className="p-4">ZIP download</td>
                 <td className="text-center p-4 text-muted-foreground">No</td>
                 <td className="text-center p-4">
-                  <Check className="w-4 h-4 text-green-500 mx-auto" />
+                  <Check className="mx-auto h-4 w-4 text-[#7ec8c0]" />
                 </td>
               </tr>
               <tr className="border-b">
                 <td className="p-4">Metadata stripping</td>
                 <td className="text-center p-4 text-muted-foreground">No</td>
                 <td className="text-center p-4">
-                  <Check className="w-4 h-4 text-green-500 mx-auto" />
+                  <Check className="mx-auto h-4 w-4 text-[#7ec8c0]" />
                 </td>
               </tr>
             </tbody>
@@ -273,8 +278,8 @@ export default function PricingPage() {
       </div>
 
       {/* FAQ */}
-      <div className="space-y-6 max-w-2xl mx-auto">
-        <h2 className="text-2xl font-bold text-center">
+      <div className="mx-auto max-w-2xl space-y-6">
+        <h2 className="brand-display text-center text-2xl tracking-tight text-[#e8f4f1]">
           Frequently Asked Questions
         </h2>
 

@@ -1,11 +1,11 @@
 {
-  "name": "SnapShark - Image Converter",
+  "name": "SnapShark — Dive logbook",
   "short_name": "SnapShark",
-  "description": "Privacy-first image converter and resizer",
+  "description": "Dive logbook and underwater photo tools for divers and snorkellers",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0f172a",
-  "theme_color": "#0f172a",
+  "background_color": "#031820",
+  "theme_color": "#031820",
   "orientation": "portrait-primary",
   "icons": [
     {
@@ -33,13 +33,20 @@
       "purpose": "any"
     }
   ],
-  "categories": ["utilities", "productivity", "photo"],
+  "categories": ["lifestyle", "photo", "utilities"],
   "shortcuts": [
     {
-      "name": "Convert Images",
-      "short_name": "Convert",
-      "description": "Convert and resize images",
-      "url": "/",
+      "name": "Open Logbook",
+      "short_name": "Logbook",
+      "description": "Map and log your dives",
+      "url": "/logbook",
+      "icons": [{ "src": "/snapshark-icon-256.png", "sizes": "256x256" }]
+    },
+    {
+      "name": "Colour Fix",
+      "short_name": "Colour Fix",
+      "description": "Fix underwater photo colour",
+      "url": "/underwater",
       "icons": [{ "src": "/snapshark-icon-256.png", "sizes": "256x256" }]
     }
   ]

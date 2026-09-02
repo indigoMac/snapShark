@@ -1,29 +1,29 @@
 import type { Metadata } from 'next';
 import { ExamplesTabbed } from '@/components/ExamplesTabbed';
+import { PageHeader } from '@/components/PageHeader';
 
 export const metadata: Metadata = {
-  title: 'Examples & Tutorials - SnapShark',
+  title: 'Examples',
   description:
-    'Learn how to use SnapShark with step-by-step tutorials and real examples. See how to create logo packages, process underwater photos, and more.',
+    'See SnapShark in action: underwater colour correction, dive logbook flow, and browser photo tools for divers and snorkellers.',
   keywords: [
-    'snapshark examples',
-    'image processing tutorials',
-    'logo package tutorial',
+    'dive logbook examples',
     'underwater photo correction',
-    'image resize guide',
+    'scuba diving log',
+    'snapshark examples',
   ],
   openGraph: {
-    title: 'Examples & Tutorials - SnapShark',
+    title: 'Examples | SnapShark',
     description:
-      'Learn how to use SnapShark with step-by-step tutorials and real examples.',
+      'Colour fix, logbook flow, and photo tools — how SnapShark works for divers.',
     type: 'website',
     url: 'https://www.snap-shark.com/examples',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Examples & Tutorials - SnapShark',
+    title: 'Examples | SnapShark',
     description:
-      'Learn how to use SnapShark with step-by-step tutorials and real examples.',
+      'Colour fix, logbook flow, and photo tools — how SnapShark works for divers.',
   },
   alternates: {
     canonical: 'https://www.snap-shark.com/examples',
@@ -32,21 +32,14 @@ export const metadata: Metadata = {
 
 export default function ExamplesPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-      <div className="container mx-auto px-4 py-12 max-w-6xl">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold text-slate-900 dark:text-white mb-4">
-            Examples & Tutorials
-          </h1>
-          <p className="text-xl text-slate-600 dark:text-slate-300 max-w-2xl mx-auto">
-            Learn how to use SnapShark's tools with real examples and step-by-step guides
-          </p>
-        </div>
+    <div className="mx-auto max-w-5xl py-6 sm:py-10">
+      <PageHeader
+        eyebrow="Examples"
+        title="How SnapShark fits a dive trip"
+        description="Colour the photos, pin the places, keep the details — here is what that looks like in practice."
+      />
 
-        {/* Tabbed Interface */}
-        <ExamplesTabbed />
-      </div>
+      <ExamplesTabbed />
     </div>
   );
 }

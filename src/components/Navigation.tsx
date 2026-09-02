@@ -15,6 +15,8 @@ import {
 import { useEffect, useState } from 'react';
 import { usePaywall } from '@/hooks/usePaywall';
 
+const navLinkClass = 'brand-nav-link';
+
 export function Navigation() {
   const { isSignedIn, user } = useUser();
   const { signOut } = useClerk();
@@ -22,12 +24,13 @@ export function Navigation() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [toolsDropdownOpen, setToolsDropdownOpen] = useState(false);
 
-  // Close mobile menu when clicking outside or on links (but not on UserButton)
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Element;
-      // Don't close if clicking on UserButton or its dropdown
-      if (target.closest('[class*="cl-userButton"]') || target.closest('[class*="cl-popover"]')) {
+      if (
+        target.closest('[class*="cl-userButton"]') ||
+        target.closest('[class*="cl-popover"]')
+      ) {
         return;
       }
       setMobileMenuOpen(false);
@@ -39,91 +42,89 @@ export function Navigation() {
     }
   }, [mobileMenuOpen, toolsDropdownOpen]);
 
-  // Prevent body scroll when mobile menu is open
   useEffect(() => {
     if (mobileMenuOpen) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'unset';
     }
-
-    // Cleanup on unmount
     return () => {
       document.body.style.overflow = 'unset';
     };
   }, [mobileMenuOpen]);
 
   return (
-    <nav className="relative z-30 border-b border-blue-200/50 dark:border-blue-800/50 bg-white/95 dark:bg-slate-900/95 backdrop-blur supports-[backdrop-filter]:bg-white/60 dark:supports-[backdrop-filter]:bg-slate-900/60">
-      <div className="container mx-auto px-4">
-        <div className="flex h-16 items-center justify-between">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-3">
+    <nav className="brand-nav relative z-30">
+      <div className="container mx-auto max-w-full px-4">
+        <div className="flex h-14 items-center justify-between sm:h-16">
+          <Link href="/" className="flex min-w-0 items-center gap-2 sm:gap-3">
             <LogoIcon size="2xl" priority />
-            <span className="font-bold text-xl sm:text-2xl lg:text-3xl">
-              <span className="text-slate-800 dark:text-slate-100">Snap</span>
-              <span className="bg-gradient-to-r from-blue-600 to-blue-700 dark:from-blue-400 dark:to-blue-500 bg-clip-text text-transparent">
-                Shark
-              </span>
+            <span className="brand-display truncate text-xl tracking-tight sm:text-2xl">
+              <span className="text-[#e8f4f1]">Snap</span>
+              <span className="text-[#7ec8c0]">Shark</span>
             </span>
           </Link>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-4">
-            {/* Tools Dropdown */}
+          <div className="hidden items-center gap-5 md:flex">
+            <Link href="/logbook" className={navLinkClass}>
+              Logbook
+            </Link>
+            <Link href="/underwater" className={navLinkClass}>
+              Colour Fix
+            </Link>
+
             <div className="relative">
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   setToolsDropdownOpen(!toolsDropdownOpen);
                 }}
-                className="flex items-center gap-1 text-sm font-medium text-slate-600 hover:text-blue-600 dark:text-slate-300 dark:hover:text-blue-400 transition-colors"
+                className={`flex items-center gap-1 ${navLinkClass}`}
               >
                 Tools
-                <ChevronDown className="w-4 h-4" />
+                <ChevronDown className="h-4 w-4" />
               </button>
 
-              {/* Tools Dropdown Menu */}
               {toolsDropdownOpen && (
-                <div className="absolute top-full left-0 mt-2 w-56 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg z-40">
+                <div className="absolute left-0 top-full z-40 mt-2 w-60 border border-[rgb(126_200_192_/_0.2)] bg-[#06262f] shadow-xl">
                   <div className="py-2">
-                    <Link
-                      href="/"
-                      onClick={() => setToolsDropdownOpen(false)}
-                      className="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:text-blue-600 hover:bg-blue-50 dark:text-slate-300 dark:hover:text-blue-400 dark:hover:bg-blue-950/50 transition-colors"
-                    >
-                      <Zap className="w-4 h-4 text-blue-600" />
-                      <div>
-                        <div className="font-medium">Image Processor</div>
-                        <div className="text-xs text-slate-500 dark:text-slate-400">
-                          Resize, convert & optimize
-                        </div>
-                      </div>
-                    </Link>
-                    <div className="h-px bg-slate-200 dark:bg-slate-700 mx-2 my-1"></div>
-                    <Link
-                      href="/background-removal"
-                      onClick={() => setToolsDropdownOpen(false)}
-                      className="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:text-blue-600 hover:bg-blue-50 dark:text-slate-300 dark:hover:text-blue-400 dark:hover:bg-blue-950/50 transition-colors"
-                    >
-                      <Scissors className="w-4 h-4 text-purple-600" />
-                      <div>
-                        <div className="font-medium">Background Removal</div>
-                        <div className="text-xs text-slate-500 dark:text-slate-400">
-                          AI-powered precision
-                        </div>
-                      </div>
-                    </Link>
                     <Link
                       href="/underwater"
                       onClick={() => setToolsDropdownOpen(false)}
-                      className="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:text-blue-600 hover:bg-blue-50 dark:text-slate-300 dark:hover:text-blue-400 dark:hover:bg-blue-950/50 transition-colors"
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-[#c5ddd8] transition-colors hover:bg-[rgb(126_200_192_/_0.08)] hover:text-[#e8f4f1]"
                     >
-                      <Waves className="w-4 h-4 text-cyan-600" />
+                      <Waves className="h-4 w-4 text-[#7ec8c0]" />
                       <div>
-                        <div className="font-medium">Underwater Color Fix</div>
-                        <div className="text-xs text-slate-500 dark:text-slate-400">
+                        <div className="font-medium">Underwater Colour Fix</div>
+                        <div className="text-xs text-[#7a9a95]">
                           Fix green/blue tints
+                        </div>
+                      </div>
+                    </Link>
+                    <Link
+                      href="/background-removal"
+                      onClick={() => setToolsDropdownOpen(false)}
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-[#c5ddd8] transition-colors hover:bg-[rgb(126_200_192_/_0.08)] hover:text-[#e8f4f1]"
+                    >
+                      <Scissors className="h-4 w-4 text-[#7ec8c0]" />
+                      <div>
+                        <div className="font-medium">Background Removal</div>
+                        <div className="text-xs text-[#7a9a95]">
+                          Clean cutouts in-browser
+                        </div>
+                      </div>
+                    </Link>
+                    <div className="mx-3 my-1 h-px bg-[rgb(126_200_192_/_0.15)]" />
+                    <Link
+                      href="/convert"
+                      onClick={() => setToolsDropdownOpen(false)}
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-[#c5ddd8] transition-colors hover:bg-[rgb(126_200_192_/_0.08)] hover:text-[#e8f4f1]"
+                    >
+                      <Zap className="h-4 w-4 text-[#7ec8c0]" />
+                      <div>
+                        <div className="font-medium">Image Processor</div>
+                        <div className="text-xs text-[#7a9a95]">
+                          Resize, convert & optimize
                         </div>
                       </div>
                     </Link>
@@ -132,48 +133,29 @@ export function Navigation() {
               )}
             </div>
 
-            <Link
-              href="/examples"
-              className="text-sm font-medium text-slate-600 hover:text-blue-600 dark:text-slate-300 dark:hover:text-blue-400 transition-colors"
-            >
+            <Link href="/examples" className={navLinkClass}>
               Examples
             </Link>
-            <Link
-              href="/about"
-              className="text-sm font-medium text-slate-600 hover:text-blue-600 dark:text-slate-300 dark:hover:text-blue-400 transition-colors"
-            >
+            <Link href="/about" className={navLinkClass}>
               About
             </Link>
-            <Link
-              href="/logbook"
-              className="text-sm font-medium text-slate-600 hover:text-blue-600 dark:text-slate-300 dark:hover:text-blue-400 transition-colors"
-            >
-              Logbook
-            </Link>
 
-            {/* Conditional Pricing - Hide for Pro users */}
             {!isPro && (
-              <Link
-                href="/pricing"
-                className="text-sm font-medium text-slate-600 hover:text-blue-600 dark:text-slate-300 dark:hover:text-blue-400 transition-colors"
-              >
+              <Link href="/pricing" className={navLinkClass}>
                 Pricing
               </Link>
             )}
 
             {isSignedIn ? (
               <>
-                <Link
-                  href="/account"
-                  className="text-sm font-medium text-slate-600 hover:text-blue-600 dark:text-slate-300 dark:hover:text-blue-400 transition-colors"
-                >
+                <Link href="/account" className={navLinkClass}>
                   Account
                 </Link>
                 <UserButton
                   afterSignOutUrl="/"
                   appearance={{
                     elements: {
-                      avatarBox: 'w-8 h-8',
+                      avatarBox: 'h-8 w-8',
                     },
                   }}
                 />
@@ -181,22 +163,16 @@ export function Navigation() {
             ) : (
               <>
                 <SignInButton mode="modal">
-                  <button className="text-sm font-medium text-slate-600 hover:text-blue-600 dark:text-slate-300 dark:hover:text-blue-400 transition-colors">
-                    Sign In
-                  </button>
+                  <button className={navLinkClass}>Sign In</button>
                 </SignInButton>
                 <SignInButton mode="modal">
-                  <button className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 shadow-lg hover:shadow-xl">
-                    Get Started
-                  </button>
+                  <button className="brand-nav-cta">Get Started</button>
                 </SignInButton>
               </>
             )}
           </div>
 
-          {/* Mobile Hamburger Button */}
-          <div className="md:hidden flex items-center gap-2">
-            {/* Hamburger Menu Button */}
+          <div className="flex items-center gap-2 md:hidden">
             <Button
               variant="ghost"
               size="icon"
@@ -204,7 +180,7 @@ export function Navigation() {
                 e.stopPropagation();
                 setMobileMenuOpen(!mobileMenuOpen);
               }}
-              className="h-10 w-10 text-slate-600 hover:text-blue-600 hover:bg-blue-50 dark:text-slate-300 dark:hover:text-blue-400 dark:hover:bg-blue-950/50"
+              className="h-10 w-10 text-[#9bb8b3] hover:bg-[rgb(126_200_192_/_0.1)] hover:text-[#e8f4f1]"
               aria-label="Toggle menu"
             >
               {mobileMenuOpen ? (
@@ -216,80 +192,68 @@ export function Navigation() {
           </div>
         </div>
 
-        {/* Mobile Menu Panel */}
         {mobileMenuOpen && (
           <>
-            {/* Backdrop */}
             <div
-              className="md:hidden fixed inset-0 bg-black/20 z-40"
+              className="fixed inset-0 z-40 bg-black/40 md:hidden"
               onClick={() => setMobileMenuOpen(false)}
             />
-            {/* Menu Content */}
-            <div className="md:hidden fixed top-16 left-0 right-0 bg-white dark:bg-slate-900 border-b border-blue-200/50 dark:border-blue-800/50 shadow-xl z-40 max-h-[calc(100vh-4rem)] overflow-y-auto">
+            <div className="absolute left-0 right-0 top-full z-40 max-h-[min(32rem,calc(100dvh-4.5rem))] overflow-y-auto overscroll-contain border-b border-[rgb(126_200_192_/_0.14)] bg-[#031820] pb-[env(safe-area-inset-bottom)] md:hidden">
               <div className="px-4 py-4">
-                <div className="flex flex-col space-y-2">
-                  {/* Tools Section */}
-                  <div className="pb-2 border-b border-slate-200 dark:border-slate-700">
-                    <h3 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider px-4 pb-2">
+                <div className="flex flex-col space-y-1">
+                  {[
+                    { href: '/logbook', label: 'Logbook' },
+                    { href: '/underwater', label: 'Colour Fix' },
+                    { href: '/examples', label: 'Examples' },
+                    { href: '/about', label: 'About' },
+                  ].map((item) => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex h-12 items-center px-4 text-base font-medium text-[#e8f4f1] transition-colors hover:bg-[rgb(126_200_192_/_0.08)]"
+                    >
+                      {item.label}
+                    </Link>
+                  ))}
+
+                  <div className="border-b border-[rgb(126_200_192_/_0.14)] pb-2 pt-2">
+                    <h3 className="px-4 pb-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#7ec8c0]">
                       Tools
                     </h3>
                     <Link
-                      href="/"
+                      href="/underwater"
                       onClick={() => setMobileMenuOpen(false)}
-                      className="flex items-center gap-3 h-12 px-4 text-base font-medium text-slate-800 hover:text-blue-600 hover:bg-blue-50 dark:text-slate-200 dark:hover:text-blue-400 dark:hover:bg-blue-950/50 rounded-lg transition-colors border border-transparent hover:border-blue-200 dark:hover:border-blue-800"
+                      className="flex h-12 items-center gap-3 px-4 text-base font-medium text-[#e8f4f1] hover:bg-[rgb(126_200_192_/_0.08)]"
                     >
-                      <Zap className="w-5 h-5 text-blue-600" />
-                      Image Processor
+                      <Waves className="h-5 w-5 text-[#7ec8c0]" />
+                      Underwater Colour Fix
                     </Link>
                     <Link
                       href="/background-removal"
                       onClick={() => setMobileMenuOpen(false)}
-                      className="flex items-center gap-3 h-12 px-4 text-base font-medium text-slate-800 hover:text-blue-600 hover:bg-blue-50 dark:text-slate-200 dark:hover:text-blue-400 dark:hover:bg-blue-950/50 rounded-lg transition-colors border border-transparent hover:border-blue-200 dark:hover:border-blue-800"
+                      className="flex h-12 items-center gap-3 px-4 text-base font-medium text-[#e8f4f1] hover:bg-[rgb(126_200_192_/_0.08)]"
                     >
-                      <Scissors className="w-5 h-5 text-purple-600" />
+                      <Scissors className="h-5 w-5 text-[#7ec8c0]" />
                       Background Removal
                     </Link>
                     <Link
-                      href="/underwater"
+                      href="/convert"
                       onClick={() => setMobileMenuOpen(false)}
-                      className="flex items-center gap-3 h-12 px-4 text-base font-medium text-slate-800 hover:text-blue-600 hover:bg-blue-50 dark:text-slate-200 dark:hover:text-blue-400 dark:hover:bg-blue-950/50 rounded-lg transition-colors border border-transparent hover:border-blue-200 dark:hover:border-blue-800"
+                      className="flex h-12 items-center gap-3 px-4 text-base font-medium text-[#e8f4f1] hover:bg-[rgb(126_200_192_/_0.08)]"
                     >
-                      <Waves className="w-5 h-5 text-cyan-600" />
-                      Underwater Color Fix
+                      <Zap className="h-5 w-5 text-[#7ec8c0]" />
+                      Image Processor
                     </Link>
                   </div>
 
-                  {/* Other Navigation Links */}
-                  <Link
-                    href="/examples"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center h-12 px-4 text-base font-medium text-slate-800 hover:text-blue-600 hover:bg-blue-50 dark:text-slate-200 dark:hover:text-blue-400 dark:hover:bg-blue-950/50 rounded-lg transition-colors border border-transparent hover:border-blue-200 dark:hover:border-blue-800"
-                  >
-                    📸 Examples
-                  </Link>
-                  <Link
-                    href="/about"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center h-12 px-4 text-base font-medium text-slate-800 hover:text-blue-600 hover:bg-blue-50 dark:text-slate-200 dark:hover:text-blue-400 dark:hover:bg-blue-950/50 rounded-lg transition-colors border border-transparent hover:border-blue-200 dark:hover:border-blue-800"
-                  >
-                    ℹ️ About
-                  </Link>
-                  <Link
-                    href="/logbook"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center h-12 px-4 text-base font-medium text-slate-800 hover:text-blue-600 hover:bg-blue-50 dark:text-slate-200 dark:hover:text-blue-400 dark:hover:bg-blue-950/50 rounded-lg transition-colors border border-transparent hover:border-blue-200 dark:hover:border-blue-800"
-                  >
-                    🗺️ Logbook
-                  </Link>
-
-                  {/* Conditional Pricing for Mobile */}
                   {!isPro && (
                     <Link
                       href="/pricing"
                       onClick={() => setMobileMenuOpen(false)}
-                      className="flex items-center h-12 px-4 text-base font-medium text-slate-800 hover:text-blue-600 hover:bg-blue-50 dark:text-slate-200 dark:hover:text-blue-400 dark:hover:bg-blue-950/50 rounded-lg transition-colors border border-transparent hover:border-blue-200 dark:hover:border-blue-800"
+                      className="flex h-12 items-center px-4 text-base font-medium text-[#e8f4f1] hover:bg-[rgb(126_200_192_/_0.08)]"
                     >
-                      💰 Pricing
+                      Pricing
                     </Link>
                   )}
 
@@ -297,55 +261,54 @@ export function Navigation() {
                     <Link
                       href="/account"
                       onClick={() => setMobileMenuOpen(false)}
-                      className="flex items-center h-12 px-4 text-base font-medium text-slate-800 hover:text-blue-600 hover:bg-blue-50 dark:text-slate-200 dark:hover:text-blue-400 dark:hover:bg-blue-950/50 rounded-lg transition-colors border border-transparent hover:border-blue-200 dark:hover:border-blue-800"
+                      className="flex h-12 items-center px-4 text-base font-medium text-[#e8f4f1] hover:bg-[rgb(126_200_192_/_0.08)]"
                     >
-                      👤 Account
+                      Account
                     </Link>
                   ) : (
                     <>
                       <SignInButton mode="modal">
                         <button
                           onClick={() => setMobileMenuOpen(false)}
-                          className="flex items-center h-12 px-3 w-full text-left text-base font-medium text-slate-700 hover:text-blue-600 hover:bg-blue-50 dark:text-slate-300 dark:hover:text-blue-400 dark:hover:bg-blue-950/50 rounded-lg transition-colors"
+                          className="flex h-12 w-full items-center px-4 text-left text-base font-medium text-[#9bb8b3] hover:bg-[rgb(126_200_192_/_0.08)] hover:text-[#e8f4f1]"
                         >
-                          🔐 Sign In
+                          Sign In
                         </button>
                       </SignInButton>
                       <SignInButton mode="modal">
                         <button
                           onClick={() => setMobileMenuOpen(false)}
-                          className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-4 py-3 rounded-lg text-base font-medium transition-all duration-200 shadow-lg hover:shadow-xl"
+                          className="brand-nav-cta mt-2 w-full"
                         >
-                          🚀 Get Started
+                          Get Started
                         </button>
                       </SignInButton>
                     </>
                   )}
 
-                  {/* User info for signed-in users */}
                   {isSignedIn && (
-                    <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
-                      <div className="flex items-center gap-3 px-3 mb-4">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                          {user?.firstName?.charAt(0) || user?.emailAddresses[0]?.emailAddress?.charAt(0) || 'U'}
+                    <div className="mt-2 border-t border-[rgb(126_200_192_/_0.14)] pt-4">
+                      <div className="mb-4 flex items-center gap-3 px-3">
+                        <div className="flex h-10 w-10 items-center justify-center bg-[#7ec8c0] text-lg font-bold text-[#06262f]">
+                          {user?.firstName?.charAt(0) ||
+                            user?.emailAddresses[0]?.emailAddress?.charAt(0) ||
+                            'U'}
                         </div>
                         <div className="flex-1">
-                          <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                          <p className="text-sm font-medium text-[#e8f4f1]">
                             {user?.firstName ||
                               user?.emailAddresses[0]?.emailAddress}
                           </p>
-                          <p className="text-xs text-slate-500 dark:text-slate-400">
+                          <p className="text-xs text-[#7a9a95]">
                             {isPro ? 'Pro Member' : 'Free Account'}
                           </p>
                         </div>
                       </div>
-                      
-                      {/* Custom Sign Out Button */}
                       <button
                         onClick={() => signOut()}
-                        className="w-full flex items-center gap-3 h-12 px-4 text-base font-medium text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-950/50 rounded-lg transition-colors border border-transparent hover:border-red-200 dark:hover:border-red-800"
+                        className="flex h-12 w-full items-center px-4 text-base font-medium text-red-300 transition-colors hover:bg-red-950/40 hover:text-red-200"
                       >
-                        🚪 Sign Out
+                        Sign Out
                       </button>
                     </div>
                   )}

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import localFont from 'next/font/local';
+import { Fraunces, Manrope } from 'next/font/google';
 import { ClerkProvider } from '@clerk/nextjs';
 import Link from 'next/link';
 import { Navigation } from '@/components/Navigation';
@@ -17,17 +18,32 @@ const appFont = localFont({
   display: 'swap',
 });
 
+const landingDisplay = Fraunces({
+  subsets: ['latin'],
+  variable: '--font-landing-display',
+  display: 'swap',
+});
+
+const landingBody = Manrope({
+  subsets: ['latin'],
+  variable: '--font-landing-body',
+  display: 'swap',
+});
+
 export const metadata: Metadata = {
-  title: 'SnapShark - Privacy-First Image Converter',
+  title: {
+    default: 'SnapShark — Dive logbook & underwater photo tools',
+    template: '%s | SnapShark',
+  },
   description:
-    'Convert and resize images directly in your browser. No uploads, complete privacy.',
+    'A dive logbook worth revisiting, and underwater colour correction that runs in your browser. Built for divers.',
   keywords: [
-    'image converter',
-    'image resizer',
-    'privacy',
-    'client-side',
-    'webp',
-    'avif',
+    'dive logbook',
+    'scuba diving log',
+    'snorkeling log',
+    'underwater photo correction',
+    'dive photos',
+    'SnapShark',
   ],
   authors: [{ name: 'SnapShark' }],
   manifest: '/manifest.json',
@@ -57,7 +73,8 @@ export const metadata: Metadata = {
 export const viewport = {
   width: 'device-width',
   initialScale: 1,
-  themeColor: '#0f172a',
+  viewportFit: 'cover' as const,
+  themeColor: '#031820',
 };
 
 export default function RootLayout({
@@ -88,7 +105,10 @@ export default function RootLayout({
           {/* Modern mobile web app capability */}
           <meta name="mobile-web-app-capable" content="yes" />
         </head>
-        <body className={appFont.className} suppressHydrationWarning={true}>
+        <body
+          className={`${appFont.className} ${landingDisplay.variable} ${landingBody.variable}`}
+          suppressHydrationWarning={true}
+        >
           <ThemeProvider
             attribute="class"
             defaultTheme="dark"
@@ -97,58 +117,70 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             <ErrorTrackingProvider />
-            <div className="min-h-screen bg-slate-900">
+            <div className="brand-shell min-h-screen overflow-x-clip">
               <Navigation />
               <GlobalGracePeriodAlert />
 
-              <main className="container mx-auto px-4 py-6">{children}</main>
+              <main className="container mx-auto min-w-0 max-w-full px-4 py-6 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+                {children}
+              </main>
 
-              <footer className="border-t border-blue-800/30 bg-slate-800/50 mt-16">
-                <div className="container mx-auto px-4 py-8">
-                  <div className="flex flex-col gap-6">
-                    {/* Main footer content */}
-                    <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+              <footer className="mt-8 border-t border-[rgb(126_200_192_/_0.14)] bg-[#02141a]">
+                <div className="container mx-auto px-4 py-10">
+                  <div className="flex flex-col gap-8">
+                    <div className="flex flex-col items-center justify-between gap-6 md:flex-row">
                       <div className="flex items-center gap-3">
                         <LogoIcon size="md" />
-                        <span className="font-medium text-slate-200">
-                          <span>Snap</span>
-                          <span className="text-blue-400">Shark</span>
+                        <span className="brand-display text-lg tracking-tight">
+                          <span className="text-[#e8f4f1]">Snap</span>
+                          <span className="text-[#7ec8c0]">Shark</span>
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-6 text-sm text-slate-400">
-                        <span>🔒 Images processed in your browser</span>
-                        <span>🚀 Powered by your browser</span>
-                        <span>⚡ Lightning fast</span>
+                      <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-[#7a9a95]">
+                        <Link href="/logbook" className="hover:text-[#e8f4f1]">
+                          Logbook
+                        </Link>
+                        <Link href="/underwater" className="hover:text-[#e8f4f1]">
+                          Colour Fix
+                        </Link>
+                        <Link href="/examples" className="hover:text-[#e8f4f1]">
+                          Examples
+                        </Link>
+                        <Link href="/about" className="hover:text-[#e8f4f1]">
+                          About
+                        </Link>
                       </div>
                     </div>
 
-                    {/* Legal links and copyright */}
-                    <div className="border-t border-blue-800/30 pt-4">
-                      <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-                        <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-sm text-slate-400">
+                    <div className="border-t border-[rgb(126_200_192_/_0.12)] pt-6">
+                      <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
+                        <div className="flex flex-wrap items-center gap-4 text-sm text-[#7a9a95] sm:gap-6">
                           <Link
                             href="/legal/privacy"
-                            className="hover:text-blue-400 transition-colors"
+                            className="hover:text-[#7ec8c0]"
                           >
                             Privacy Policy
                           </Link>
                           <Link
                             href="/legal/terms"
-                            className="hover:text-blue-400 transition-colors"
+                            className="hover:text-[#7ec8c0]"
                           >
                             Terms of Service
                           </Link>
                           <Link
-                            href="/about"
-                            className="hover:text-blue-400 transition-colors"
+                            href="/legal/photo-credits"
+                            className="hover:text-[#7ec8c0]"
                           >
+                            Photo credits
+                          </Link>
+                          <Link href="/about" className="hover:text-[#7ec8c0]">
                             Contact
                           </Link>
                         </div>
-                        <div className="text-sm text-slate-400">
-                          © {new Date().getFullYear()} SnapShark. Privacy-first
-                          image processing.
+                        <div className="text-sm text-[#5f7d78]">
+                          © {new Date().getFullYear()} SnapShark. For divers
+                          and snorkellers.
                         </div>
                       </div>
                     </div>
