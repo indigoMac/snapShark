@@ -11,8 +11,6 @@ export interface PaywallState {
   hasTrialAvailable: boolean;
   trialUsed: boolean;
   subscriptionStatus?: string;
-  customerId?: string;
-  subscriptionId?: string;
   cancelAtPeriodEnd?: boolean;
   cancelAt?: string;
   lastPaymentFailed?: string;
@@ -24,9 +22,6 @@ export interface PaywallService {
   checkFeatureAccess: (state: PaywallState, feature: PaywallFeature) => boolean;
   markTrialUsed: (state: PaywallState) => PaywallState;
   upgradeToPro: (priceId: string, isYearly?: boolean) => Promise<void>;
-  manageSubscription: (customerId: string) => Promise<void>;
-  cancelSubscription: (
-    subscriptionId: string,
-    cancelAtPeriodEnd?: boolean
-  ) => Promise<unknown>;
+  manageSubscription: () => Promise<void>;
+  cancelSubscription: (cancelAtPeriodEnd?: boolean) => Promise<unknown>;
 }

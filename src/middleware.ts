@@ -37,6 +37,11 @@ export default clerkMiddleware(async (auth, req) => {
   const isUpload = isUploadRoute(req) && req.method === 'POST';
 
   if (isGeocodeRoute(req)) {
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const result = await RATE_LIMITS.GEOCODE(req);
     if (!result.success) return tooManyRequests(result);
   }

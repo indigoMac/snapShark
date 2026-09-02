@@ -32,7 +32,9 @@ export function createRateLimit(config: RateLimitConfig) {
     resetTime: number;
   }> => {
     // Generate key for rate limiting (default: IP address)
-    const key = keyGenerator ? keyGenerator(req) : getClientIdentifier(req);
+    const key = keyGenerator
+      ? keyGenerator(req)
+      : getRateLimitClientIdentifier(req);
 
     const now = Date.now();
     const windowStart = now - windowMs;
@@ -76,30 +78,40 @@ export function createRateLimit(config: RateLimitConfig) {
 }
 
 /**
- * Get client identifier for rate limiting
- * Uses IP address with fallbacks
+ * Client IP for rate limiting. Prefers headers the platform sets, not the
+ * first X-Forwarded-For hop, which a caller can spoof.
  */
-function getClientIdentifier(req: NextRequest): string {
-  // Try various headers for IP address
-  const forwardedFor = req.headers.get('x-forwarded-for');
-  const realIp = req.headers.get('x-real-ip');
-  const cfConnectingIp = req.headers.get('cf-connecting-ip');
+export function getRateLimitClientIdentifier(req: NextRequest): string {
+  const vercelForwarded = firstHop(req.headers.get('x-vercel-forwarded-for'));
+  if (vercelForwarded) return vercelForwarded;
 
-  if (forwardedFor) {
-    // x-forwarded-for can contain multiple IPs, take the first one
-    return forwardedFor.split(',')[0].trim();
-  }
+  const cfConnectingIp = req.headers.get('cf-connecting-ip')?.trim();
+  if (cfConnectingIp) return cfConnectingIp;
 
-  if (realIp) {
-    return realIp;
-  }
+  const realIp = req.headers.get('x-real-ip')?.trim();
+  if (realIp) return realIp;
 
-  if (cfConnectingIp) {
-    return cfConnectingIp;
-  }
+  // Last hop is added by the trusted proxy; earlier hops are client-controlled.
+  const forwardedLast = lastHop(req.headers.get('x-forwarded-for'));
+  if (forwardedLast) return forwardedLast;
 
-  // Fallback to a default identifier
+  if (req.ip) return req.ip;
+
   return 'unknown-ip';
+}
+
+function firstHop(header: string | null): string | null {
+  if (!header) return null;
+  return header.split(',')[0]?.trim() || null;
+}
+
+function lastHop(header: string | null): string | null {
+  if (!header) return null;
+  const hops = header
+    .split(',')
+    .map((hop) => hop.trim())
+    .filter(Boolean);
+  return hops[hops.length - 1] ?? null;
 }
 
 /**
@@ -163,8 +175,8 @@ export const RATE_LIMITS = {
     windowMs: 15 * 60 * 1000, // 15 minutes
   }),
 
-  // Unauthenticated proxy to OpenStreetMap, whose fair-use policy we have to
-  // respect on behalf of every visitor.
+  // Signed-in proxy to OpenStreetMap; still capped so a single account cannot
+  // exhaust Nominatim's fair-use allowance.
   GEOCODE: createRateLimit({
     maxRequests: 100,
     windowMs: 15 * 60 * 1000, // 15 minutes

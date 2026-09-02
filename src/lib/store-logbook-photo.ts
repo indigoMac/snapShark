@@ -6,6 +6,23 @@ import { del, get, put } from '@vercel/blob';
  */
 export type PhotoStorageRef = string;
 
+export const ALLOWED_LOGBOOK_PHOTO_TYPES = [
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+] as const;
+
+export type AllowedLogbookPhotoType =
+  (typeof ALLOWED_LOGBOOK_PHOTO_TYPES)[number];
+
+const ALLOWED_TYPE_SET = new Set<string>(ALLOWED_LOGBOOK_PHOTO_TYPES);
+
+const TYPE_TO_EXT: Record<AllowedLogbookPhotoType, string> = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+};
+
 function isDataUrl(ref: PhotoStorageRef): boolean {
   return ref.startsWith('data:');
 }
@@ -13,6 +30,52 @@ function isDataUrl(ref: PhotoStorageRef): boolean {
 /** Legacy references created before photos moved to private storage. */
 function isLegacyPublicUrl(ref: PhotoStorageRef): boolean {
   return ref.startsWith('https://');
+}
+
+function httpError(message: string, status: number): Error {
+  return Object.assign(new Error(message), { status });
+}
+
+function normalizeImageContentType(raw: string): string {
+  const type = raw.toLowerCase().split(';')[0]?.trim() ?? '';
+  if (type === 'image/jpg') return 'image/jpeg';
+  return type;
+}
+
+export function safeLogbookPhotoContentType(
+  contentType: string | null | undefined
+): AllowedLogbookPhotoType | null {
+  if (!contentType) return null;
+  const normalized = normalizeImageContentType(contentType);
+  return ALLOWED_TYPE_SET.has(normalized)
+    ? (normalized as AllowedLogbookPhotoType)
+    : null;
+}
+
+/**
+ * Accepts only JPEG, PNG, or WebP data URLs. SVG and other types are rejected
+ * so they cannot be served back on this origin.
+ */
+export function parseLogbookPhotoDataUrl(dataUrl: string): {
+  contentType: AllowedLogbookPhotoType;
+  buffer: Buffer;
+  ext: string;
+} {
+  const match = /^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/.exec(dataUrl);
+  if (!match) {
+    throw httpError('Photo must be a JPEG, PNG, or WebP image', 400);
+  }
+
+  const contentType = safeLogbookPhotoContentType(match[1]);
+  if (!contentType) {
+    throw httpError('Photo must be a JPEG, PNG, or WebP image', 400);
+  }
+
+  return {
+    contentType,
+    buffer: Buffer.from(match[2], 'base64'),
+    ext: TYPE_TO_EXT[contentType],
+  };
 }
 
 /**
@@ -26,34 +89,18 @@ export async function storeLogbookPhoto(opts: {
   dataUrl: string;
 }): Promise<PhotoStorageRef> {
   const { userId, diveId, dataUrl } = opts;
-
-  if (!dataUrl.startsWith('data:image/')) {
-    throw new Error('Photo must be a data URL');
-  }
+  const parsed = parseLogbookPhotoDataUrl(dataUrl);
 
   if (!process.env.BLOB_READ_WRITE_TOKEN) {
     return dataUrl;
   }
 
-  const match = /^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/.exec(dataUrl);
-  if (!match) {
-    throw new Error('Invalid image data URL');
-  }
-
-  const contentType = match[1];
-  const buffer = Buffer.from(match[2], 'base64');
-  const ext = contentType.includes('png')
-    ? 'png'
-    : contentType.includes('webp')
-      ? 'webp'
-      : 'jpg';
-
   const blob = await put(
-    `logbook/${userId}/${diveId}/${Date.now()}.${ext}`,
-    buffer,
+    `logbook/${userId}/${diveId}/${Date.now()}.${parsed.ext}`,
+    parsed.buffer,
     {
       access: 'private',
-      contentType,
+      contentType: parsed.contentType,
       addRandomSuffix: true,
     }
   );
@@ -99,8 +146,11 @@ export async function deleteStoredLogbookPhotos(
 /** Decodes an inline data URL reference into bytes for streaming. */
 export function decodeDataUrlPhoto(
   ref: PhotoStorageRef
-): { buffer: Buffer; contentType: string } | null {
-  const match = /^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/.exec(ref);
-  if (!match) return null;
-  return { buffer: Buffer.from(match[2], 'base64'), contentType: match[1] };
+): { buffer: Buffer; contentType: AllowedLogbookPhotoType } | null {
+  try {
+    const parsed = parseLogbookPhotoDataUrl(ref);
+    return { buffer: parsed.buffer, contentType: parsed.contentType };
+  } catch {
+    return null;
+  }
 }

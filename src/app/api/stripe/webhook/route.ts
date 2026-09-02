@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 import { stripe } from '@/lib/stripe';
 import { clerkClient } from '@clerk/nextjs/server';
-import { RATE_LIMITS, createRateLimitHeaders } from '@/lib/rate-limit';
 import {
   findClerkUserIdByCustomerId,
   periodEndFromStripe,
@@ -18,18 +17,6 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
   try {
-    // Apply rate limiting (even for webhooks as defense in depth)
-    const rateLimitResult = await RATE_LIMITS.API(req);
-
-    if (!rateLimitResult.success) {
-      return NextResponse.json(
-        { error: 'Rate limit exceeded' },
-        {
-          status: 429,
-          headers: createRateLimitHeaders(rateLimitResult),
-        }
-      );
-    }
     if (!stripe) {
       return NextResponse.json(
         { error: 'Stripe not configured' },
@@ -96,14 +83,12 @@ export async function POST(req: NextRequest) {
                 isProUser: true,
                 subscriptionStarted: new Date().toISOString(),
               },
-              publicMetadata: {
+              publicMetadata: withoutStripeIds({
                 ...(user.publicMetadata || {}),
                 subscriptionStatus: 'active',
                 isProUser: true,
                 plan: 'pro',
-                stripeCustomerId: customerId,
-                stripeSubscriptionId: subscriptionId,
-              },
+              }),
             });
           } catch (clerkError: any) {
             console.error(
@@ -149,12 +134,14 @@ export async function POST(req: NextRequest) {
         }
 
         try {
-          const client = await clerkClient();
-          const user = userId
-            ? await client.users.getUser(userId)
-            : await findUserByCustomerId(client, customerId);
-
-          if (user) {
+          if (!userId) {
+            console.warn(`[WEBHOOK] subscription.updated user not found`, {
+              customerId,
+              subscriptionId: subscription.id,
+            });
+          } else {
+            const client = await clerkClient();
+            const user = await client.users.getUser(userId);
             const isActive = subscription.status === 'active';
             const willCancel = subscription.cancel_at_period_end;
             const cancelAt = subscription.cancel_at
@@ -179,7 +166,7 @@ export async function POST(req: NextRequest) {
                 stripeCustomerId: customerId,
                 stripeSubscriptionId: subscription.id,
               },
-              publicMetadata: {
+              publicMetadata: withoutStripeIds({
                 ...(user.publicMetadata || {}),
                 subscriptionStatus: subscription.status,
                 isProUser: isActive,
@@ -187,15 +174,8 @@ export async function POST(req: NextRequest) {
                 cancelAtPeriodEnd: willCancel,
                 cancelAt,
                 currentPeriodEnd,
-                stripeCustomerId: customerId,
-                stripeSubscriptionId: subscription.id,
-              },
+              }),
             });
-          } else {
-            console.warn(
-              `[WEBHOOK] subscription.updated user not found`,
-              { userId, customerId, subscriptionId: subscription.id }
-            );
           }
         } catch (clerkError: any) {
           console.error(
@@ -229,12 +209,14 @@ export async function POST(req: NextRequest) {
         }
 
         try {
-          const client = await clerkClient();
-          const user = userId
-            ? await client.users.getUser(userId)
-            : await findUserByCustomerId(client, customerId);
-
-          if (user) {
+          if (!userId) {
+            console.warn(`[WEBHOOK] subscription.deleted user not found`, {
+              customerId,
+              subscriptionId: subscription.id,
+            });
+          } else {
+            const client = await clerkClient();
+            const user = await client.users.getUser(userId);
             await client.users.updateUserMetadata(user.id, {
               privateMetadata: {
                 ...(user.privateMetadata || {}),
@@ -244,20 +226,13 @@ export async function POST(req: NextRequest) {
                 stripeCustomerId: customerId,
                 stripeSubscriptionId: subscription.id,
               },
-              publicMetadata: {
+              publicMetadata: withoutStripeIds({
                 ...(user.publicMetadata || {}),
                 subscriptionStatus: 'canceled',
                 isProUser: false,
                 plan: 'free',
-                stripeCustomerId: customerId,
-                stripeSubscriptionId: subscription.id,
-              },
+              }),
             });
-          } else {
-            console.warn(
-              `[WEBHOOK] subscription.deleted user not found`,
-              { userId, customerId, subscriptionId: subscription.id }
-            );
           }
         } catch (clerkError: any) {
           console.error(
@@ -276,56 +251,45 @@ export async function POST(req: NextRequest) {
       case 'invoice.payment_failed': {
         const invoice = event.data.object as Stripe.Invoice;
         const customerId = invoice.customer as string;
+        const userId = await findClerkUserIdByCustomerId(customerId);
 
-        try {
-          // Find user by customer ID and notify of payment failure
-          const client = await clerkClient();
-          const users = await client.users.getUserList({
-            limit: 100, // Increased limit to find users
-          });
-
-          const user = users.data.find(
-            (u: any) => u.privateMetadata?.stripeCustomerId === customerId
-          );
-
-          if (user) {
-            await client.users.updateUserMetadata(user.id, {
+        if (userId) {
+          try {
+            const client = await clerkClient();
+            const user = await client.users.getUser(userId);
+            await client.users.updateUserMetadata(userId, {
               privateMetadata: {
                 ...(user.privateMetadata || {}),
                 lastPaymentFailed: new Date().toISOString(),
               },
             });
-          } else {
+          } catch (clerkError: unknown) {
+            console.error(
+              '[WEBHOOK] invoice.payment_failed Clerk update failed',
+              clerkError
+            );
           }
-        } catch (clerkError: any) {}
+        }
         break;
       }
 
       default:
     }
 
+    return NextResponse.json({ received: true });
+  } catch (error: unknown) {
+    console.error('[WEBHOOK] handler failed', error);
     return NextResponse.json(
-      { received: true },
-      {
-        headers: createRateLimitHeaders(rateLimitResult),
-      }
-    );
-  } catch (error: any) {
-    return NextResponse.json(
-      { error: 'Webhook handler failed', details: error.message },
+      { error: 'Webhook handler failed' },
       { status: 400 }
     );
   }
 }
 
-async function findUserByCustomerId(
-  client: Awaited<ReturnType<typeof clerkClient>>,
-  customerId: string
-) {
-  const users = await client.users.getUserList({
-    limit: 100,
-  });
-  return users.data.find(
-    (u: any) => u.privateMetadata?.stripeCustomerId === customerId
-  );
+function withoutStripeIds<T extends Record<string, unknown>>(metadata: T) {
+  return {
+    ...metadata,
+    stripeCustomerId: null,
+    stripeSubscriptionId: null,
+  };
 }

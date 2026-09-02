@@ -4,6 +4,7 @@ import { requireDbUser } from '@/lib/auth';
 import {
   decodeDataUrlPhoto,
   readStoredLogbookPhoto,
+  safeLogbookPhotoContentType,
 } from '@/lib/store-logbook-photo';
 
 type RouteContext = { params: { id: string } };
@@ -29,10 +30,7 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
     if (inline) {
       return new NextResponse(new Uint8Array(inline.buffer), {
         status: 200,
-        headers: {
-          'Content-Type': inline.contentType,
-          'Cache-Control': 'private, max-age=3600',
-        },
+        headers: photoFileHeaders(inline.contentType),
       });
     }
 
@@ -44,12 +42,17 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
       );
     }
 
+    const contentType = safeLogbookPhotoContentType(stored.contentType);
+    if (!contentType) {
+      return NextResponse.json(
+        { error: 'Photo is no longer available' },
+        { status: 404 }
+      );
+    }
+
     return new NextResponse(stored.stream, {
       status: 200,
-      headers: {
-        'Content-Type': stored.contentType,
-        'Cache-Control': 'private, max-age=3600',
-      },
+      headers: photoFileHeaders(contentType),
     });
   } catch (error: unknown) {
     const err = error as { status?: number; message?: string };
@@ -58,4 +61,13 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
       { status: err?.status || 500 }
     );
   }
+}
+
+function photoFileHeaders(contentType: string): Record<string, string> {
+  return {
+    'Content-Type': contentType,
+    'Content-Disposition': 'inline',
+    'X-Content-Type-Options': 'nosniff',
+    'Cache-Control': 'private, max-age=3600',
+  };
 }

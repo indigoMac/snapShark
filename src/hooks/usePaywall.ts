@@ -130,16 +130,12 @@ export function usePaywall() {
   );
 
   const manageSubscription = useCallback(async () => {
-    if (!paywallState.customerId) return;
-    await paywallService.manageSubscription(paywallState.customerId);
-  }, [paywallService, paywallState.customerId]);
+    await paywallService.manageSubscription();
+  }, [paywallService]);
 
   const cancelSubscription = useCallback(
-    async (subscriptionId: string, cancelAtPeriodEnd: boolean = true) => {
-      const result = await paywallService.cancelSubscription(
-        subscriptionId,
-        cancelAtPeriodEnd
-      );
+    async (cancelAtPeriodEnd: boolean = true) => {
+      const result = await paywallService.cancelSubscription(cancelAtPeriodEnd);
       if (user) {
         await user.reload();
       }
@@ -154,8 +150,6 @@ export function usePaywall() {
     hasTrialAvailable: paywallState.hasTrialAvailable,
     trialUsed: paywallState.trialUsed,
     subscriptionStatus: paywallState.subscriptionStatus,
-    customerId: paywallState.customerId,
-    subscriptionId: paywallState.subscriptionId,
     cancelAtPeriodEnd: paywallState.cancelAtPeriodEnd,
     cancelAt: paywallState.cancelAt,
     lastPaymentFailed: paywallState.lastPaymentFailed,

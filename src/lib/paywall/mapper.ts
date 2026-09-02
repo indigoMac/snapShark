@@ -25,13 +25,6 @@ export function mapUserToPaywallState(user: MetadataSource): PaywallState {
     getString(privateMeta, 'subscriptionStatus') ||
     getString(publicMeta, 'subscriptionStatus');
 
-  const customerId =
-    getString(privateMeta, 'stripeCustomerId') || getString(publicMeta, 'stripeCustomerId');
-
-  const subscriptionId =
-    getString(privateMeta, 'stripeSubscriptionId') ||
-    getString(publicMeta, 'stripeSubscriptionId');
-
   const cancelAtPeriodEnd =
     (privateMeta?.cancelAtPeriodEnd as boolean | undefined) ||
     (publicMeta?.cancelAtPeriodEnd as boolean | undefined);
@@ -52,8 +45,6 @@ export function mapUserToPaywallState(user: MetadataSource): PaywallState {
     hasTrialAvailable: true,
     trialUsed: false,
     subscriptionStatus,
-    customerId,
-    subscriptionId,
     cancelAtPeriodEnd,
     cancelAt,
     lastPaymentFailed,

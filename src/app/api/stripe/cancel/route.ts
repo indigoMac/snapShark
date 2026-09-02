@@ -1,16 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth, clerkClient } from '@clerk/nextjs/server';
+import { clerkClient } from '@clerk/nextjs/server';
+import { requireDbUser } from '@/lib/auth';
 import { stripe } from '@/lib/stripe';
-import { periodEndFromStripe, syncSubscriptionToDb } from '@/lib/subscription';
+import { periodEndFromStripe, syncSubscriptionToDb, getBillingIds } from '@/lib/subscription';
 import Stripe from 'stripe';
 
 export async function POST(req: NextRequest) {
   try {
-    const { userId } = await auth();
-
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const { clerkUserId } = await requireDbUser();
 
     if (!stripe) {
       return NextResponse.json(
@@ -19,45 +16,32 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { subscriptionId, cancelAtPeriodEnd = true } = await req.json();
+    const body = (await req.json().catch(() => ({}))) as {
+      cancelAtPeriodEnd?: boolean;
+    };
+    const cancelAtPeriodEnd = body.cancelAtPeriodEnd !== false;
 
-    if (!subscriptionId) {
+    const billing = await getBillingIds(clerkUserId);
+    if (!billing?.stripeSubscriptionId) {
       return NextResponse.json(
-        { error: 'Subscription ID is required' },
-        { status: 400 }
+        { error: 'No subscription found to cancel' },
+        { status: 404 }
       );
     }
 
-    // Verify the subscription belongs to the authenticated user
-    const client = await clerkClient();
-    const user = await client.users.getUser(userId);
-    const userSubscriptionId =
-      (user.privateMetadata as Record<string, any> | undefined)
-        ?.stripeSubscriptionId ||
-      (user.publicMetadata as Record<string, any> | undefined)
-        ?.stripeSubscriptionId;
+    const subscriptionId = billing.stripeSubscriptionId;
 
-    if (!userSubscriptionId || userSubscriptionId !== subscriptionId) {
-      return NextResponse.json(
-        { error: 'Subscription does not belong to the current user' },
-        { status: 403 }
-      );
-    }
-
-    // Cancel the subscription
     let subscription: Stripe.Subscription;
     if (cancelAtPeriodEnd) {
-      // Cancel at the end of the billing period (recommended)
       subscription = await stripe.subscriptions.update(subscriptionId, {
         cancel_at_period_end: true,
       });
     } else {
-      // Cancel immediately
       subscription = await stripe.subscriptions.cancel(subscriptionId);
     }
 
     await syncSubscriptionToDb({
-      clerkUserId: userId,
+      clerkUserId,
       stripeCustomerId: subscription.customer as string,
       stripeSubscriptionId: subscription.id,
       status: subscription.status,
@@ -67,9 +51,9 @@ export async function POST(req: NextRequest) {
       cancelAtPeriodEnd: subscription.cancel_at_period_end,
     });
 
-    // Update Clerk metadata immediately so the UI reflects the cancel choice
     try {
-      const user = await client.users.getUser(userId);
+      const client = await clerkClient();
+      const clerkUser = await client.users.getUser(clerkUserId);
 
       const isActive = subscription.status === 'active';
       const willCancel = subscription.cancel_at_period_end;
@@ -78,15 +62,17 @@ export async function POST(req: NextRequest) {
         : null;
 
       const currentPeriodStart = (subscription as any).current_period_start
-        ? new Date((subscription as any).current_period_start * 1000).toISOString()
+        ? new Date(
+            (subscription as any).current_period_start * 1000
+          ).toISOString()
         : null;
       const currentPeriodEnd = (subscription as any).current_period_end
         ? new Date((subscription as any).current_period_end * 1000).toISOString()
         : null;
 
-      await client.users.updateUserMetadata(userId, {
+      await client.users.updateUserMetadata(clerkUserId, {
         privateMetadata: {
-          ...(user.privateMetadata || {}),
+          ...(clerkUser.privateMetadata || {}),
           stripeSubscriptionId: subscription.id,
           subscriptionStatus: subscription.status,
           isProUser: isActive,
@@ -97,18 +83,19 @@ export async function POST(req: NextRequest) {
           subscriptionUpdated: new Date().toISOString(),
         },
         publicMetadata: {
-          ...(user.publicMetadata || {}),
+          ...(clerkUser.publicMetadata || {}),
           subscriptionStatus: subscription.status,
           isProUser: isActive,
           plan: isActive ? 'pro' : 'free',
           cancelAtPeriodEnd: willCancel,
           cancelAt,
           currentPeriodEnd,
+          stripeCustomerId: null,
+          stripeSubscriptionId: null,
         },
       });
-    } catch (clerkError: any) {
+    } catch (clerkError: unknown) {
       console.error('[CANCEL] Failed to update Clerk metadata:', clerkError);
-      // Continue; Stripe cancellation already succeeded
     }
 
     return NextResponse.json({
@@ -120,9 +107,12 @@ export async function POST(req: NextRequest) {
       },
     });
   } catch (error: any) {
+    if (error?.status === 401) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     console.error('[CANCEL] Subscription cancellation error:', error);
 
-    // Handle specific Stripe errors
     if (error.type === 'StripeInvalidRequestError') {
       return NextResponse.json(
         { error: 'Invalid subscription or already canceled' },
