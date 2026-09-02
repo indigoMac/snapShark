@@ -1,14 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { auth, clerkClient } from '@clerk/nextjs/server';
+import { NextResponse } from 'next/server';
+import { requireDbUser } from '@/lib/auth';
 import { stripe, STRIPE_CONFIG } from '@/lib/stripe';
+import { getBillingIds } from '@/lib/subscription';
 
-export async function POST(req: NextRequest) {
+export async function POST() {
   try {
-    const { userId } = await auth();
-
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const { clerkUserId } = await requireDbUser();
 
     if (!stripe) {
       return NextResponse.json(
@@ -17,41 +14,27 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { customerId } = await req.json();
-
-    if (!customerId) {
+    const billing = await getBillingIds(clerkUserId);
+    if (!billing?.stripeCustomerId) {
       return NextResponse.json(
-        { error: 'Customer ID is required' },
-        { status: 400 }
+        { error: 'No billing account found' },
+        { status: 404 }
       );
     }
 
-    // Verify the customer belongs to the authenticated user
-    const client = await clerkClient();
-    const user = await client.users.getUser(userId);
-    const userCustomerId =
-      (user.privateMetadata as Record<string, any> | undefined)
-        ?.stripeCustomerId ||
-      (user.publicMetadata as Record<string, any> | undefined)
-        ?.stripeCustomerId;
-
-    if (!userCustomerId || userCustomerId !== customerId) {
-      return NextResponse.json(
-        { error: 'Customer does not belong to the current user' },
-        { status: 403 }
-      );
-    }
-
-    // Create Stripe customer portal session
     const session = await stripe.billingPortal.sessions.create({
-      customer: customerId,
+      customer: billing.stripeCustomerId,
       return_url: STRIPE_CONFIG.CUSTOMER_PORTAL_URL,
     });
 
     return NextResponse.json({
       url: session.url,
     });
-  } catch (error) {
+  } catch (error: unknown) {
+    const err = error as { status?: number; message?: string };
+    if (err.status === 401) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     console.error('Stripe portal error:', error);
     return NextResponse.json(
       { error: 'Failed to create portal session' },

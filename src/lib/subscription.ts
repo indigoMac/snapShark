@@ -69,6 +69,16 @@ export async function findClerkUserIdByCustomerId(
   return user?.clerkUserId ?? null;
 }
 
+export async function getBillingIds(clerkUserId: string) {
+  return prisma.user.findUnique({
+    where: { clerkUserId },
+    select: {
+      stripeCustomerId: true,
+      stripeSubscriptionId: true,
+    },
+  });
+}
+
 export function periodEndFromStripe(
   seconds: number | null | undefined
 ): Date | null {

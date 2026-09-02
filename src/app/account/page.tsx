@@ -42,7 +42,6 @@ function AccountPageContent() {
     manageSubscription,
     cancelSubscription,
     subscriptionStatus,
-    subscriptionId,
     cancelAtPeriodEnd,
     cancelAt,
   } = usePaywall();
@@ -164,15 +163,10 @@ function AccountPageContent() {
   };
 
   const handleCancelConfirm = async () => {
-    if (!subscriptionId) {
-      setMessage({ type: 'error', text: 'No subscription found to cancel' });
-      return;
-    }
-
     setIsCanceling(true);
     setMessage(null);
     try {
-      await cancelSubscription(subscriptionId, cancelAtPeriodEndChoice);
+      await cancelSubscription(cancelAtPeriodEndChoice);
       setShowCancelDialog(false);
 
       if (cancelAtPeriodEndChoice) {

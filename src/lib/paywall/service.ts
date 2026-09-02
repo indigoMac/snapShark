@@ -36,14 +36,15 @@ export function createPaywallService(fetcher: Fetcher = fetch): PaywallService {
     window.location.href = url;
   };
 
-  const manageSubscription = async (customerId: string) => {
-    if (!customerId) return;
-
+  const manageSubscription = async () => {
     const response = await fetcher('/api/stripe/portal', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ customerId }),
     });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || 'Failed to open billing portal');
+    }
 
     const { url } = (await response.json()) as { url?: string };
     if (url) {
@@ -51,14 +52,11 @@ export function createPaywallService(fetcher: Fetcher = fetch): PaywallService {
     }
   };
 
-  const cancelSubscription = async (
-    subscriptionId: string,
-    cancelAtPeriodEnd = true
-  ) => {
+  const cancelSubscription = async (cancelAtPeriodEnd = true) => {
     const response = await fetcher('/api/stripe/cancel', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ subscriptionId, cancelAtPeriodEnd }),
+      body: JSON.stringify({ cancelAtPeriodEnd }),
     });
 
     if (!response.ok) {
