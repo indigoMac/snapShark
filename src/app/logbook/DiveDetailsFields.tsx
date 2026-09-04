@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { DIVE_TYPES, type DiveDetailsInput } from '@/lib/dive-details';
@@ -10,6 +11,8 @@ type DiveDetailsFieldsProps = {
   onChange: (next: DiveDetailsInput) => void;
   /** Collapse under a lighter heading for create flows */
   compact?: boolean;
+  /** Hide depth/time/buddy until the diver asks — keeps the first save fast. */
+  defaultCollapsed?: boolean;
 };
 
 export function DiveDetailsFields({
@@ -17,9 +20,23 @@ export function DiveDetailsFields({
   value,
   onChange,
   compact = false,
+  defaultCollapsed = false,
 }: DiveDetailsFieldsProps) {
+  const [open, setOpen] = useState(!defaultCollapsed);
   const set = (patch: Partial<DiveDetailsInput>) =>
     onChange({ ...value, ...patch });
+
+  if (!open) {
+    return (
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="text-sm text-slate-500 underline decoration-slate-300 underline-offset-4 hover:text-slate-800 dark:hover:text-slate-200"
+      >
+        Add depth, time, buddy…
+      </button>
+    );
+  }
 
   return (
     <div className={compact ? 'space-y-3' : 'space-y-3'}>

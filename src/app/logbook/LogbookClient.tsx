@@ -22,6 +22,7 @@ import { CreatePlaceDialog } from './CreatePlaceDialog';
 import { AddMemoryForm, MemoryCard } from './MemoryCard';
 import { PlacesBrowse } from './PlacesBrowse';
 import { TripsBrowse } from './TripsBrowse';
+import { ShareDialogButton } from './ShareDialogButton';
 
 const LogbookMap = dynamic(() => import('./LogbookMap'), { ssr: false });
 
@@ -369,8 +370,8 @@ export default function LogbookClient() {
         <Compass className="mx-auto h-12 w-12 text-blue-500" />
         <h1 className="text-3xl font-bold tracking-tight">Dive logbook</h1>
         <p className="text-muted-foreground">
-          Sign in to pin the places you&apos;ve dived and keep a logbook of
-          where you&apos;ve been.
+        Sign in to pin places, keep photos with them, and send a trip to
+          someone who wasn&apos;t there.
         </p>
         <SignInButton mode="modal">
           <Button size="lg">Sign in to open logbook</Button>
@@ -386,8 +387,7 @@ export default function LogbookClient() {
           <p className="brand-eyebrow">Logbook</p>
           <h1 className="brand-title text-3xl sm:text-4xl">Dive logbook</h1>
           <p className="max-w-xl text-sm leading-relaxed text-[#9bb8b3] sm:text-base">
-            A map of where you&apos;ve been — pin places, add notes, and attach
-            photos so each dive stays easy to revisit.
+            Pin a place, attach a photo, send the trip. Depth and time can wait.
           </p>
         </div>
         <Button
@@ -598,6 +598,22 @@ export default function LogbookClient() {
                         </p>
                       </div>
                       <div className="flex shrink-0 gap-1">
+                        <ShareDialogButton
+                          kind="place"
+                          id={selectedSite.id}
+                          name={selectedSite.name}
+                          shareToken={selectedSite.shareToken}
+                          coverUrl={coverPhotoForSite(selectedSite)}
+                          onShareTokenChange={(token) => {
+                            setSites((prev) =>
+                              prev.map((s) =>
+                                s.id === selectedSite.id
+                                  ? { ...s, shareToken: token }
+                                  : s
+                              )
+                            );
+                          }}
+                        />
                         <Button
                           type="button"
                           size="sm"
@@ -718,6 +734,13 @@ export default function LogbookClient() {
                   if (selectedTripFilter === tripId) {
                     setSelectedTripFilter(null);
                   }
+                }}
+                onShareTokenChange={(tripId, token) => {
+                  setTrips((prev) =>
+                    prev.map((t) =>
+                      t.id === tripId ? { ...t, shareToken: token } : t
+                    )
+                  );
                 }}
               />
               <PlacesBrowse

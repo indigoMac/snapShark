@@ -175,6 +175,12 @@ export const RATE_LIMITS = {
     windowMs: 15 * 60 * 1000, // 15 minutes
   }),
 
+  // Public share pages and photos. Enough for a group chat, not a scraper.
+  SHARE: createRateLimit({
+    maxRequests: 180,
+    windowMs: 15 * 60 * 1000, // 15 minutes
+  }),
+
   // Signed-in proxy to OpenStreetMap; still capped so a single account cannot
   // exhaust Nominatim's fair-use allowance.
   GEOCODE: createRateLimit({

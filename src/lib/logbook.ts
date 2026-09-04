@@ -39,6 +39,7 @@ export type LogbookSite = {
   tripId?: string | null;
   trip?: LogbookTripSummary | null;
   dives: LogbookDive[];
+  shareToken?: string | null;
 };
 
 export type LogbookTrip = {
@@ -50,6 +51,7 @@ export type LogbookTrip = {
   placeCount: number;
   diveCount: number;
   coverUrl?: string | null;
+  shareToken?: string | null;
 };
 
 export const PENDING_PHOTO_KEY = 'snapshark:pendingLogbookPhoto';
@@ -155,6 +157,7 @@ export function serializeSite(site: {
   tripId?: string | null;
   trip?: { id: string; name: string } | null;
   dives?: Array<Parameters<typeof serializeDive>[0]>;
+  shareToken?: string | null;
 }): LogbookSite {
   return {
     id: site.id,
@@ -169,6 +172,7 @@ export function serializeSite(site: {
       ? { id: site.trip.id, name: site.trip.name }
       : null,
     dives: (site.dives ?? []).map(serializeDive),
+    shareToken: site.shareToken ?? null,
   };
 }
 
@@ -178,6 +182,7 @@ export function serializeTrip(trip: {
   description?: string | null;
   startDate?: Date | string | null;
   endDate?: Date | string | null;
+  shareToken?: string | null;
   places?: Array<{
     dives?: Array<{ photos?: Array<{ id: string }> }>;
   }>;
@@ -204,6 +209,7 @@ export function serializeTrip(trip: {
     placeCount: places.length,
     diveCount,
     coverUrl,
+    shareToken: trip.shareToken ?? null,
   };
 }
 

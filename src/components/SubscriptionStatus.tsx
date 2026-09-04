@@ -262,12 +262,10 @@ export function SubscriptionStatus({
         <div className="bg-muted/50 p-4 rounded-lg">
           <h4 className="font-medium mb-2">✨ Pro Features Active</h4>
           <div className="grid md:grid-cols-2 gap-2 text-sm text-muted-foreground">
-            <div>✓ Batch processing (up to 50 files)</div>
-            <div>✓ Professional packages</div>
-            <div>✓ AVIF & HEIC support</div>
+            <div>✓ Colour-fix a whole card</div>
+            <div>✓ Extra logbook photo storage</div>
+            <div>✓ AVIF output & print packages</div>
             <div>✓ ZIP download</div>
-            <div>✓ Advanced upscaling</div>
-            <div>✓ Metadata control</div>
           </div>
         </div>
       )}

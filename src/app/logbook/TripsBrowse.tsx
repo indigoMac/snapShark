@@ -5,6 +5,7 @@ import { FolderPlus, MapPin, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import type { LogbookTrip } from '@/lib/logbook';
+import { ShareDialogButton } from './ShareDialogButton';
 
 type TripsBrowseProps = {
   trips: LogbookTrip[];
@@ -12,6 +13,7 @@ type TripsBrowseProps = {
   onSelectTrip: (tripId: string | null) => void;
   onCreated: (trip: LogbookTrip) => void;
   onDeleted: (tripId: string) => void;
+  onShareTokenChange: (tripId: string, token: string | null) => void;
 };
 
 export function TripsBrowse({
@@ -20,6 +22,7 @@ export function TripsBrowse({
   onSelectTrip,
   onCreated,
   onDeleted,
+  onShareTokenChange,
 }: TripsBrowseProps) {
   const [creating, setCreating] = useState(false);
   const [name, setName] = useState('');
@@ -170,6 +173,16 @@ export function TripsBrowse({
                   </div>
                 </div>
               </button>
+              <ShareDialogButton
+                kind="trip"
+                id={trip.id}
+                name={trip.name}
+                shareToken={trip.shareToken}
+                coverUrl={trip.coverUrl}
+                onShareTokenChange={(token) =>
+                  onShareTokenChange(trip.id, token)
+                }
+              />
               <Button
                 type="button"
                 size="sm"

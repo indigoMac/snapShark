@@ -142,6 +142,9 @@ export default function PrivacyPolicyPage() {
                   </li>
                   <li>• Trips you create and the places you assign to them</li>
                   <li>• Photos you attach to a dive, and their captions</li>
+                  <li>
+                    • Share tokens if you choose to publish a trip or place
+                  </li>
                 </ul>
                 <p className="text-sm text-muted-foreground mt-2">
                   <strong>Why:</strong> to provide the Logbook feature you asked
@@ -222,11 +225,14 @@ export default function PrivacyPolicyPage() {
                 <p className="text-sm text-muted-foreground">
                   Photos you attach to a dive are resized in your browser and
                   then uploaded to private storage (Vercel Blob). They have no
-                  public web address: every request goes through our server,
-                  which checks that you are signed in and that the photo belongs
-                  to your account before sending it back. Deleting a photo, a
-                  dive, or your Logbook removes the stored file as well as the
-                  database record.
+                  public web address by default: every request goes through our
+                  server, which checks that you are signed in and that the photo
+                  belongs to your account before sending it back. If you turn
+                  sharing on for a trip or a place, photos on that share can be
+                  loaded by anyone with the link. Deleting a photo, a dive, or
+                  your Logbook removes the stored file as well as the
+                  database record. Turning sharing off immediately stops the
+                  old link from working.
                 </p>
               </div>
               <div>
@@ -238,6 +244,17 @@ export default function PrivacyPolicyPage() {
                   place name, the search text is sent through our server to
                   OpenStreetMap&apos;s search service, so your IP address is not
                   shared with them for searches.
+                </p>
+              </div>
+              <div>
+                <h3 className="font-semibold mb-1">Share links you turn on</h3>
+                <p className="text-sm text-muted-foreground">
+                  Sharing is off until you create a link for a trip or a place.
+                  Anyone who has that link can see the name, notes, and photos
+                  you attached there. We do not list share pages in search
+                  results. The link is unguessable, but it is still a public
+                  URL: only share it with people you trust, and turn it off
+                  when you are done.
                 </p>
               </div>
               <div>
@@ -447,7 +464,8 @@ export default function PrivacyPolicyPage() {
                   <li>
                     • Every Logbook request, including each photo, is checked
                     against the signed-in account, so users cannot read each
-                    other&apos;s entries
+                    other&apos;s private entries. Share links are the exception:
+                    they only work for the trip or place you chose to publish
                   </li>
                   <li>• Payments handled by Stripe; we never see card details</li>
                 </ul>

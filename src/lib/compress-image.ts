@@ -49,7 +49,12 @@ function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => resolve(img);
-    img.onerror = () => reject(new Error('Failed to load image'));
+    img.onerror = () =>
+      reject(
+        new Error(
+          'Could not read that photo. iPhone HEIC shots work in Safari; otherwise save as JPEG first.'
+        )
+      );
     img.src = src;
   });
 }

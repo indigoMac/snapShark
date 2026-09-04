@@ -1,27 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
-import { requireDbUser } from '@/lib/auth';
+import { photoBelongsToShare } from '@/lib/share';
 import { logbookPhotoResponse } from '@/lib/photo-file';
 
-type RouteContext = { params: { id: string } };
+type RouteContext = { params: { token: string; photoId: string } };
 
 /**
- * Streams a logbook photo to its owner. Photos are stored privately, so this is
- * the only authenticated way to view one.
+ * Serves a photo that belongs to a currently-shared trip or place.
+ * Token in the URL is the access check; turning sharing off revokes this.
  */
 export async function GET(_req: NextRequest, { params }: RouteContext) {
   try {
-    const { user } = await requireDbUser();
-
-    const photo = await prisma.photo.findFirst({
-      where: { id: params.id, dive: { userId: user.id } },
-      select: { storageRef: true },
-    });
+    const photo = await photoBelongsToShare(params.token, params.photoId);
     if (!photo) {
       return NextResponse.json({ error: 'Photo not found' }, { status: 404 });
     }
 
-    return logbookPhotoResponse(photo.storageRef, 'private');
+    return logbookPhotoResponse(photo.storageRef, 'public');
   } catch (error: unknown) {
     const err = error as { status?: number; message?: string };
     return NextResponse.json(

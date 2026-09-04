@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
   title: 'Pricing',
   description:
-    'SnapShark is free to start for divers. Pro unlocks extra photo tools when you need them.',
+    'SnapShark is free to start: log dives, colour-fix a few photos, and send the trip. Pro is for a full memory card.',
   alternates: {
     canonical: '/pricing',
   },

@@ -126,7 +126,7 @@ export function CreatePlaceDialog({
           <DialogTitle>Pin a dive place</DialogTitle>
           <DialogDescription>
             {lat != null && lng != null
-              ? `Pin at ${lat.toFixed(4)}, ${lng.toFixed(4)}. Name it and optionally log your first dive.`
+              ? `Pin at ${lat.toFixed(4)}, ${lng.toFixed(4)}. A name is enough — add a dive if you want.`
               : 'Choose a spot on the map first.'}
           </DialogDescription>
         </DialogHeader>
@@ -178,6 +178,7 @@ export function CreatePlaceDialog({
                 value={details}
                 onChange={setDetails}
                 compact
+                defaultCollapsed
               />
             </div>
           )}

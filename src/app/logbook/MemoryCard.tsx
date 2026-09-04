@@ -246,6 +246,7 @@ export function AddMemoryForm({
         value={details}
         onChange={setDetails}
         compact
+        defaultCollapsed
       />
       {error && <p className="text-xs text-red-600">{error}</p>}
       <Button type="submit" disabled={saving} className="w-full">

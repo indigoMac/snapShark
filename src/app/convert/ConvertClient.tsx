@@ -297,7 +297,7 @@ export default function ConvertClient() {
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-1.5 h-1.5 bg-blue-600 dark:bg-blue-400 rounded-full" />
-                  <span>AVIF & HEIC format support</span>
+                  <span>AVIF output and print packages</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-1.5 h-1.5 bg-blue-600 dark:bg-blue-400 rounded-full" />

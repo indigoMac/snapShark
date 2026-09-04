@@ -3,6 +3,8 @@ import { prisma } from '@/lib/db';
 import { requireDbUser } from '@/lib/auth';
 import { storeLogbookPhoto } from '@/lib/store-logbook-photo';
 import { photoSrc } from '@/lib/logbook';
+import { getEntitlements } from '@/lib/entitlements';
+import { FREE_PHOTO_LIMIT, photoLimitReached } from '@/lib/plan';
 
 const MAX_DATA_URL_CHARS = 1_200_000;
 
@@ -36,6 +38,20 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         { error: 'Dive not found for current user' },
         { status: 404 }
+      );
+    }
+
+    const entitlements = await getEntitlements();
+    const photoCount = await prisma.photo.count({
+      where: { dive: { userId: user.id } },
+    });
+    if (photoLimitReached(entitlements.isPro, photoCount)) {
+      return NextResponse.json(
+        {
+          error: `Free accounts can keep ${FREE_PHOTO_LIMIT} photos. Upgrade to Pro for a full trip’s worth.`,
+          code: 'PHOTO_LIMIT',
+        },
+        { status: 403 }
       );
     }
 
