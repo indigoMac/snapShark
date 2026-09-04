@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -23,6 +23,8 @@ type ShareDialogButtonProps = {
   shareToken?: string | null;
   coverUrl?: string | null;
   onShareTokenChange: (token: string | null) => void;
+  /** Icon-only for tight toolbars; labeled for the dive entry footer. */
+  labeled?: boolean;
 };
 
 export function ShareDialogButton({
@@ -32,11 +34,16 @@ export function ShareDialogButton({
   shareToken,
   coverUrl,
   onShareTokenChange,
+  labeled = false,
 }: ShareDialogButtonProps) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [token, setToken] = useState(shareToken ?? null);
+
+  useEffect(() => {
+    setToken(shareToken ?? null);
+  }, [shareToken]);
 
   const endpoint =
     kind === 'trip' ? `/api/trips/${id}` : `/api/dive-sites/${id}`;
@@ -74,15 +81,24 @@ export function ShareDialogButton({
       <Button
         type="button"
         size="sm"
-        variant="ghost"
+        variant={labeled ? 'outline' : 'ghost'}
         title={live ? 'Sharing is on' : 'Share'}
-        onClick={() => setOpen(true)}
-        className={live ? 'text-[#2f6f6a]' : undefined}
+        onClick={(e) => {
+          e.stopPropagation();
+          setOpen(true);
+        }}
+        className={live && !labeled ? 'text-[#2f6f6a]' : undefined}
       >
-        <Share2 className="h-4 w-4" />
+        <Share2 className={labeled ? 'mr-1.5 h-3.5 w-3.5' : 'h-4 w-4'} />
+        {labeled ? 'Share' : null}
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent
+          className="z-[1200] sm:max-w-lg"
+          overlayClassName="z-[1200]"
+          onPointerDownOutside={(e) => e.stopPropagation()}
+          onInteractOutside={(e) => e.stopPropagation()}
+        >
           <DialogHeader>
             <DialogTitle>
               {kind === 'trip' ? 'Share this trip' : 'Share this place'}

@@ -604,6 +604,7 @@ export default function LogbookClient() {
                           name={selectedSite.name}
                           shareToken={selectedSite.shareToken}
                           coverUrl={coverPhotoForSite(selectedSite)}
+                          labeled
                           onShareTokenChange={(token) => {
                             setSites((prev) =>
                               prev.map((s) =>
@@ -687,6 +688,9 @@ export default function LogbookClient() {
                       key={dive.id}
                       dive={dive}
                       placeName={selectedSite.name}
+                      placeId={selectedSite.id}
+                      shareToken={selectedSite.shareToken}
+                      coverUrl={coverPhotoForSite(selectedSite)}
                       highlight={dive.id === highlightedDiveId}
                       pendingPhotoDataUrl={pendingPhoto?.dataUrl}
                       onPhotoAdded={(photo) =>
@@ -698,6 +702,15 @@ export default function LogbookClient() {
                       onUpdated={handleMemoryUpdated}
                       onDeleted={handleMemoryDeleted}
                       onAttachedPending={dismissPendingPhoto}
+                      onShareTokenChange={(token) => {
+                        setSites((prev) =>
+                          prev.map((s) =>
+                            s.id === selectedSite.id
+                              ? { ...s, shareToken: token }
+                              : s
+                          )
+                        );
+                      }}
                     />
                   ))
                 )}
