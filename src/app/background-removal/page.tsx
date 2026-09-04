@@ -5,18 +5,17 @@ import { PageHeader } from '@/components/PageHeader';
 export const metadata: Metadata = {
   title: 'Background Removal',
   description:
-    'Remove backgrounds from images instantly with AI. Privacy-first processing in your browser.',
+    'Cut a subject free in your browser — a photo tool in SnapShark, next to the dive logbook and underwater colour fix.',
   keywords: [
     'background removal',
-    'AI image editing',
-    'remove background',
+    'dive photos',
     'transparent background',
-    'image cutout',
+    'SnapShark',
   ],
   openGraph: {
     title: 'Background Removal | SnapShark',
     description:
-      'Remove backgrounds from images instantly with AI. Privacy-first processing in your browser.',
+      'Cut a subject free in your browser — a photo tool in SnapShark, next to the dive logbook and underwater colour fix.',
     type: 'website',
     url: 'https://www.snap-shark.com/background-removal',
   },

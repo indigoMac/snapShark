@@ -2,9 +2,12 @@ import type { Metadata } from 'next';
 import ConvertClient from './ConvertClient';
 
 export const metadata: Metadata = {
-  title: 'Image Processor',
+  title: 'Photo tools',
   description:
-    'Convert and resize images directly in your browser. No uploads, complete privacy.',
+    'Convert and resize photos in your browser — a secondary toolkit alongside the SnapShark dive logbook.',
+  alternates: {
+    canonical: '/convert',
+  },
 };
 
 export default function ConvertPage() {

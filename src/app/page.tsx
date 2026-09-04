@@ -1,41 +1,34 @@
 import type { Metadata } from 'next';
 import { HomeLanding } from '@/components/HomeLanding';
+import {
+  HOME_DESCRIPTION,
+  HOME_KEYWORDS,
+  HOME_TITLE,
+  OG_IMAGE,
+  SITE_URL,
+} from '@/lib/seo';
 
 export const metadata: Metadata = {
-  title: 'SnapShark — Dive logbook & underwater photo tools',
-  description:
-    'A dive logbook worth revisiting, and underwater colour correction that runs in your browser. Built for divers.',
-  keywords: [
-    'dive logbook',
-    'scuba diving log',
-    'snorkeling log',
-    'underwater photo correction',
-    'dive photos',
-    'SnapShark',
-  ],
+  title: {
+    absolute: HOME_TITLE,
+  },
+  description: HOME_DESCRIPTION,
+  keywords: [...HOME_KEYWORDS],
   openGraph: {
-    title: 'SnapShark — Dive logbook & underwater photo tools',
-    description:
-      'Map your dives, keep the details that matter, and bring the colour back to your underwater photos.',
+    title: HOME_TITLE,
+    description: HOME_DESCRIPTION,
     type: 'website',
-    url: 'https://www.snap-shark.com',
-    images: [
-      {
-        url: '/marketing/hero-dive.jpg',
-        width: 2400,
-        height: 1600,
-        alt: 'Scuba diver beside a school of bluestripe snappers',
-      },
-    ],
+    url: SITE_URL,
+    images: [OG_IMAGE],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'SnapShark — Dive logbook & underwater photo tools',
-    description:
-      'A dive logbook worth revisiting, and underwater colour correction in your browser.',
+    title: HOME_TITLE,
+    description: HOME_DESCRIPTION,
+    images: [OG_IMAGE.url],
   },
   alternates: {
-    canonical: 'https://www.snap-shark.com',
+    canonical: SITE_URL,
   },
 };
 

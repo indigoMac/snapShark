@@ -9,6 +9,16 @@ import { LogoIcon } from '@/components/Logo';
 import { ThemeProvider } from '@/components/theme-provider';
 import { ErrorTrackingProvider } from '@/components/ErrorTrackingProvider';
 import { Analytics } from '@vercel/analytics/react';
+import {
+  HOME_DESCRIPTION,
+  HOME_KEYWORDS,
+  HOME_TITLE,
+  OG_IMAGE,
+  SITE_NAME,
+  SITE_URL,
+  webAppJsonLd,
+  websiteJsonLd,
+} from '@/lib/seo';
 import './globals.css';
 
 const appFont = localFont({
@@ -31,21 +41,34 @@ const landingBody = Manrope({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
+  applicationName: SITE_NAME,
   title: {
-    default: 'SnapShark — Dive logbook & underwater photo tools',
+    default: HOME_TITLE,
     template: '%s | SnapShark',
   },
-  description:
-    'A dive logbook worth revisiting, and underwater colour correction that runs in your browser. Built for divers.',
-  keywords: [
-    'dive logbook',
-    'scuba diving log',
-    'snorkeling log',
-    'underwater photo correction',
-    'dive photos',
-    'SnapShark',
-  ],
-  authors: [{ name: 'SnapShark' }],
+  description: HOME_DESCRIPTION,
+  keywords: [...HOME_KEYWORDS],
+  authors: [{ name: SITE_NAME }],
+  openGraph: {
+    type: 'website',
+    locale: 'en_GB',
+    url: SITE_URL,
+    siteName: SITE_NAME,
+    title: HOME_TITLE,
+    description: HOME_DESCRIPTION,
+    images: [OG_IMAGE],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: HOME_TITLE,
+    description: HOME_DESCRIPTION,
+    images: [OG_IMAGE.url],
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
   manifest: '/manifest.json',
   icons: {
     icon: [
@@ -104,6 +127,12 @@ export default function RootLayout({
 
           {/* Modern mobile web app capability */}
           <meta name="mobile-web-app-capable" content="yes" />
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify([websiteJsonLd, webAppJsonLd]),
+            }}
+          />
         </head>
         <body
           className={`${appFont.className} ${landingDisplay.variable} ${landingBody.variable}`}
