@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireDbUser } from '@/lib/auth';
 import { diveSiteInclude, serializeSite } from '@/lib/logbook';
+import { nextShareToken } from '@/lib/share';
 
 type RouteContext = { params: { id: string } };
 
@@ -17,11 +18,12 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       latitude,
       longitude,
       tripId,
+      shareEnabled,
     } = body;
 
     const existing = await prisma.diveSite.findFirst({
       where: { id: params.id, userId: user.id },
-      select: { id: true },
+      select: { id: true, shareToken: true },
     });
     if (!existing) {
       return NextResponse.json({ error: 'Place not found' }, { status: 404 });
@@ -70,6 +72,9 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
         ...(longitude !== undefined ? { longitude: Number(longitude) } : {}),
         ...(tripId !== undefined
           ? { tripId: tripId === null || tripId === '' ? null : tripId }
+          : {}),
+        ...(typeof shareEnabled === 'boolean'
+          ? { shareToken: nextShareToken(shareEnabled, existing.shareToken) }
           : {}),
       },
       include: diveSiteInclude,

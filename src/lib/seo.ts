@@ -9,7 +9,7 @@ export const HOME_TITLE =
   'SnapShark - Dive Logbook & Underwater Photo Tools';
 
 export const HOME_DESCRIPTION =
-  'Log your dives on a map, keep the details that matter, and restore colour to underwater photos in your browser. Built for divers and snorkellers. Free to start.';
+  'Fix a dive photo, drop it on the map, and send the trip. A private logbook for divers and snorkellers. Free to start.';
 
 export const HOME_KEYWORDS = [
   'dive logbook',

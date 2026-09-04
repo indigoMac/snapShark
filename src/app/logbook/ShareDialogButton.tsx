@@ -1,0 +1,150 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { Share2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { ShareBar } from '@/components/ShareBar';
+import { sharePath } from '@/lib/share-url';
+import { SITE_URL } from '@/lib/seo';
+
+type ShareKind = 'trip' | 'place';
+
+type ShareDialogButtonProps = {
+  kind: ShareKind;
+  id: string;
+  name: string;
+  shareToken?: string | null;
+  coverUrl?: string | null;
+  onShareTokenChange: (token: string | null) => void;
+  /** Icon-only for tight toolbars; labeled for the dive entry footer. */
+  labeled?: boolean;
+};
+
+export function ShareDialogButton({
+  kind,
+  id,
+  name,
+  shareToken,
+  coverUrl,
+  onShareTokenChange,
+  labeled = false,
+}: ShareDialogButtonProps) {
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [token, setToken] = useState(shareToken ?? null);
+
+  useEffect(() => {
+    setToken(shareToken ?? null);
+  }, [shareToken]);
+
+  const endpoint =
+    kind === 'trip' ? `/api/trips/${id}` : `/api/dive-sites/${id}`;
+  const live = Boolean(token);
+  const origin =
+    typeof window !== 'undefined' ? window.location.origin : SITE_URL;
+  const url = token ? `${origin}${sharePath(token)}` : '';
+
+  const setSharing = async (shareEnabled: boolean) => {
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await fetch(endpoint, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ shareEnabled }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Could not update sharing');
+      }
+      const json = (await res.json()) as { shareToken?: string | null };
+      const next = json.shareToken ?? null;
+      setToken(next);
+      onShareTokenChange(next);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Could not update sharing');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <>
+      <Button
+        type="button"
+        size="sm"
+        variant={labeled ? 'outline' : 'ghost'}
+        title={live ? 'Sharing is on' : 'Share'}
+        onClick={(e) => {
+          e.stopPropagation();
+          setOpen(true);
+        }}
+        className={live && !labeled ? 'text-[#2f6f6a]' : undefined}
+      >
+        <Share2 className={labeled ? 'mr-1.5 h-3.5 w-3.5' : 'h-4 w-4'} />
+        {labeled ? 'Share' : null}
+      </Button>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent
+          className="z-[1200] sm:max-w-lg"
+          overlayClassName="z-[1200]"
+          onPointerDownOutside={(e) => e.stopPropagation()}
+          onInteractOutside={(e) => e.stopPropagation()}
+        >
+          <DialogHeader>
+            <DialogTitle>
+              {kind === 'trip' ? 'Share this trip' : 'Share this place'}
+            </DialogTitle>
+            <DialogDescription>
+              Anyone with the link can see the photos and notes on “{name}”.
+              Your logbook stays private until you turn this on. Turn it off and
+              the old link stops working.
+            </DialogDescription>
+          </DialogHeader>
+
+          {!live ? (
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                This makes a page you can paste into WhatsApp, Messages, or
+                Instagram — not a public feed.
+              </p>
+              <Button
+                type="button"
+                disabled={busy}
+                onClick={() => void setSharing(true)}
+              >
+                {busy ? 'Creating link…' : 'Create a share link'}
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <ShareBar
+                url={url}
+                title={name}
+                text={`Look at this dive ${kind === 'trip' ? 'trip' : 'site'} on SnapShark`}
+                imageUrl={coverUrl ?? null}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                disabled={busy}
+                onClick={() => void setSharing(false)}
+              >
+                {busy ? 'Stopping…' : 'Stop sharing'}
+              </Button>
+            </div>
+          )}
+          {error && <p className="text-sm text-red-600">{error}</p>}
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}

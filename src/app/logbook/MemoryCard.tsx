@@ -18,6 +18,9 @@ import { DiveDetailDialog } from './DiveDetailDialog';
 type MemoryCardProps = {
   dive: LogbookDive;
   placeName?: string;
+  placeId?: string;
+  shareToken?: string | null;
+  coverUrl?: string | null;
   highlight?: boolean;
   pendingPhotoDataUrl?: string | null;
   onPhotoAdded?: (photo: LogbookPhoto) => void;
@@ -25,11 +28,15 @@ type MemoryCardProps = {
   onUpdated?: (dive: LogbookDive) => void;
   onDeleted?: (diveId: string) => void;
   onAttachedPending?: () => void;
+  onShareTokenChange?: (token: string | null) => void;
 };
 
 export function MemoryCard({
   dive,
   placeName,
+  placeId,
+  shareToken,
+  coverUrl,
   highlight = false,
   pendingPhotoDataUrl,
   onPhotoAdded,
@@ -37,6 +44,7 @@ export function MemoryCard({
   onUpdated,
   onDeleted,
   onAttachedPending,
+  onShareTokenChange,
 }: MemoryCardProps) {
   const [open, setOpen] = useState(false);
   const [photos, setPhotos] = useState(dive.photos);
@@ -145,6 +153,10 @@ export function MemoryCard({
       <DiveDetailDialog
         dive={{ ...dive, photos }}
         placeName={placeName}
+        placeId={placeId}
+        shareToken={shareToken}
+        coverUrl={coverUrl}
+        onShareTokenChange={onShareTokenChange}
         open={open}
         onOpenChange={setOpen}
         pendingPhotoDataUrl={pendingPhotoDataUrl}
@@ -246,6 +258,7 @@ export function AddMemoryForm({
         value={details}
         onChange={setDetails}
         compact
+        defaultCollapsed
       />
       {error && <p className="text-xs text-red-600">{error}</p>}
       <Button type="submit" disabled={saving} className="w-full">

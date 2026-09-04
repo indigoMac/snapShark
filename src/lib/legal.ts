@@ -22,8 +22,8 @@ export const LEGAL = {
   },
   minimumAge: 16,
   /** Bump when the policy text materially changes. */
-  privacyLastUpdated: '1 September 2026',
-  termsLastUpdated: '1 September 2026',
+  privacyLastUpdated: '4 September 2026',
+  termsLastUpdated: '4 September 2026',
 } as const;
 
 /** Third parties that process data on our behalf, or that the browser contacts directly. */

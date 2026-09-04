@@ -9,6 +9,12 @@ import { BookImage, Download, Upload, RotateCcw, Waves } from 'lucide-react';
 import { downloadFile, createZip, downloadZip } from '@/lib/zip';
 import { compressImageForLogbook } from '@/lib/compress-image';
 import { storePendingPhoto } from '@/lib/logbook';
+import { usePaywall } from '@/hooks/usePaywall';
+import { PaywallDialog } from '@/components/PaywallDialog';
+import {
+  FREE_COLOUR_BATCH_LIMIT,
+  PRO_COLOUR_BATCH_LIMIT,
+} from '@/lib/plan';
 
 interface ProcessedResult {
   original: string;
@@ -20,6 +26,13 @@ interface ProcessedResult {
 
 export default function UnderwaterPage() {
   const router = useRouter();
+  const {
+    isPro,
+    requestFeatureAccess,
+    showPaywallDialog,
+    closePaywallDialog,
+    paywallFeature,
+  } = usePaywall();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [results, setResults] = useState<ProcessedResult[]>([]);
@@ -95,14 +108,31 @@ export default function UnderwaterPage() {
           setError('Batch processing only supports images. Please select image files only.');
           return;
         }
-        
-        setSelectedFiles(imageFiles);
+
+        let batch = imageFiles;
+        if (batch.length > PRO_COLOUR_BATCH_LIMIT) {
+          batch = batch.slice(0, PRO_COLOUR_BATCH_LIMIT);
+        }
+        if (batch.length > FREE_COLOUR_BATCH_LIMIT) {
+          const allowed = requestFeatureAccess(
+            'colour-batch',
+            'Colour-fix a whole memory card'
+          );
+          if (!allowed) {
+            batch = batch.slice(0, FREE_COLOUR_BATCH_LIMIT);
+            setError(
+              `Free colour-fix is ${FREE_COLOUR_BATCH_LIMIT} photos at a time. Upgrade to do a whole card.`
+            );
+          }
+        }
+
+        setSelectedFiles(batch);
         setIsVideoFile(false);
-        setIsBatchMode(true);
-        // Don't auto-process in batch mode, wait for user to click "Process Batch"
+        setIsBatchMode(batch.length > 1);
+        return;
       }
     },
-    [intensity]
+    [intensity, requestFeatureAccess]
   );
 
   const processImage = useCallback(
@@ -119,7 +149,12 @@ export default function UnderwaterPage() {
 
         await new Promise((resolve, reject) => {
           img.onload = resolve;
-          img.onerror = reject;
+          img.onerror = () =>
+            reject(
+              new Error(
+                'Could not read that photo. iPhone HEIC shots work in Safari; otherwise save as JPEG first.'
+              )
+            );
           img.src = imageUrl;
         });
 
@@ -926,10 +961,12 @@ export default function UnderwaterPage() {
                       Tap to upload underwater photos or video
                     </p>
                     <p className="text-sm text-[#9bb8b3]">
-                      JPG, PNG, WebP · MP4, WebM, MOV (max 100MB, 60s)
+                      JPG, PNG, WebP, HEIC on iPhone · MP4, WebM, MOV (max 100MB)
                     </p>
                     <p className="mt-2 text-xs text-[#7a9a95]">
-                      Select multiple images for batch processing
+                      {isPro
+                        ? `Select up to ${PRO_COLOUR_BATCH_LIMIT} photos`
+                        : `Free: ${FREE_COLOUR_BATCH_LIMIT} photos at a time · Pro for a whole card`}
                     </p>
                   </div>
                   <input
@@ -1294,6 +1331,11 @@ export default function UnderwaterPage() {
           </Card>
         </div>
       </div>
+      <PaywallDialog
+        open={showPaywallDialog}
+        onOpenChange={closePaywallDialog}
+        feature={paywallFeature}
+      />
     </div>
   );
 }

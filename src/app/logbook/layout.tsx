@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
   title: 'Dive logbook',
   description:
-    'Map dive sites, group trips, and keep depth, time, buddy, notes, and photos together in one logbook.',
+    'Map dive sites, attach photos, and send a trip link. Depth and time are optional.',
   alternates: {
     canonical: '/logbook',
   },

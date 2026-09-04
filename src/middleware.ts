@@ -18,6 +18,7 @@ const isProtectedApiRoute = createRouteMatcher([
 
 const isUploadRoute = createRouteMatcher(['/api/photos']);
 const isGeocodeRoute = createRouteMatcher(['/api/geocode(.*)']);
+const isShareApiRoute = createRouteMatcher(['/api/share(.*)']);
 
 function tooManyRequests(result: {
   limit: number;
@@ -35,6 +36,12 @@ function tooManyRequests(result: {
 
 export default clerkMiddleware(async (auth, req) => {
   const isUpload = isUploadRoute(req) && req.method === 'POST';
+
+  if (isShareApiRoute(req)) {
+    const result = await RATE_LIMITS.SHARE(req);
+    if (!result.success) return tooManyRequests(result);
+    return NextResponse.next();
+  }
 
   if (isGeocodeRoute(req)) {
     const { userId } = await auth();

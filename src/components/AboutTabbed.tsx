@@ -213,12 +213,16 @@ function FeaturesTab() {
           </h3>
           <ul className="space-y-1 text-[#c5ddd8]">
             <li>• Search for a place, or drop and drag a pin on the map</li>
-            <li>• Log dives with notes and photos</li>
+            <li>• Log dives with a note and photos — details are optional</li>
             <li>
-              • Optional details: dive type, max depth, bottom time, buddy,
+              • Optional extras: dive type, max depth, bottom time, buddy,
               visibility, and water temperature
             </li>
             <li>• Group places into trips</li>
+            <li>
+              • Share a trip or a place as a link for WhatsApp, Messages, or
+              Instagram
+            </li>
             <li>• Full-screen view of any dive entry</li>
           </ul>
         </div>
@@ -242,10 +246,10 @@ function FeaturesTab() {
           Free and Pro
         </h2>
         <p className="mt-4 text-[#c5ddd8]">
-          The logbook and every core tool are free. Pro adds convenience rather
-          than unlocking basics: batch processing, instant multi-size packages,
-          and the extra formats. You can do most of it on the free plan, one
-          image at a time.
+          The logbook, colour-fix for a few photos, and trip sharing are free.
+          Pro is for when you come back with a full card: batch colour-fix and
+          more photo storage. Converter extras (AVIF, print packages) stay on
+          Pro too. There are no watermarks on either plan.
         </p>
         <p className="mt-3 text-[#c5ddd8]">
           Pro is £3 per month. There are no watermarks on either plan.
@@ -277,8 +281,9 @@ function PrivacyTab() {
           A logbook is only useful if it follows you between devices, so
           anything you save there is stored on our servers: places, dives,
           notes, details, and photos. Photos are held in private storage and are
-          only ever sent back to you after we check you are signed in and that
-          they belong to your account.
+          only sent back to you after we check you are signed in — unless you
+          turn sharing on for a trip or place, in which case anyone with that
+          link can view it. Turn sharing off and the old link stops working.
         </p>
         <p className="mt-4 text-base leading-relaxed text-[#c5ddd8] sm:text-lg">
           You can download everything, or permanently delete it, from your{' '}

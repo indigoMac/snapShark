@@ -500,10 +500,10 @@ function AccountPageContent() {
                 What happens when you cancel:
               </h4>
               <ul className="text-sm text-orange-700 space-y-1">
-                <li>• You'll lose access to batch processing (50+ files)</li>
-                <li>• Professional presets will be disabled</li>
-                <li>• AVIF & HEIC support will be removed</li>
-                <li>• ZIP download functionality will be disabled</li>
+                <li>• You&apos;ll go back to 3 colour-fixes at a time</li>
+                <li>• Free photo storage cap will apply again</li>
+                <li>• Batch converter extras (AVIF, print packages) will stop</li>
+                <li>• Your logbook and share links stay</li>
               </ul>
             </div>
 

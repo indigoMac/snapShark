@@ -29,10 +29,15 @@ import {
   type DiveDetailsInput,
 } from '@/lib/dive-details';
 import { DiveDetailsFields } from './DiveDetailsFields';
+import { ShareDialogButton } from './ShareDialogButton';
 
 type DiveDetailDialogProps = {
   dive: LogbookDive;
   placeName?: string;
+  placeId?: string;
+  shareToken?: string | null;
+  coverUrl?: string | null;
+  onShareTokenChange?: (token: string | null) => void;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   pendingPhotoDataUrl?: string | null;
@@ -68,6 +73,10 @@ function formatDiveTime(iso: string) {
 export function DiveDetailDialog({
   dive,
   placeName,
+  placeId,
+  shareToken,
+  coverUrl,
+  onShareTokenChange,
   open,
   onOpenChange,
   pendingPhotoDataUrl,
@@ -511,6 +520,17 @@ export function DiveDetailDialog({
                 )}
                 Add photo
               </Button>
+              {placeId && onShareTokenChange && (
+                <ShareDialogButton
+                  kind="place"
+                  id={placeId}
+                  name={placeName || 'Dive place'}
+                  shareToken={shareToken}
+                  coverUrl={coverUrl ?? dive.photos[0]?.url ?? null}
+                  onShareTokenChange={onShareTokenChange}
+                  labeled
+                />
+              )}
               {pendingPhotoDataUrl && (
                 <Button
                   type="button"

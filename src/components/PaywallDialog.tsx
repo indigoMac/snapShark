@@ -51,8 +51,8 @@ export function PaywallDialog({
             </div>
           </div>
           <DialogDescription className="text-center">
-            {feature ? `${feature} requires` : 'Unlock'} Pro features for
-            powerful batch processing and advanced tools.
+            {feature ? `${feature} is` : 'This is'} a Pro feature — for when you
+            come back with a full memory card, not to start logging dives.
           </DialogDescription>
         </DialogHeader>
 
@@ -60,27 +60,19 @@ export function PaywallDialog({
           <div className="grid gap-3">
             <div className="flex items-center gap-3">
               <Check className="h-4 w-4 text-green-500" />
-              <span className="text-sm">Batch process multiple images</span>
+              <span className="text-sm">Colour-fix a whole trip at once</span>
             </div>
             <div className="flex items-center gap-3">
               <Check className="h-4 w-4 text-green-500" />
-              <span className="text-sm">Professional presets & templates</span>
+              <span className="text-sm">More logbook photo storage</span>
             </div>
             <div className="flex items-center gap-3">
               <Check className="h-4 w-4 text-green-500" />
-              <span className="text-sm">AVIF format support</span>
+              <span className="text-sm">ZIP download of a corrected batch</span>
             </div>
             <div className="flex items-center gap-3">
               <Check className="h-4 w-4 text-green-500" />
-              <span className="text-sm">ZIP download for batches</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <Check className="h-4 w-4 text-green-500" />
-              <span className="text-sm">HEIC/HEIF support</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <Check className="h-4 w-4 text-green-500" />
-              <span className="text-sm">Metadata stripping</span>
+              <span className="text-sm">Converter extras: AVIF, print sizes</span>
             </div>
           </div>
 

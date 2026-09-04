@@ -85,6 +85,10 @@ export default function TermsOfServicePage() {
                       • A personal dive Logbook that saves places, dives, notes,
                       and photos to your account
                     </li>
+                    <li>
+                      • Optional share links so you can send a trip or place to
+                      someone else
+                    </li>
                   </ul>
                 </div>
                 <div>
@@ -267,10 +271,12 @@ export default function TermsOfServicePage() {
                   <p className="text-sm text-muted-foreground mb-2">
                     For Logbook content only, you give us a limited licence to
                     store, copy, and display that content back to you so we can
-                    operate the feature. That licence exists purely to run the
-                    service: we do not publish your entries, sell them, or use
-                    them to train models. It ends when you delete the content or
-                    your account.
+                    operate the feature. If you turn sharing on, that licence
+                    also covers showing the shared trip or place to people who
+                    open the link. We do not otherwise publish your entries, sell
+                    them, or use them to train models. The licence ends when you
+                    delete the content, turn sharing off, or delete your
+                    account.
                   </p>
                   <p className="text-sm text-muted-foreground">
                     You are responsible for what you upload. Only add photos you

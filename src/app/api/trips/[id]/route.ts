@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireDbUser } from '@/lib/auth';
 import { serializeTrip } from '@/lib/logbook';
+import { nextShareToken } from '@/lib/share';
 
 const tripInclude = {
   places: {
@@ -20,11 +21,11 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
   try {
     const { user } = await requireDbUser();
     const body = await req.json();
-    const { name, description, startDate, endDate } = body;
+    const { name, description, startDate, endDate, shareEnabled } = body;
 
     const existing = await prisma.trip.findFirst({
       where: { id: params.id, userId: user.id },
-      select: { id: true },
+      select: { id: true, shareToken: true },
     });
     if (!existing) {
       return NextResponse.json({ error: 'Trip not found' }, { status: 404 });
@@ -44,6 +45,9 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
           : {}),
         ...(endDate !== undefined
           ? { endDate: endDate ? new Date(endDate) : null }
+          : {}),
+        ...(typeof shareEnabled === 'boolean'
+          ? { shareToken: nextShareToken(shareEnabled, existing.shareToken) }
           : {}),
       },
       include: tripInclude,

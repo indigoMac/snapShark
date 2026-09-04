@@ -99,11 +99,11 @@ export function HomeLanding() {
               <span className="text-[#7ec8c0]">Shark</span>
             </p>
             <h1 className="home-landing-hero-line home-landing-hero-line-2 mt-4 max-w-xl font-landing-display text-[clamp(1.35rem,5.5vw,2.35rem)] font-medium leading-snug tracking-tight text-[#e8f4f1] sm:mt-5">
-              Your dives. Worth coming back to.
+              Fix the photo. Drop it on the map. Send the trip.
             </h1>
             <p className="home-landing-hero-line home-landing-hero-line-3 mt-4 max-w-md text-[0.95rem] leading-relaxed text-[#b7d4cf] sm:text-lg">
-              A quiet logbook for the places you dive, and a colour fix that
-              brings the reds back to your photos.
+              A private logbook for the places you dive, a colour fix that
+              brings the reds back, and a link you can paste into WhatsApp.
             </p>
             <div className="home-landing-hero-line home-landing-hero-line-4 mt-7 flex w-full flex-col gap-3 sm:mt-8 sm:w-auto sm:flex-row sm:items-center">
               <Link
@@ -141,9 +141,9 @@ export function HomeLanding() {
             </Reveal>
             <Reveal delayMs={160}>
               <p className="mt-5 max-w-md text-base leading-relaxed text-[#3d565c] sm:text-lg">
-                Pin sites on the map, group trips, and save the details that
-                matter — depth, bottom time, buddy, notes, and the photos you
-                want to remember.
+                Pin a site, attach the shot, and you are done. Depth and time
+                can wait. When you want someone else to see it, send a link —
+                not another social app.
               </p>
             </Reveal>
             <Reveal delayMs={240}>
@@ -231,6 +231,29 @@ export function HomeLanding() {
         </div>
       </section>
 
+      {/* Share */}
+      <section className={`${sectionClass} bg-[#f4f7f6] text-[#0b2a32]`}>
+        <div className="mx-auto max-w-3xl px-5 py-16 text-center sm:px-10 sm:py-20 lg:py-28">
+          <Reveal>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#2f6f6a]">
+              Send the trip
+            </p>
+          </Reveal>
+          <Reveal delayMs={80}>
+            <h2 className="mt-3 font-landing-display text-[1.75rem] leading-tight tracking-tight sm:text-4xl lg:text-[2.75rem]">
+              Paste a link. Not another login.
+            </h2>
+          </Reveal>
+          <Reveal delayMs={160}>
+            <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-[#3d565c] sm:text-lg">
+              Turn sharing on for a trip or a place and you get a page that
+              looks right in WhatsApp, Messages, or an Instagram story. Your
+              logbook stays private until you choose.
+            </p>
+          </Reveal>
+        </div>
+      </section>
+
       {/* Close */}
       <section className={`${sectionClass} bg-[#031820] text-[#e8f4f1]`}>
         <div className="mx-auto max-w-3xl px-5 py-20 text-center sm:px-10 sm:py-24 lg:py-32">
@@ -241,8 +264,8 @@ export function HomeLanding() {
           </Reveal>
           <Reveal delayMs={100}>
             <p className="mx-auto mt-5 max-w-lg text-base leading-relaxed text-[#9bb8b3] sm:text-lg">
-              Free to start. Private photo tools in your browser. A logbook that
-              follows you between devices.
+              Free to start. Colour-fix in your browser. A logbook that follows
+              you — and a link when you want to show someone.
             </p>
           </Reveal>
           <Reveal delayMs={180}>

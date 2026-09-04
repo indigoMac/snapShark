@@ -1,5 +1,6 @@
 export type PaywallFeature =
   | 'batch'
+  | 'colour-batch'
   | 'presets'
   | 'advanced-formats'
   | 'zip-export'
