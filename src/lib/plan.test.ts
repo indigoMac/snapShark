@@ -29,8 +29,8 @@ describe('plan caps', () => {
 describe('share tokens', () => {
   it('mints a URL-safe token long enough to be unguessable', () => {
     const token = createShareToken();
-    expect(token).toMatch(/^[A-Za-z0-9_-]+$/);
-    expect(token.length).toBeGreaterThanOrEqual(20);
+    expect(token).toMatch(/^[a-f0-9]+$/);
+    expect(token.length).toBe(36);
   });
 
   it('keeps a live token and rotates after sharing is turned off', () => {

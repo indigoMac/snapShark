@@ -6,17 +6,18 @@ export function sharePhotoSrc(token: string, photoId: string): string {
   return `/api/share/${token}/photos/${photoId}`;
 }
 
+/**
+ * Random unguessable token. Encoded as hex so we never depend on `btoa`,
+ * which throws on binary strings in jsdom/CI.
+ */
 export function createShareToken(): string {
   const bytes = new Uint8Array(18);
   crypto.getRandomValues(bytes);
-  let binary = '';
+  let hex = '';
   for (let i = 0; i < bytes.length; i += 1) {
-    binary += String.fromCharCode(bytes[i]);
+    hex += (bytes[i] as number).toString(16).padStart(2, '0');
   }
-  return btoa(binary)
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=+$/g, '');
+  return hex;
 }
 
 /** Keep a live URL stable; mint a new token after a share is turned off. */
