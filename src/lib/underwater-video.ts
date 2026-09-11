@@ -121,9 +121,18 @@ export async function waitForVideoData(video: HTMLVideoElement): Promise<void> {
         )
       );
     };
+    const timeoutId = window.setTimeout(() => {
+      cleanup();
+      reject(
+        new Error(
+          'Could not read that video. Try an MP4 or WebM clip under 60 seconds.'
+        )
+      );
+    }, 8000);
     const cleanup = () => {
       video.removeEventListener('loadeddata', onReady);
       video.removeEventListener('error', onError);
+      window.clearTimeout(timeoutId);
     };
     video.addEventListener('loadeddata', onReady);
     video.addEventListener('error', onError);
@@ -153,10 +162,55 @@ export function waitForVideoTime(
   });
 }
 
+export function mountOffscreen(element: HTMLElement): void {
+  element.style.position = 'fixed';
+  element.style.left = '0';
+  element.style.top = '0';
+  element.style.opacity = '0';
+  element.style.pointerEvents = 'none';
+  element.style.zIndex = '-1';
+  document.body.appendChild(element);
+}
+
+export function requestCanvasFrame(stream: MediaStream): void {
+  const track = stream.getVideoTracks()[0] as
+    | (MediaStreamTrack & { requestFrame?: () => void })
+    | undefined;
+  track?.requestFrame?.();
+}
+
+export async function waitOneFrame(): Promise<void> {
+  await new Promise<void>((resolve) => {
+    requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+  });
+}
+
+export async function readBlobDuration(blob: Blob): Promise<number> {
+  const url = URL.createObjectURL(blob);
+  try {
+    const video = document.createElement('video');
+    video.muted = true;
+    video.preload = 'metadata';
+    video.src = url;
+    await waitForVideoData(video);
+    const duration = video.duration;
+    video.src = '';
+    return Number.isFinite(duration) ? duration : 0;
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
+export type CanvasRecorderSession = {
+  recorder: MediaRecorder;
+  mimeType: string;
+  stop: () => Promise<Blob>;
+};
+
 export async function startCanvasRecorder(
   stream: MediaStream,
   bitsPerSecond: number
-): Promise<{ recorder: MediaRecorder; mimeType: string }> {
+): Promise<CanvasRecorderSession> {
   if (typeof MediaRecorder === 'undefined') {
     throw new Error(
       'Video colour-fix is not supported in this browser. Try the latest Chrome, Firefox, or Safari.'
@@ -174,9 +228,17 @@ export async function startCanvasRecorder(
       const options: MediaRecorderOptions = { videoBitsPerSecond: bitsPerSecond };
       if (mimeType) options.mimeType = mimeType;
       const recorder = new MediaRecorder(stream, options);
+      const chunks: Blob[] = [];
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) chunks.push(event.data);
+      };
       const started = await waitForRecorderStart(recorder);
       if (started) {
-        return { recorder, mimeType: recorder.mimeType || mimeType };
+        return {
+          recorder,
+          mimeType: recorder.mimeType || mimeType,
+          stop: () => finalizeRecorder(recorder, chunks),
+        };
       }
       if (recorder.state !== 'inactive') {
         recorder.stop();
@@ -211,7 +273,8 @@ function waitForRecorderStart(recorder: MediaRecorder): Promise<boolean> {
     recorder.addEventListener('start', onStart);
     recorder.addEventListener('error', onError);
     try {
-      recorder.start(200);
+      // No timeslice: one blob on stop. Timeslice events were previously dropped.
+      recorder.start();
     } catch {
       finish(false);
       return;
@@ -222,21 +285,22 @@ function waitForRecorderStart(recorder: MediaRecorder): Promise<boolean> {
   });
 }
 
-export function stopRecorder(recorder: MediaRecorder): Promise<Blob[]> {
+function finalizeRecorder(
+  recorder: MediaRecorder,
+  chunks: Blob[]
+): Promise<Blob> {
   return new Promise((resolve, reject) => {
-    const chunks: Blob[] = [];
-    recorder.ondataavailable = (event) => {
-      if (event.data.size > 0) chunks.push(event.data);
-    };
+    const mimeType = recorder.mimeType || 'video/webm';
     recorder.onerror = () => {
       reject(new Error('Video encoding failed. Try a shorter MP4 or WebM clip.'));
     };
-    recorder.onstop = () => resolve(chunks);
+    recorder.onstop = () => {
+      resolve(new Blob(chunks, { type: mimeType }));
+    };
     if (recorder.state === 'inactive') {
-      resolve(chunks);
+      resolve(new Blob(chunks, { type: mimeType }));
       return;
     }
-    recorder.requestData?.();
     recorder.stop();
   });
 }
@@ -254,8 +318,11 @@ export function attachFramePump(
   let raf = 0;
 
   const pump = () => {
-    if (stopped || video.paused || video.ended) return;
-    onFrame();
+    if (stopped) return;
+    if (!video.paused && !video.ended) {
+      onFrame();
+    }
+    if (stopped || video.ended) return;
     if (typeof el.requestVideoFrameCallback === 'function') {
       el.requestVideoFrameCallback(pump);
     } else {
@@ -263,11 +330,7 @@ export function attachFramePump(
     }
   };
 
-  if (typeof el.requestVideoFrameCallback === 'function') {
-    el.requestVideoFrameCallback(pump);
-  } else {
-    raf = window.requestAnimationFrame(pump);
-  }
+  pump();
 
   return () => {
     stopped = true;

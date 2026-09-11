@@ -22,12 +22,15 @@ import {
   clampVideoBitrate,
   evenOutputSize,
   imageDataToJpegUrl,
+  mountOffscreen,
+  readBlobDuration,
   recorderContainerType,
+  requestCanvasFrame,
   scaleColorMatrix,
   startCanvasRecorder,
-  stopRecorder,
   waitForVideoData,
   waitForVideoTime,
+  waitOneFrame,
 } from '@/lib/underwater-video';
 
 interface ProcessedResult {
@@ -445,6 +448,7 @@ export default function UnderwaterPage() {
       const video = document.createElement('video');
       const videoUrl = URL.createObjectURL(file);
       let stream: MediaStream | null = null;
+      let recordCanvas: HTMLCanvasElement | null = null;
       let stopPump: (() => void) | null = null;
 
       video.muted = true;
@@ -452,14 +456,7 @@ export default function UnderwaterPage() {
       video.preload = 'auto';
       video.setAttribute('playsinline', 'true');
       video.setAttribute('muted', 'true');
-      video.style.position = 'fixed';
-      video.style.left = '0';
-      video.style.top = '0';
-      video.style.width = '16px';
-      video.style.height = '16px';
-      video.style.opacity = '0';
-      video.style.pointerEvents = 'none';
-      document.body.appendChild(video);
+      mountOffscreen(video);
       video.src = videoUrl;
 
       try {
@@ -492,6 +489,8 @@ export default function UnderwaterPage() {
           video.videoWidth,
           video.videoHeight
         );
+        video.style.width = `${width}px`;
+        video.style.height = `${height}px`;
         setTotalFrames(Math.max(1, Math.round(duration * 30)));
 
         const processCanvas = document.createElement('canvas');
@@ -500,10 +499,10 @@ export default function UnderwaterPage() {
         const processCtx = processCanvas.getContext('2d', {
           willReadFrequently: true,
         });
-        const recordCanvas = document.createElement('canvas');
+        recordCanvas = document.createElement('canvas');
         recordCanvas.width = width;
         recordCanvas.height = height;
-        const recordCtx = recordCanvas.getContext('2d');
+        const recordCtx = recordCanvas.getContext('2d', { alpha: false });
         if (!processCtx || !recordCtx) {
           throw new Error('Could not get canvas context');
         }
@@ -512,6 +511,9 @@ export default function UnderwaterPage() {
             'Video colour-fix is not supported in this browser. Try the latest Chrome, Firefox, or Safari.'
           );
         }
+        mountOffscreen(recordCanvas);
+        recordCanvas.style.width = `${width}px`;
+        recordCanvas.style.height = `${height}px`;
 
         await waitForVideoTime(video, 0);
         processCtx.drawImage(video, 0, 0, width, height);
@@ -527,6 +529,7 @@ export default function UnderwaterPage() {
           const corrected = applyColorMatrix(frame, scaled);
           processCtx.putImageData(corrected, 0, 0);
           recordCtx.drawImage(processCanvas, 0, 0);
+          if (stream) requestCanvasFrame(stream);
         };
 
         const preview = applyColorMatrix(sample, scaled);
@@ -539,13 +542,15 @@ export default function UnderwaterPage() {
 
         paint();
         stream = recordCanvas.captureStream(30);
-        const { recorder, mimeType } = await startCanvasRecorder(
+        paint();
+        await waitOneFrame();
+        const session = await startCanvasRecorder(
           stream,
           clampVideoBitrate(file.size, duration)
         );
 
         if (jobId !== videoJobRef.current) {
-          if (recorder.state !== 'inactive') recorder.stop();
+          if (session.recorder.state !== 'inactive') session.recorder.stop();
           return;
         }
 
@@ -574,22 +579,27 @@ export default function UnderwaterPage() {
         stopPump();
         stopPump = null;
         paint();
-        await new Promise((resolve) => setTimeout(resolve, 120));
+        await waitOneFrame();
 
         if (jobId !== videoJobRef.current) {
-          if (recorder.state !== 'inactive') recorder.stop();
+          if (session.recorder.state !== 'inactive') session.recorder.stop();
           return;
         }
 
-        const chunks = await stopRecorder(recorder);
-        if (chunks.length === 0) {
+        const processedVideoBlob = await session.stop();
+        if (processedVideoBlob.size < 8 * 1024) {
           throw new Error(
             'Video encoding produced no data. Try a shorter MP4 or WebM clip.'
           );
         }
+        const encodedDuration = await readBlobDuration(processedVideoBlob);
+        if (encodedDuration < 0.2) {
+          throw new Error(
+            'Video encoding produced an empty clip. Try Chrome or Firefox with an MP4 file.'
+          );
+        }
 
-        const outputType = recorderContainerType(mimeType);
-        const processedVideoBlob = new Blob(chunks, { type: outputType });
+        const outputType = recorderContainerType(session.mimeType);
         const correctedUrl = URL.createObjectURL(processedVideoBlob);
         const extension = outputType === 'video/mp4' ? 'mp4' : 'webm';
         setResults([
@@ -614,6 +624,7 @@ export default function UnderwaterPage() {
       } finally {
         stopPump?.();
         stream?.getTracks().forEach((track) => track.stop());
+        recordCanvas?.remove();
         video.remove();
         URL.revokeObjectURL(videoUrl);
         if (jobId === videoJobRef.current) {
