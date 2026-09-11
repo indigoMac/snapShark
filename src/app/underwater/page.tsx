@@ -16,6 +16,19 @@ import {
   PRO_COLOUR_BATCH_LIMIT,
 } from '@/lib/plan';
 import { isImageMediaFile, isVideoMediaFile } from '@/lib/media-file';
+import {
+  applyColorMatrix,
+  attachFramePump,
+  clampVideoBitrate,
+  evenOutputSize,
+  imageDataToJpegUrl,
+  recorderContainerType,
+  scaleColorMatrix,
+  startCanvasRecorder,
+  stopRecorder,
+  waitForVideoData,
+  waitForVideoTime,
+} from '@/lib/underwater-video';
 
 interface ProcessedResult {
   original: string;
@@ -23,46 +36,6 @@ interface ProcessedResult {
   filename: string;
   isVideo?: boolean;
   correctedBlob?: Blob; // Store the actual blob for ZIP creation
-}
-
-const VIDEO_RECORDER_TYPES = [
-  'video/webm;codecs=vp9',
-  'video/webm;codecs=vp8',
-  'video/webm',
-  'video/mp4;codecs=avc1.42E01E',
-  'video/mp4',
-];
-
-function pickRecorderMimeType(): string {
-  if (typeof MediaRecorder === 'undefined') return '';
-  return (
-    VIDEO_RECORDER_TYPES.find((type) => MediaRecorder.isTypeSupported(type)) ??
-    ''
-  );
-}
-
-function recorderContainerType(mimeType: string): 'video/mp4' | 'video/webm' {
-  return mimeType.startsWith('video/mp4') ? 'video/mp4' : 'video/webm';
-}
-
-function waitForVideoFrame(video: HTMLVideoElement, time: number): Promise<void> {
-  return new Promise((resolve) => {
-    const target = Math.max(0, time);
-    if (Math.abs(video.currentTime - target) < 0.0005 && video.readyState >= 2) {
-      resolve();
-      return;
-    }
-
-    const finish = () => {
-      video.removeEventListener('seeked', finish);
-      window.clearTimeout(timeoutId);
-      resolve();
-    };
-
-    const timeoutId = window.setTimeout(finish, 1500);
-    video.addEventListener('seeked', finish);
-    video.currentTime = target;
-  });
 }
 
 export default function UnderwaterPage() {
@@ -82,6 +55,17 @@ export default function UnderwaterPage() {
   const [savingToLogbook, setSavingToLogbook] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const processingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const videoJobRef = useRef(0);
+  const videoMatrixRef = useRef<number[] | null>(null);
+  const videoSourceFrameRef = useRef<ImageData | null>(null);
+  const sourcePreviewUrlRef = useRef<string | null>(null);
+  const stillPreviewUrlRef = useRef<string | null>(null);
+  const processVideoRef = useRef<(file: File, intensityValue: number) => Promise<void>>(
+    async () => {}
+  );
+  const processImageRef = useRef<
+    (file: File, intensityValue: number, isBatchProcessing?: boolean) => Promise<void>
+  >(async () => {});
   const [isMobile, setIsMobile] = useState(false);
   
   // Batch processing state
@@ -94,6 +78,9 @@ export default function UnderwaterPage() {
   const [videoProgress, setVideoProgress] = useState(0);
   const [totalFrames, setTotalFrames] = useState(0);
   const [processedFrames, setProcessedFrames] = useState(0);
+  const [sourcePreviewUrl, setSourcePreviewUrl] = useState<string | null>(null);
+  const [stillPreviewUrl, setStillPreviewUrl] = useState<string | null>(null);
+  const [encodedIntensity, setEncodedIntensity] = useState<number | null>(null);
 
   const handleFileSelect = useCallback(
     async (files: FileList | File[]) => {
@@ -128,18 +115,32 @@ export default function UnderwaterPage() {
       setCurrentProcessingIndex(0);
 
       if (fileArray.length === 1) {
-        // Single file mode (existing behavior)
         const file = fileArray[0];
         const isVideo = isVideoMediaFile(file);
         setSelectedFiles([file]);
         setIsVideoFile(isVideo);
         setIsBatchMode(false);
 
-        // Start processing immediately with default intensity
+        if (sourcePreviewUrlRef.current) {
+          URL.revokeObjectURL(sourcePreviewUrlRef.current);
+        }
+        const previewUrl = URL.createObjectURL(file);
+        sourcePreviewUrlRef.current = previewUrl;
+        setSourcePreviewUrl(previewUrl);
+
+        if (stillPreviewUrlRef.current) {
+          URL.revokeObjectURL(stillPreviewUrlRef.current);
+          stillPreviewUrlRef.current = null;
+        }
+        setStillPreviewUrl(null);
+        videoMatrixRef.current = null;
+        videoSourceFrameRef.current = null;
+        setEncodedIntensity(null);
+
         if (isVideo) {
-          await processVideo(file, intensity[0]);
+          await processVideoRef.current(file, intensity[0]);
         } else {
-          await processImage(file, intensity[0], false);
+          await processImageRef.current(file, intensity[0], false);
         }
       } else {
         // Batch mode (images only)
@@ -260,74 +261,12 @@ export default function UnderwaterPage() {
   // Underwater color correction algorithm (from your example code)
   const applyUnderwaterCorrection = useCallback(
     (imageData: ImageData, intensity: number): ImageData => {
-      const { data, width, height } = imageData;
-
-      // Get color filter matrix using your algorithm
-      const matrix = getColorFilterMatrix(data, width, height);
-
-      // Apply intensity scaling
-      const scaledMatrix = matrix.map((value, index) => {
-        if (index % 5 === 4) {
-          // Offset values (last column)
-          return value * intensity;
-        } else if (index % 5 === index % 5) {
-          // Diagonal values - blend with identity matrix
-          const identityValue = index % 6 === 0 ? 1 : 0;
-          return identityValue + (value - identityValue) * intensity;
-        } else {
-          // Other values
-          return value * intensity;
-        }
-      });
-
-      // Apply matrix transformation to image
-      const newImageData = new ImageData(width, height);
-
-      for (let i = 0; i < data.length; i += 4) {
-        const r = data[i];
-        const g = data[i + 1];
-        const b = data[i + 2];
-        const a = data[i + 3];
-
-        // Apply color matrix transformation
-        const newR = Math.max(
-          0,
-          Math.min(
-            255,
-            scaledMatrix[0] * r +
-              scaledMatrix[1] * g +
-              scaledMatrix[2] * b +
-              scaledMatrix[4] * 255
-          )
-        );
-        const newG = Math.max(
-          0,
-          Math.min(
-            255,
-            scaledMatrix[5] * r +
-              scaledMatrix[6] * g +
-              scaledMatrix[7] * b +
-              scaledMatrix[9] * 255
-          )
-        );
-        const newB = Math.max(
-          0,
-          Math.min(
-            255,
-            scaledMatrix[10] * r +
-              scaledMatrix[11] * g +
-              scaledMatrix[12] * b +
-              scaledMatrix[14] * 255
-          )
-        );
-
-        newImageData.data[i] = newR;
-        newImageData.data[i + 1] = newG;
-        newImageData.data[i + 2] = newB;
-        newImageData.data[i + 3] = a;
-      }
-
-      return newImageData;
+      const matrix = getColorFilterMatrix(
+        imageData.data,
+        imageData.width,
+        imageData.height
+      );
+      return applyColorMatrix(imageData, scaleColorMatrix(matrix, intensity));
     },
     []
   );
@@ -497,6 +436,7 @@ export default function UnderwaterPage() {
 
   const processVideo = useCallback(
     async (file: File, intensityValue: number) => {
+      const jobId = ++videoJobRef.current;
       setIsProcessing(true);
       setError(null);
       setVideoProgress(0);
@@ -505,6 +445,7 @@ export default function UnderwaterPage() {
       const video = document.createElement('video');
       const videoUrl = URL.createObjectURL(file);
       let stream: MediaStream | null = null;
+      let stopPump: (() => void) | null = null;
 
       video.muted = true;
       video.playsInline = true;
@@ -512,45 +453,22 @@ export default function UnderwaterPage() {
       video.setAttribute('playsinline', 'true');
       video.setAttribute('muted', 'true');
       video.style.position = 'fixed';
-      video.style.left = '-9999px';
-      video.style.width = '1px';
-      video.style.height = '1px';
+      video.style.left = '0';
+      video.style.top = '0';
+      video.style.width = '16px';
+      video.style.height = '16px';
+      video.style.opacity = '0';
+      video.style.pointerEvents = 'none';
       document.body.appendChild(video);
+      video.src = videoUrl;
 
       try {
-        await new Promise<void>((resolve, reject) => {
-          const onReady = () => {
-            cleanup();
-            resolve();
-          };
-          const onError = () => {
-            cleanup();
-            reject(
-              new Error(
-                'Could not read that video. Try an MP4 or WebM clip under 60 seconds.'
-              )
-            );
-          };
-          const cleanup = () => {
-            video.removeEventListener('loadeddata', onReady);
-            video.removeEventListener('error', onError);
-          };
-
-          video.addEventListener('loadeddata', onReady);
-          video.addEventListener('error', onError);
-          video.src = videoUrl;
-          video.load();
-
-          if (video.readyState >= 2) {
-            onReady();
-          }
-        });
-
+        await waitForVideoData(video);
         try {
           await video.play();
           video.pause();
         } catch {
-          // Muted play unlocks decoding in Safari; seeking still works if play is blocked.
+          // Muted play unlocks decoding; seeking still works if play is blocked.
         }
 
         const duration = video.duration;
@@ -570,134 +488,113 @@ export default function UnderwaterPage() {
           );
         }
 
-        const possibleFps = [24, 25, 30, 60];
-        let targetFps = 30;
-        for (const fps of possibleFps) {
-          const expectedFrames = duration * fps;
-          if (Math.abs(expectedFrames - Math.round(expectedFrames)) < 0.1) {
-            targetFps = fps;
-            break;
-          }
-        }
+        const { width, height } = evenOutputSize(
+          video.videoWidth,
+          video.videoHeight
+        );
+        setTotalFrames(Math.max(1, Math.round(duration * 30)));
 
-        const totalFrames = Math.max(1, Math.round(duration * targetFps));
-        setTotalFrames(totalFrames);
-
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d', { willReadFrequently: true });
-        if (!ctx) {
+        const processCanvas = document.createElement('canvas');
+        processCanvas.width = width;
+        processCanvas.height = height;
+        const processCtx = processCanvas.getContext('2d', {
+          willReadFrequently: true,
+        });
+        const recordCanvas = document.createElement('canvas');
+        recordCanvas.width = width;
+        recordCanvas.height = height;
+        const recordCtx = recordCanvas.getContext('2d');
+        if (!processCtx || !recordCtx) {
           throw new Error('Could not get canvas context');
         }
-        if (typeof canvas.captureStream !== 'function') {
+        if (typeof recordCanvas.captureStream !== 'function') {
           throw new Error(
             'Video colour-fix is not supported in this browser. Try the latest Chrome, Firefox, or Safari.'
           );
         }
 
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
+        await waitForVideoTime(video, 0);
+        processCtx.drawImage(video, 0, 0, width, height);
+        const sample = processCtx.getImageData(0, 0, width, height);
+        const matrix = getColorFilterMatrix(sample.data, width, height);
+        videoMatrixRef.current = matrix;
+        videoSourceFrameRef.current = sample;
+        const scaled = scaleColorMatrix(matrix, intensityValue / 100);
 
-        stream = canvas.captureStream(targetFps);
-        const originalBitrate = (file.size * 8) / duration;
-        const adaptiveBitrate = Math.min(
-          Math.max(originalBitrate * 0.98, 1000000),
-          originalBitrate * 1.02
+        const paint = () => {
+          processCtx.drawImage(video, 0, 0, width, height);
+          const frame = processCtx.getImageData(0, 0, width, height);
+          const corrected = applyColorMatrix(frame, scaled);
+          processCtx.putImageData(corrected, 0, 0);
+          recordCtx.drawImage(processCanvas, 0, 0);
+        };
+
+        const preview = applyColorMatrix(sample, scaled);
+        const previewUrl = await imageDataToJpegUrl(preview);
+        if (stillPreviewUrlRef.current) {
+          URL.revokeObjectURL(stillPreviewUrlRef.current);
+        }
+        stillPreviewUrlRef.current = previewUrl;
+        setStillPreviewUrl(previewUrl);
+
+        paint();
+        stream = recordCanvas.captureStream(30);
+        const { recorder, mimeType } = await startCanvasRecorder(
+          stream,
+          clampVideoBitrate(file.size, duration)
         );
 
-        const mimeType = pickRecorderMimeType();
-        const outputType = recorderContainerType(mimeType);
-        const recorderOptions: MediaRecorderOptions = {
-          videoBitsPerSecond: adaptiveBitrate,
-        };
-        if (mimeType) {
-          recorderOptions.mimeType = mimeType;
+        if (jobId !== videoJobRef.current) {
+          if (recorder.state !== 'inactive') recorder.stop();
+          return;
         }
 
-        const mediaRecorder = new MediaRecorder(stream, recorderOptions);
-        const chunks: Blob[] = [];
-        mediaRecorder.ondataavailable = (event) => {
-          if (event.data.size > 0) {
-            chunks.push(event.data);
-          }
-        };
+        await waitForVideoTime(video, 0);
+        paint();
 
-        await new Promise<void>((resolve, reject) => {
+        const ended = new Promise<void>((resolve, reject) => {
           const timeoutId = window.setTimeout(() => {
-            reject(new Error('Video encoding failed to start.'));
-          }, 3000);
-          mediaRecorder.onstart = () => {
+            reject(new Error('Video encoding timed out. Try a shorter clip.'));
+          }, (duration + 8) * 1000);
+          video.onended = () => {
             window.clearTimeout(timeoutId);
             resolve();
           };
-          try {
-            mediaRecorder.start(100);
-          } catch (err) {
-            window.clearTimeout(timeoutId);
-            reject(err);
-          }
         });
 
-        for (let frameIndex = 0; frameIndex < totalFrames; frameIndex++) {
-          if (frameIndex / targetFps >= duration) {
-            break;
-          }
+        await video.play();
+        stopPump = attachFramePump(video, () => {
+          if (jobId !== videoJobRef.current) return;
+          paint();
+          const progress = Math.min(100, (video.currentTime / duration) * 100);
+          setVideoProgress(progress);
+          setProcessedFrames(Math.max(1, Math.round(video.currentTime * 30)));
+        });
+        await ended;
+        stopPump();
+        stopPump = null;
+        paint();
+        await new Promise((resolve) => setTimeout(resolve, 120));
 
-          const currentTime = Math.min(
-            frameIndex / targetFps,
-            Math.max(0, duration - 1 / targetFps)
-          );
-          await waitForVideoFrame(video, currentTime);
+        if (jobId !== videoJobRef.current) {
+          if (recorder.state !== 'inactive') recorder.stop();
+          return;
+        }
 
-          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-          const correctedImageData = applyUnderwaterCorrection(
-            imageData,
-            intensityValue / 100
-          );
-          ctx.putImageData(correctedImageData, 0, 0);
-
-          const track = stream.getVideoTracks()[0] as
-            | (MediaStreamTrack & { requestFrame?: () => void })
-            | undefined;
-          track?.requestFrame?.();
-
-          setProcessedFrames(frameIndex + 1);
-          setVideoProgress(((frameIndex + 1) / totalFrames) * 100);
-
-          await new Promise((resolve) =>
-            setTimeout(resolve, Math.max(16, 1000 / targetFps / 4))
+        const chunks = await stopRecorder(recorder);
+        if (chunks.length === 0) {
+          throw new Error(
+            'Video encoding produced no data. Try a shorter MP4 or WebM clip.'
           );
         }
 
-        await new Promise((resolve) => setTimeout(resolve, 120));
-
-        const processedVideoBlob = await new Promise<Blob>((resolve, reject) => {
-          mediaRecorder.onstop = () => {
-            if (chunks.length === 0) {
-              reject(
-                new Error(
-                  'Video encoding produced no data. Try a shorter MP4 or WebM clip.'
-                )
-              );
-              return;
-            }
-            resolve(new Blob(chunks, { type: outputType }));
-          };
-          mediaRecorder.onerror = () => {
-            reject(
-              new Error(
-                'Video encoding failed. Try a shorter MP4 or WebM clip.'
-              )
-            );
-          };
-          mediaRecorder.stop();
-        });
-
+        const outputType = recorderContainerType(mimeType);
+        const processedVideoBlob = new Blob(chunks, { type: outputType });
         const correctedUrl = URL.createObjectURL(processedVideoBlob);
         const extension = outputType === 'video/mp4' ? 'mp4' : 'webm';
         setResults([
           {
-            original: videoUrl,
+            original: sourcePreviewUrlRef.current || videoUrl,
             corrected: correctedUrl,
             filename: file.name.replace(
               /\.[^/.]+$/,
@@ -707,18 +604,29 @@ export default function UnderwaterPage() {
             correctedBlob: processedVideoBlob,
           },
         ]);
+        setEncodedIntensity(intensityValue);
       } catch (err) {
-        URL.revokeObjectURL(videoUrl);
-        setError(err instanceof Error ? err.message : 'Video processing failed');
+        if (jobId === videoJobRef.current) {
+          setError(
+            err instanceof Error ? err.message : 'Video processing failed'
+          );
+        }
       } finally {
+        stopPump?.();
         stream?.getTracks().forEach((track) => track.stop());
         video.remove();
-        setIsProcessing(false);
-        setVideoProgress(0);
+        URL.revokeObjectURL(videoUrl);
+        if (jobId === videoJobRef.current) {
+          setIsProcessing(false);
+          setVideoProgress(0);
+        }
       }
     },
-    [applyUnderwaterCorrection]
+    [getColorFilterMatrix]
   );
+
+  processVideoRef.current = processVideo;
+  processImageRef.current = processImage;
 
   // Batch processing function
   const processBatch = useCallback(
@@ -757,26 +665,48 @@ export default function UnderwaterPage() {
       }
 
       // Set new timeout for processing
-      const delay = isVideoFile ? 500 : 150; // Longer delay for videos to avoid excessive processing
+      const delay = isVideoFile ? 1000 : 150;
       processingTimeoutRef.current = setTimeout(() => {
         if (isVideoFile) {
-          processVideo(file, intensityValue);
+          processVideoRef.current(file, intensityValue);
         } else {
-          processImage(file, intensityValue, false);
+          processImageRef.current(file, intensityValue, false);
         }
       }, delay);
     },
-    [processImage, processVideo, isVideoFile]
+    [isVideoFile]
   );
 
   const handleIntensityChange = useCallback(
     (newIntensity: number[]) => {
       setIntensity(newIntensity);
-      if (selectedFiles.length === 1 && !isBatchMode) {
-        debouncedProcessFile(selectedFiles[0], newIntensity[0]);
+      if (selectedFiles.length !== 1 || isBatchMode) return;
+
+      if (isVideoFile) {
+        videoJobRef.current += 1;
+        setIsProcessing(false);
+        setError(null);
       }
+
+      if (isVideoFile && videoSourceFrameRef.current && videoMatrixRef.current) {
+        const preview = applyColorMatrix(
+          videoSourceFrameRef.current,
+          scaleColorMatrix(videoMatrixRef.current, newIntensity[0] / 100)
+        );
+        void imageDataToJpegUrl(preview)
+          .then((url) => {
+            if (stillPreviewUrlRef.current) {
+              URL.revokeObjectURL(stillPreviewUrlRef.current);
+            }
+            stillPreviewUrlRef.current = url;
+            setStillPreviewUrl(url);
+          })
+          .catch(() => {});
+      }
+
+      debouncedProcessFile(selectedFiles[0], newIntensity[0]);
     },
-    [selectedFiles, isBatchMode, debouncedProcessFile]
+    [selectedFiles, isBatchMode, isVideoFile, debouncedProcessFile]
   );
 
   const handleDownload = useCallback(async (result?: ProcessedResult) => {
@@ -869,15 +799,28 @@ export default function UnderwaterPage() {
   }, [results]);
 
   const handleReset = useCallback(() => {
-    // Clean up blob URLs before clearing results
-    results.forEach(result => {
-      if (result.original) {
+    videoJobRef.current += 1;
+    results.forEach((result) => {
+      if (result.original && result.original !== sourcePreviewUrlRef.current) {
         URL.revokeObjectURL(result.original);
       }
-      if (result.corrected) {
+      if (result.corrected && result.corrected !== stillPreviewUrlRef.current) {
         URL.revokeObjectURL(result.corrected);
       }
     });
+    if (sourcePreviewUrlRef.current) {
+      URL.revokeObjectURL(sourcePreviewUrlRef.current);
+      sourcePreviewUrlRef.current = null;
+    }
+    if (stillPreviewUrlRef.current) {
+      URL.revokeObjectURL(stillPreviewUrlRef.current);
+      stillPreviewUrlRef.current = null;
+    }
+    videoMatrixRef.current = null;
+    videoSourceFrameRef.current = null;
+    setSourcePreviewUrl(null);
+    setStillPreviewUrl(null);
+    setEncodedIntensity(null);
 
     setSelectedFiles([]);
     setResults([]);
@@ -930,31 +873,28 @@ export default function UnderwaterPage() {
     };
   }, []);
 
-  // Cleanup blob URLs when results change to prevent memory leaks
   useEffect(() => {
     return () => {
-      results.forEach(result => {
-        if (result.original) {
+      results.forEach((result) => {
+        if (result.original && result.original !== sourcePreviewUrlRef.current) {
           URL.revokeObjectURL(result.original);
         }
-        if (result.corrected) {
+        if (result.corrected && result.corrected !== stillPreviewUrlRef.current) {
           URL.revokeObjectURL(result.corrected);
         }
       });
     };
   }, [results]);
 
-  // Cleanup all blob URLs on component unmount
   useEffect(() => {
     return () => {
-      results.forEach(result => {
-        if (result.original) {
-          URL.revokeObjectURL(result.original);
-        }
-        if (result.corrected) {
-          URL.revokeObjectURL(result.corrected);
-        }
-      });
+      videoJobRef.current += 1;
+      if (sourcePreviewUrlRef.current) {
+        URL.revokeObjectURL(sourcePreviewUrlRef.current);
+      }
+      if (stillPreviewUrlRef.current) {
+        URL.revokeObjectURL(stillPreviewUrlRef.current);
+      }
     };
   }, []);
 
@@ -1087,6 +1027,12 @@ export default function UnderwaterPage() {
                         </span>
                       </div>
                     </div>
+                    {isVideoFile && (
+                      <p className="text-xs text-[#7a9a95]">
+                        The still preview follows the slider immediately. The
+                        clip re-encodes about a second after you stop dragging.
+                      </p>
+                    )}
 
                     {/* Action Buttons */}
                     <div className="flex flex-col sm:flex-row gap-2">
@@ -1157,17 +1103,16 @@ export default function UnderwaterPage() {
                   </div>
 
                   {/* Results Display */}
-                  {results.length > 0 && (
+                  {(results.length > 0 || (!isBatchMode && sourcePreviewUrl)) && (
                     <div className="space-y-4">
                       {!isBatchMode ? (
-                        // Single file display (existing layout)
                         <div className="grid md:grid-cols-2 gap-4">
                           <div className="space-y-2">
                             <h3 className="text-white font-medium">Original</h3>
                             <div className="relative rounded-lg overflow-hidden bg-slate-700">
-                              {results[0].isVideo ? (
+                              {isVideoFile ? (
                                 <video
-                                  src={results[0].original}
+                                  src={sourcePreviewUrl || results[0]?.original}
                                   controls
                                   muted
                                   className="w-full h-auto"
@@ -1175,7 +1120,7 @@ export default function UnderwaterPage() {
                                 />
                               ) : (
                                 <img
-                                  src={results[0].original}
+                                  src={results[0]?.original}
                                   alt="Original underwater photo"
                                   className="w-full h-auto"
                                 />
@@ -1190,7 +1135,17 @@ export default function UnderwaterPage() {
                               Color Corrected
                             </h3>
                             <div className="relative rounded-lg overflow-hidden bg-slate-700">
-                              {results[0].isVideo ? (
+                              {isVideoFile &&
+                              stillPreviewUrl &&
+                              (isProcessing ||
+                                encodedIntensity !== intensity[0] ||
+                                !results[0]?.corrected) ? (
+                                <img
+                                  src={stillPreviewUrl}
+                                  alt="Color corrected preview frame"
+                                  className="w-full h-auto"
+                                />
+                              ) : isVideoFile && results[0]?.corrected ? (
                                 <video
                                   src={results[0].corrected}
                                   controls
@@ -1198,15 +1153,21 @@ export default function UnderwaterPage() {
                                   className="w-full h-auto"
                                   style={{ maxHeight: '400px' }}
                                 />
-                              ) : (
+                              ) : results[0]?.corrected ? (
                                 <img
                                   src={results[0].corrected}
                                   alt="Color corrected underwater photo"
                                   className="w-full h-auto"
                                 />
+                              ) : (
+                                <div className="flex h-40 items-center justify-center text-sm text-blue-300">
+                                  Preparing preview…
+                                </div>
                               )}
                               <div className="absolute top-2 left-2 bg-emerald-600/80 text-white px-2 py-1 rounded text-sm">
-                                Corrected
+                                {isVideoFile && isProcessing
+                                  ? 'Preview'
+                                  : 'Corrected'}
                               </div>
                             </div>
                           </div>
