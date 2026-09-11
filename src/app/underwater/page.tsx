@@ -15,6 +15,7 @@ import {
   FREE_COLOUR_BATCH_LIMIT,
   PRO_COLOUR_BATCH_LIMIT,
 } from '@/lib/plan';
+import { isImageMediaFile, isVideoMediaFile } from '@/lib/media-file';
 
 interface ProcessedResult {
   original: string;
@@ -22,6 +23,46 @@ interface ProcessedResult {
   filename: string;
   isVideo?: boolean;
   correctedBlob?: Blob; // Store the actual blob for ZIP creation
+}
+
+const VIDEO_RECORDER_TYPES = [
+  'video/webm;codecs=vp9',
+  'video/webm;codecs=vp8',
+  'video/webm',
+  'video/mp4;codecs=avc1.42E01E',
+  'video/mp4',
+];
+
+function pickRecorderMimeType(): string {
+  if (typeof MediaRecorder === 'undefined') return '';
+  return (
+    VIDEO_RECORDER_TYPES.find((type) => MediaRecorder.isTypeSupported(type)) ??
+    ''
+  );
+}
+
+function recorderContainerType(mimeType: string): 'video/mp4' | 'video/webm' {
+  return mimeType.startsWith('video/mp4') ? 'video/mp4' : 'video/webm';
+}
+
+function waitForVideoFrame(video: HTMLVideoElement, time: number): Promise<void> {
+  return new Promise((resolve) => {
+    const target = Math.max(0, time);
+    if (Math.abs(video.currentTime - target) < 0.0005 && video.readyState >= 2) {
+      resolve();
+      return;
+    }
+
+    const finish = () => {
+      video.removeEventListener('seeked', finish);
+      window.clearTimeout(timeoutId);
+      resolve();
+    };
+
+    const timeoutId = window.setTimeout(finish, 1500);
+    video.addEventListener('seeked', finish);
+    video.currentTime = target;
+  });
 }
 
 export default function UnderwaterPage() {
@@ -57,10 +98,8 @@ export default function UnderwaterPage() {
   const handleFileSelect = useCallback(
     async (files: FileList | File[]) => {
       const fileArray = Array.from(files);
-      
-      // Filter for images only in batch mode
-      const imageFiles = fileArray.filter(file => file.type.startsWith('image/'));
-      const videoFiles = fileArray.filter(file => file.type.startsWith('video/'));
+      const imageFiles = fileArray.filter(isImageMediaFile);
+      const videoFiles = fileArray.filter(isVideoMediaFile);
       
       if (imageFiles.length === 0 && videoFiles.length === 0) {
         setError('Please select valid image or video files');
@@ -91,7 +130,7 @@ export default function UnderwaterPage() {
       if (fileArray.length === 1) {
         // Single file mode (existing behavior)
         const file = fileArray[0];
-        const isVideo = file.type.startsWith('video/');
+        const isVideo = isVideoMediaFile(file);
         setSelectedFiles([file]);
         setIsVideoFile(isVideo);
         setIsBatchMode(false);
@@ -463,115 +502,118 @@ export default function UnderwaterPage() {
       setVideoProgress(0);
       setProcessedFrames(0);
 
-      try {
-        // Create video element
-        const video = document.createElement('video');
-        const videoUrl = URL.createObjectURL(file);
-        video.src = videoUrl;
-        video.muted = true;
-        video.preload = 'metadata';
+      const video = document.createElement('video');
+      const videoUrl = URL.createObjectURL(file);
+      let stream: MediaStream | null = null;
 
-        // Wait for video metadata to load
-        await new Promise((resolve, reject) => {
-          video.onloadedmetadata = resolve;
-          video.onerror = reject;
+      video.muted = true;
+      video.playsInline = true;
+      video.preload = 'auto';
+      video.setAttribute('playsinline', 'true');
+      video.setAttribute('muted', 'true');
+      video.style.position = 'fixed';
+      video.style.left = '-9999px';
+      video.style.width = '1px';
+      video.style.height = '1px';
+      document.body.appendChild(video);
+
+      try {
+        await new Promise<void>((resolve, reject) => {
+          const onReady = () => {
+            cleanup();
+            resolve();
+          };
+          const onError = () => {
+            cleanup();
+            reject(
+              new Error(
+                'Could not read that video. Try an MP4 or WebM clip under 60 seconds.'
+              )
+            );
+          };
+          const cleanup = () => {
+            video.removeEventListener('loadeddata', onReady);
+            video.removeEventListener('error', onError);
+          };
+
+          video.addEventListener('loadeddata', onReady);
+          video.addEventListener('error', onError);
+          video.src = videoUrl;
+          video.load();
+
+          if (video.readyState >= 2) {
+            onReady();
+          }
         });
 
-        // MATCH original video properties exactly
+        try {
+          await video.play();
+          video.pause();
+        } catch {
+          // Muted play unlocks decoding in Safari; seeking still works if play is blocked.
+        }
+
         const duration = video.duration;
-        
-        // Try to detect original frame rate (approximation)
-        // Most videos are 24, 25, 30, or 60 fps
+        if (!Number.isFinite(duration) || duration <= 0) {
+          throw new Error(
+            'Could not read that video. Try an MP4 or WebM clip under 60 seconds.'
+          );
+        }
+        if (duration > 60) {
+          throw new Error(
+            'Video too long. Please select a video under 60 seconds.'
+          );
+        }
+        if (!video.videoWidth || !video.videoHeight) {
+          throw new Error(
+            'Could not read that video. Try an MP4 or WebM clip under 60 seconds.'
+          );
+        }
+
         const possibleFps = [24, 25, 30, 60];
-        let detectedFps = 30; // default fallback
-        
-        // Simple heuristic: try to match common frame rates
+        let targetFps = 30;
         for (const fps of possibleFps) {
           const expectedFrames = duration * fps;
           if (Math.abs(expectedFrames - Math.round(expectedFrames)) < 0.1) {
-            detectedFps = fps;
+            targetFps = fps;
             break;
           }
         }
-        
-        const targetFps = detectedFps;
-        const totalFrames = Math.round(duration * targetFps); // Use round for exact match
-        
-        console.log('Video analysis:', {
-          videoDuration: duration,
-          detectedFps,
-          targetFps,
-          totalFrames,
-          expectedDuration: totalFrames / targetFps,
-          durationDiff: Math.abs(duration - (totalFrames / targetFps)),
-          resolution: `${video.videoWidth}x${video.videoHeight}`,
-          aspectRatio: (video.videoWidth / video.videoHeight).toFixed(2)
-        });
-        
-        // Limit video length for performance (max 60 seconds for now)
-        if (duration > 60) {
-          throw new Error('Video too long. Please select a video under 60 seconds.');
-        }
 
+        const totalFrames = Math.max(1, Math.round(duration * targetFps));
         setTotalFrames(totalFrames);
 
-        // Create canvas for frame processing
         const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
         if (!ctx) {
           throw new Error('Could not get canvas context');
+        }
+        if (typeof canvas.captureStream !== 'function') {
+          throw new Error(
+            'Video colour-fix is not supported in this browser. Try the latest Chrome, Firefox, or Safari.'
+          );
         }
 
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
 
-        // Create MediaRecorder with adaptive bitrate for better quality
-        const stream = canvas.captureStream(targetFps);
-        
-        // MATCH original bitrate as closely as possible
-        const originalBitrate = (file.size * 8) / duration; // Original bitrate in bits/second
-        
-        // Use original bitrate exactly, with small safety margins
+        stream = canvas.captureStream(targetFps);
+        const originalBitrate = (file.size * 8) / duration;
         const adaptiveBitrate = Math.min(
-          Math.max(originalBitrate * 0.98, 1000000), // Use 98% of original, minimum 1Mbps
-          originalBitrate * 1.02  // Allow up to 102% of original (tiny margin for encoding differences)
+          Math.max(originalBitrate * 0.98, 1000000),
+          originalBitrate * 1.02
         );
-        
-        // Try different codecs for better quality/compatibility
-        let mediaRecorder;
-        const codecOptions = [
-          { mimeType: 'video/webm;codecs=vp9', name: 'VP9' },
-          { mimeType: 'video/webm;codecs=vp8', name: 'VP8' },
-          { mimeType: 'video/mp4;codecs=avc1', name: 'H.264' },
-          { mimeType: 'video/webm', name: 'WebM' }
-        ];
-        
-        let selectedCodec = codecOptions[0]; // Default to VP9
-        for (const codec of codecOptions) {
-          if (MediaRecorder.isTypeSupported(codec.mimeType)) {
-            selectedCodec = codec;
-            break;
-          }
-        }
-        
-        mediaRecorder = new MediaRecorder(stream, {
-          mimeType: selectedCodec.mimeType,
-          videoBitsPerSecond: adaptiveBitrate
-        });
-        
-        console.log(`Using codec: ${selectedCodec.name} (${selectedCodec.mimeType})`);
-        
-        // Debug info
-        console.log('Video processing settings:', {
-          originalSize: `${(file.size / 1024 / 1024).toFixed(1)}MB`,
-          resolution: `${canvas.width}x${canvas.height}`,
-          duration: `${duration.toFixed(1)}s`,
-          targetFps,
-          originalBitrate: `${(originalBitrate / 1000000).toFixed(1)}Mbps`,
-          adaptiveBitrate: `${(adaptiveBitrate / 1000000).toFixed(1)}Mbps`
-        });
 
+        const mimeType = pickRecorderMimeType();
+        const outputType = recorderContainerType(mimeType);
+        const recorderOptions: MediaRecorderOptions = {
+          videoBitsPerSecond: adaptiveBitrate,
+        };
+        if (mimeType) {
+          recorderOptions.mimeType = mimeType;
+        }
+
+        const mediaRecorder = new MediaRecorder(stream, recorderOptions);
         const chunks: Blob[] = [];
         mediaRecorder.ondataavailable = (event) => {
           if (event.data.size > 0) {
@@ -579,90 +621,98 @@ export default function UnderwaterPage() {
           }
         };
 
-        // Start recording with optimized chunk size
-        mediaRecorder.start(100); // Record in 100ms chunks for better memory management
+        await new Promise<void>((resolve, reject) => {
+          const timeoutId = window.setTimeout(() => {
+            reject(new Error('Video encoding failed to start.'));
+          }, 3000);
+          mediaRecorder.onstart = () => {
+            window.clearTimeout(timeoutId);
+            resolve();
+          };
+          try {
+            mediaRecorder.start(100);
+          } catch (err) {
+            window.clearTimeout(timeoutId);
+            reject(err);
+          }
+        });
 
-        // Process EXACT number of frames to match original duration
-        const frameInterval = 1000 / targetFps; // Time between frames in milliseconds
-        
         for (let frameIndex = 0; frameIndex < totalFrames; frameIndex++) {
-          const currentTime = frameIndex / targetFps;
-          
-          // Process every frame up to exact duration
-          if (currentTime >= duration) {
-            console.log(`Reached end: frame ${frameIndex}, time ${currentTime}s, duration ${duration}s`);
+          if (frameIndex / targetFps >= duration) {
             break;
           }
-          
-          // Seek to EXACT frame position
-          video.currentTime = Math.min(currentTime, duration - (1 / targetFps)); // Leave exactly 1 frame buffer
-          
-          // Wait for seek to complete with timeout fallback
-          await new Promise((resolve) => {
-            const onSeeked = () => {
-              video.removeEventListener('seeked', onSeeked);
-              resolve(void 0);
-            };
-            video.addEventListener('seeked', onSeeked);
-            
-            // Fallback timeout in case seeked event doesn't fire
-            setTimeout(() => {
-              video.removeEventListener('seeked', onSeeked);
-              resolve(void 0);
-            }, 100);
-          });
 
-          // Draw frame to canvas
+          const currentTime = Math.min(
+            frameIndex / targetFps,
+            Math.max(0, duration - 1 / targetFps)
+          );
+          await waitForVideoFrame(video, currentTime);
+
           ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-          // Get image data and apply correction
           const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-          const correctedImageData = applyUnderwaterCorrection(imageData, intensityValue / 100);
-          
-          // Put corrected data back to canvas
+          const correctedImageData = applyUnderwaterCorrection(
+            imageData,
+            intensityValue / 100
+          );
           ctx.putImageData(correctedImageData, 0, 0);
 
-          // Update progress
+          const track = stream.getVideoTracks()[0] as
+            | (MediaStreamTrack & { requestFrame?: () => void })
+            | undefined;
+          track?.requestFrame?.();
+
           setProcessedFrames(frameIndex + 1);
           setVideoProgress(((frameIndex + 1) / totalFrames) * 100);
 
-          // EXACT timing to match original frame rate
-          // Wait the precise frame interval for perfect timing
-          await new Promise(resolve => setTimeout(resolve, frameInterval / 2));
+          await new Promise((resolve) =>
+            setTimeout(resolve, Math.max(16, 1000 / targetFps / 4))
+          );
         }
 
-        // No extra wait - stop immediately after last frame
-        // await new Promise(resolve => setTimeout(resolve, 50)); // Minimal if needed
+        await new Promise((resolve) => setTimeout(resolve, 120));
 
-        // Stop recording and get result
-        mediaRecorder.stop();
-        
-        const processedVideoBlob = await new Promise<Blob>((resolve) => {
+        const processedVideoBlob = await new Promise<Blob>((resolve, reject) => {
           mediaRecorder.onstop = () => {
-            const blob = new Blob(chunks, { type: 'video/webm' });
-            resolve(blob);
+            if (chunks.length === 0) {
+              reject(
+                new Error(
+                  'Video encoding produced no data. Try a shorter MP4 or WebM clip.'
+                )
+              );
+              return;
+            }
+            resolve(new Blob(chunks, { type: outputType }));
           };
+          mediaRecorder.onerror = () => {
+            reject(
+              new Error(
+                'Video encoding failed. Try a shorter MP4 or WebM clip.'
+              )
+            );
+          };
+          mediaRecorder.stop();
         });
 
         const correctedUrl = URL.createObjectURL(processedVideoBlob);
-
-        const newResult = {
-          original: videoUrl,
-          corrected: correctedUrl,
-          filename: file.name.replace(/\.[^/.]+$/, '_underwater_corrected.webm'),
-          isVideo: true,
-          correctedBlob: processedVideoBlob, // Store the blob for potential future use
-        };
-
-        if (isBatchMode) {
-          setResults(prev => [...prev, newResult]);
-        } else {
-          setResults([newResult]);
-        }
-
+        const extension = outputType === 'video/mp4' ? 'mp4' : 'webm';
+        setResults([
+          {
+            original: videoUrl,
+            corrected: correctedUrl,
+            filename: file.name.replace(
+              /\.[^/.]+$/,
+              `_underwater_corrected.${extension}`
+            ),
+            isVideo: true,
+            correctedBlob: processedVideoBlob,
+          },
+        ]);
       } catch (err) {
+        URL.revokeObjectURL(videoUrl);
         setError(err instanceof Error ? err.message : 'Video processing failed');
       } finally {
+        stream?.getTracks().forEach((track) => track.stop());
+        video.remove();
         setIsProcessing(false);
         setVideoProgress(0);
       }
@@ -969,14 +1019,20 @@ export default function UnderwaterPage() {
                         : `Free: ${FREE_COLOUR_BATCH_LIMIT} photos at a time · Pro for a whole card`}
                     </p>
                   </div>
+                  {error && (
+                    <div className="rounded-lg border border-red-500 bg-red-900/20 p-4">
+                      <p className="text-red-300">{error}</p>
+                    </div>
+                  )}
                   <input
                     ref={fileInputRef}
                     type="file"
-                    accept="image/*,video/*"
+                    accept="image/*,video/*,.mp4,.webm,.mov,.m4v"
                     multiple
                     onChange={(e) => {
                       const files = e.target.files;
                       if (files && files.length > 0) handleFileSelect(files);
+                      e.target.value = '';
                     }}
                     className="hidden"
                   />
