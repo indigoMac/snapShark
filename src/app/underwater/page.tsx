@@ -19,10 +19,14 @@ import { isImageMediaFile, isVideoMediaFile } from '@/lib/media-file';
 import {
   applyColorMatrix,
   attachFramePump,
+  captureElementAudio,
   clampVideoBitrate,
+  createColorMatrixRenderer,
+  DEFAULT_FRAME_RATE,
   evenOutputSize,
   imageDataToJpegUrl,
   mountOffscreen,
+  probeFrameRate,
   readBlobDuration,
   recorderContainerType,
   requestCanvasFrame,
@@ -31,6 +35,8 @@ import {
   waitForVideoData,
   waitForVideoTime,
   waitOneFrame,
+  type ColorMatrixRenderer,
+  type ElementAudioCapture,
 } from '@/lib/underwater-video';
 
 interface ProcessedResult {
@@ -39,6 +45,29 @@ interface ProcessedResult {
   filename: string;
   isVideo?: boolean;
   correctedBlob?: Blob; // Store the actual blob for ZIP creation
+}
+
+const PROGRESS_INTERVAL_MS = 100;
+
+/**
+ * Keeps the source audio in the output. The element has to be unmuted for the
+ * Web Audio graph to receive samples, which autoplay policies can refuse; when
+ * that happens we encode video only rather than failing the whole clip.
+ */
+async function setUpAudioPassthrough(
+  video: HTMLVideoElement
+): Promise<ElementAudioCapture | null> {
+  let capture: ElementAudioCapture | null = null;
+  try {
+    capture = captureElementAudio(video);
+    if (!capture) return null;
+    await video.play();
+    video.pause();
+    return capture;
+  } catch {
+    capture?.dispose();
+    return null;
+  }
 }
 
 export default function UnderwaterPage() {
@@ -449,6 +478,8 @@ export default function UnderwaterPage() {
       const videoUrl = URL.createObjectURL(file);
       let stream: MediaStream | null = null;
       let recordCanvas: HTMLCanvasElement | null = null;
+      let renderer: ColorMatrixRenderer | null = null;
+      let audio: ElementAudioCapture | null = null;
       let stopPump: (() => void) | null = null;
 
       video.muted = true;
@@ -461,8 +492,10 @@ export default function UnderwaterPage() {
 
       try {
         await waitForVideoData(video);
+        let frameRate = DEFAULT_FRAME_RATE;
         try {
           await video.play();
+          frameRate = await probeFrameRate(video);
           video.pause();
         } catch {
           // Muted play unlocks decoding; seeking still works if play is blocked.
@@ -491,46 +524,29 @@ export default function UnderwaterPage() {
         );
         video.style.width = `${width}px`;
         video.style.height = `${height}px`;
-        setTotalFrames(Math.max(1, Math.round(duration * 30)));
-
-        const processCanvas = document.createElement('canvas');
-        processCanvas.width = width;
-        processCanvas.height = height;
-        const processCtx = processCanvas.getContext('2d', {
-          willReadFrequently: true,
-        });
-        recordCanvas = document.createElement('canvas');
-        recordCanvas.width = width;
-        recordCanvas.height = height;
-        const recordCtx = recordCanvas.getContext('2d', { alpha: false });
-        if (!processCtx || !recordCtx) {
-          throw new Error('Could not get canvas context');
-        }
-        if (typeof recordCanvas.captureStream !== 'function') {
-          throw new Error(
-            'Video colour-fix is not supported in this browser. Try the latest Chrome, Firefox, or Safari.'
-          );
-        }
-        mountOffscreen(recordCanvas);
-        recordCanvas.style.width = `${width}px`;
-        recordCanvas.style.height = `${height}px`;
+        setTotalFrames(Math.max(1, Math.round(duration * frameRate)));
 
         await waitForVideoTime(video, 0);
-        processCtx.drawImage(video, 0, 0, width, height);
-        const sample = processCtx.getImageData(0, 0, width, height);
+
+        // One-shot analysis frame: the matrix and the still preview are both
+        // derived on the CPU, where the cost is paid once rather than per frame.
+        const sampleCanvas = document.createElement('canvas');
+        sampleCanvas.width = width;
+        sampleCanvas.height = height;
+        const sampleCtx = sampleCanvas.getContext('2d', {
+          willReadFrequently: true,
+        });
+        if (!sampleCtx) {
+          throw new Error('Could not get canvas context');
+        }
+        sampleCtx.imageSmoothingEnabled = true;
+        sampleCtx.imageSmoothingQuality = 'high';
+        sampleCtx.drawImage(video, 0, 0, width, height);
+        const sample = sampleCtx.getImageData(0, 0, width, height);
         const matrix = getColorFilterMatrix(sample.data, width, height);
         videoMatrixRef.current = matrix;
         videoSourceFrameRef.current = sample;
         const scaled = scaleColorMatrix(matrix, intensityValue / 100);
-
-        const paint = () => {
-          processCtx.drawImage(video, 0, 0, width, height);
-          const frame = processCtx.getImageData(0, 0, width, height);
-          const corrected = applyColorMatrix(frame, scaled);
-          processCtx.putImageData(corrected, 0, 0);
-          recordCtx.drawImage(processCanvas, 0, 0);
-          if (stream) requestCanvasFrame(stream);
-        };
 
         const preview = applyColorMatrix(sample, scaled);
         const previewUrl = await imageDataToJpegUrl(preview);
@@ -540,22 +556,50 @@ export default function UnderwaterPage() {
         stillPreviewUrlRef.current = previewUrl;
         setStillPreviewUrl(previewUrl);
 
-        paint();
-        stream = recordCanvas.captureStream(30);
-        paint();
-        await waitOneFrame();
-        const session = await startCanvasRecorder(
-          stream,
-          clampVideoBitrate(file.size, duration)
+        recordCanvas = document.createElement('canvas');
+        recordCanvas.width = width;
+        recordCanvas.height = height;
+        if (typeof recordCanvas.captureStream !== 'function') {
+          throw new Error(
+            'Video colour-fix is not supported in this browser. Try the latest Chrome, Firefox, or Safari.'
+          );
+        }
+        mountOffscreen(recordCanvas);
+        recordCanvas.style.width = `${width}px`;
+        recordCanvas.style.height = `${height}px`;
+        renderer = createColorMatrixRenderer(
+          recordCanvas,
+          video.videoWidth,
+          video.videoHeight
         );
+        renderer.setMatrix(scaled);
+
+        audio = await setUpAudioPassthrough(video);
+
+        await waitForVideoTime(video, 0);
+
+        // Rate 0 means frames are captured only via requestFrame(), so every
+        // decoded frame lands in the encoder exactly once.
+        stream = recordCanvas.captureStream(0);
+        if (audio) stream.addTrack(audio.track);
+        renderer.render(video);
+        requestCanvasFrame(stream);
+        await waitOneFrame();
+
+        const session = await startCanvasRecorder(stream, {
+          videoBitsPerSecond: clampVideoBitrate(
+            file.size,
+            duration,
+            width * height,
+            frameRate
+          ),
+          withAudio: Boolean(audio),
+        });
 
         if (jobId !== videoJobRef.current) {
           if (session.recorder.state !== 'inactive') session.recorder.stop();
           return;
         }
-
-        await waitForVideoTime(video, 0);
-        paint();
 
         const ended = new Promise<void>((resolve, reject) => {
           const timeoutId = window.setTimeout(() => {
@@ -567,18 +611,28 @@ export default function UnderwaterPage() {
           };
         });
 
-        await video.play();
+        const activeRenderer = renderer;
+        const activeStream = stream;
+        let lastProgressAt = 0;
         stopPump = attachFramePump(video, () => {
           if (jobId !== videoJobRef.current) return;
-          paint();
-          const progress = Math.min(100, (video.currentTime / duration) * 100);
-          setVideoProgress(progress);
-          setProcessedFrames(Math.max(1, Math.round(video.currentTime * 30)));
+          activeRenderer.render(video);
+          requestCanvasFrame(activeStream);
+          // Re-rendering this page on every frame would itself cost frames.
+          const now = performance.now();
+          if (now - lastProgressAt < PROGRESS_INTERVAL_MS) return;
+          lastProgressAt = now;
+          setVideoProgress(Math.min(100, (video.currentTime / duration) * 100));
+          setProcessedFrames(
+            Math.max(1, Math.round(video.currentTime * frameRate))
+          );
         });
+        await video.play();
         await ended;
         stopPump();
         stopPump = null;
-        paint();
+        renderer.render(video);
+        requestCanvasFrame(stream);
         await waitOneFrame();
 
         if (jobId !== videoJobRef.current) {
@@ -593,7 +647,7 @@ export default function UnderwaterPage() {
           );
         }
         const encodedDuration = await readBlobDuration(processedVideoBlob);
-        if (encodedDuration < 0.2) {
+        if (encodedDuration !== null && encodedDuration < 0.2) {
           throw new Error(
             'Video encoding produced an empty clip. Try Chrome or Firefox with an MP4 file.'
           );
@@ -623,6 +677,8 @@ export default function UnderwaterPage() {
         }
       } finally {
         stopPump?.();
+        audio?.dispose();
+        renderer?.dispose();
         stream?.getTracks().forEach((track) => track.stop());
         recordCanvas?.remove();
         video.remove();

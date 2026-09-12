@@ -1,13 +1,38 @@
 const MAX_OUTPUT_EDGE = 1920;
-const MAX_BITRATE = 8_000_000;
-const MIN_BITRATE = 1_500_000;
+const DEFAULT_OUTPUT_PIXELS = 1920 * 1080;
 
-const RECORDER_TYPES = [
-  'video/webm;codecs=vp8',
-  'video/webm',
-  'video/webm;codecs=vp9',
+// Re-encoding an already-compressed clip at its source bitrate always loses,
+// because the encoder has to spend bits reproducing the source's own artifacts.
+const TRANSCODE_HEADROOM = 1.6;
+const BITS_PER_PIXEL_PER_FRAME = 0.2;
+const MAX_BITRATE = 24_000_000;
+const MIN_BITRATE = 4_000_000;
+const AUDIO_BITRATE = 128_000;
+
+export const DEFAULT_FRAME_RATE = 30;
+const MIN_FRAME_RATE = 12;
+const MAX_FRAME_RATE = 60;
+
+// Ordered best-first. Every browser supports VP8, so it has to sit last or it
+// wins every negotiation despite being the weakest encoder of the set.
+const VIDEO_ONLY_TYPES = [
+  'video/mp4;codecs=avc1.640029',
+  'video/mp4;codecs=avc1.4d0028',
   'video/mp4;codecs=avc1.42E01E',
   'video/mp4',
+  'video/webm;codecs=vp9',
+  'video/webm;codecs=vp8',
+  'video/webm',
+];
+
+const AUDIO_VIDEO_TYPES = [
+  'video/mp4;codecs=avc1.640029,mp4a.40.2',
+  'video/mp4;codecs=avc1.4d0028,mp4a.40.2',
+  'video/mp4;codecs=avc1.42E01E,mp4a.40.2',
+  'video/mp4',
+  'video/webm;codecs=vp9,opus',
+  'video/webm;codecs=vp8,opus',
+  'video/webm',
 ];
 
 export function evenOutputSize(width: number, height: number): {
@@ -21,9 +46,21 @@ export function evenOutputSize(width: number, height: number): {
   };
 }
 
-export function clampVideoBitrate(fileSizeBytes: number, durationSec: number): number {
-  const fromFile = (fileSizeBytes * 8) / Math.max(durationSec, 0.1);
-  return Math.min(MAX_BITRATE, Math.max(MIN_BITRATE, fromFile));
+export function clampVideoBitrate(
+  fileSizeBytes: number,
+  durationSec: number,
+  outputPixels = DEFAULT_OUTPUT_PIXELS,
+  frameRate = DEFAULT_FRAME_RATE
+): number {
+  const sourceBits = Math.max(
+    0,
+    (fileSizeBytes * 8) / Math.max(durationSec, 0.1) - AUDIO_BITRATE
+  );
+  const budget = outputPixels * frameRate * BITS_PER_PIXEL_PER_FRAME;
+  const target = Math.max(sourceBits * TRANSCODE_HEADROOM, budget * 0.5);
+  return Math.round(
+    Math.max(MIN_BITRATE, Math.min(MAX_BITRATE, budget, target))
+  );
 }
 
 export function recorderContainerType(mimeType: string): 'video/mp4' | 'video/webm' {
@@ -79,6 +116,182 @@ export function applyColorMatrix(
   }
 
   return next;
+}
+
+const VERTEX_SHADER_SOURCE = `
+attribute vec2 a_position;
+varying vec2 v_uv;
+void main() {
+  v_uv = vec2((a_position.x + 1.0) * 0.5, 1.0 - (a_position.y + 1.0) * 0.5);
+  gl_Position = vec4(a_position, 0.0, 1.0);
+}
+`;
+
+const FRAGMENT_SHADER_SOURCE = `
+precision highp float;
+uniform sampler2D u_texture;
+uniform mat3 u_matrix;
+uniform vec3 u_offset;
+uniform vec2 u_tap;
+varying vec2 v_uv;
+
+vec3 sampleSource(vec2 uv) {
+  if (u_tap.x <= 0.0 && u_tap.y <= 0.0) {
+    return texture2D(u_texture, uv).rgb;
+  }
+  return 0.25 * (
+    texture2D(u_texture, uv + vec2(-u_tap.x, -u_tap.y)).rgb +
+    texture2D(u_texture, uv + vec2(u_tap.x, -u_tap.y)).rgb +
+    texture2D(u_texture, uv + vec2(-u_tap.x, u_tap.y)).rgb +
+    texture2D(u_texture, uv + vec2(u_tap.x, u_tap.y)).rgb
+  );
+}
+
+void main() {
+  vec3 corrected = u_matrix * sampleSource(v_uv) + u_offset;
+  gl_FragColor = vec4(clamp(corrected, 0.0, 1.0), 1.0);
+}
+`;
+
+export type ColorMatrixRenderer = {
+  setMatrix: (scaledMatrix: number[]) => void;
+  render: (source: TexImageSource) => void;
+  dispose: () => void;
+};
+
+function compileShader(
+  gl: WebGLRenderingContext,
+  type: number,
+  source: string
+): WebGLShader {
+  const shader = gl.createShader(type);
+  if (!shader) throw new Error('Could not create WebGL shader');
+  gl.shaderSource(shader, source);
+  gl.compileShader(shader);
+  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+    const log = gl.getShaderInfoLog(shader);
+    gl.deleteShader(shader);
+    throw new Error(`Could not compile WebGL shader: ${log ?? 'unknown error'}`);
+  }
+  return shader;
+}
+
+/**
+ * Applies the colour matrix on the GPU so a frame costs well under a
+ * millisecond. The CPU version cannot keep pace with real-time playback at
+ * 1080p, which leaves the recorder capturing stale frames.
+ */
+export function createColorMatrixRenderer(
+  canvas: HTMLCanvasElement,
+  sourceWidth: number,
+  sourceHeight: number
+): ColorMatrixRenderer {
+  const gl = canvas.getContext('webgl', {
+    alpha: false,
+    antialias: false,
+    depth: false,
+    stencil: false,
+    premultipliedAlpha: false,
+    preserveDrawingBuffer: true,
+  }) as WebGLRenderingContext | null;
+
+  if (!gl) {
+    throw new Error(
+      'Video colour-fix needs WebGL. Try the latest Chrome, Firefox, or Safari.'
+    );
+  }
+
+  const vertexShader = compileShader(gl, gl.VERTEX_SHADER, VERTEX_SHADER_SOURCE);
+  const fragmentShader = compileShader(
+    gl,
+    gl.FRAGMENT_SHADER,
+    FRAGMENT_SHADER_SOURCE
+  );
+  const program = gl.createProgram();
+  if (!program) throw new Error('Could not create WebGL program');
+  gl.attachShader(program, vertexShader);
+  gl.attachShader(program, fragmentShader);
+  gl.linkProgram(program);
+  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+    const log = gl.getProgramInfoLog(program);
+    throw new Error(`Could not link WebGL program: ${log ?? 'unknown error'}`);
+  }
+  gl.useProgram(program);
+
+  const buffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+  gl.bufferData(
+    gl.ARRAY_BUFFER,
+    new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]),
+    gl.STATIC_DRAW
+  );
+  const positionLocation = gl.getAttribLocation(program, 'a_position');
+  gl.enableVertexAttribArray(positionLocation);
+  gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
+
+  const texture = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, texture);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+
+  const matrixLocation = gl.getUniformLocation(program, 'u_matrix');
+  const offsetLocation = gl.getUniformLocation(program, 'u_offset');
+  const tapLocation = gl.getUniformLocation(program, 'u_tap');
+
+  // A single bilinear tap aliases when minifying, so widen to a 2x2 box once
+  // the downscale is steep enough to matter.
+  const minifies =
+    sourceWidth / Math.max(canvas.width, 1) > 1.2 ||
+    sourceHeight / Math.max(canvas.height, 1) > 1.2;
+  gl.uniform2f(
+    tapLocation,
+    minifies ? 0.25 / canvas.width : 0,
+    minifies ? 0.25 / canvas.height : 0
+  );
+  gl.viewport(0, 0, canvas.width, canvas.height);
+
+  return {
+    setMatrix(scaledMatrix: number[]) {
+      // GLSL mat3 is column-major; the matrix rows are r/g/b output channels.
+      gl.uniformMatrix3fv(
+        matrixLocation,
+        false,
+        new Float32Array([
+          scaledMatrix[0],
+          scaledMatrix[5],
+          scaledMatrix[10],
+          scaledMatrix[1],
+          scaledMatrix[6],
+          scaledMatrix[11],
+          scaledMatrix[2],
+          scaledMatrix[7],
+          scaledMatrix[12],
+        ])
+      );
+      gl.uniform3f(
+        offsetLocation,
+        scaledMatrix[4],
+        scaledMatrix[9],
+        scaledMatrix[14]
+      );
+    },
+    render(source: TexImageSource) {
+      gl.bindTexture(gl.TEXTURE_2D, texture);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, source);
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+      gl.flush();
+    },
+    dispose() {
+      gl.deleteTexture(texture);
+      gl.deleteBuffer(buffer);
+      gl.deleteProgram(program);
+      gl.deleteShader(vertexShader);
+      gl.deleteShader(fragmentShader);
+      gl.getExtension('WEBGL_lose_context')?.loseContext();
+    },
+  };
 }
 
 export function imageDataToJpegUrl(imageData: ImageData, quality = 0.85): Promise<string> {
@@ -185,7 +398,11 @@ export async function waitOneFrame(): Promise<void> {
   });
 }
 
-export async function readBlobDuration(blob: Blob): Promise<number> {
+/**
+ * Returns null when the container reports no usable duration, which some
+ * recorders do for an otherwise valid clip. Callers must not read that as empty.
+ */
+export async function readBlobDuration(blob: Blob): Promise<number | null> {
   const url = URL.createObjectURL(blob);
   try {
     const video = document.createElement('video');
@@ -195,10 +412,57 @@ export async function readBlobDuration(blob: Blob): Promise<number> {
     await waitForVideoData(video);
     const duration = video.duration;
     video.src = '';
-    return Number.isFinite(duration) ? duration : 0;
+    return Number.isFinite(duration) ? duration : null;
   } finally {
     URL.revokeObjectURL(url);
   }
+}
+
+export type ElementAudioCapture = {
+  track: MediaStreamTrack;
+  dispose: () => void;
+};
+
+type AudioContextConstructor = new () => AudioContext;
+
+/**
+ * Routes the element's audio into a MediaStream so the recorder can mux it.
+ * The graph is deliberately not wired to the speakers, so nothing is audible
+ * while the clip processes. Returns null when the browser has no Web Audio.
+ */
+export function captureElementAudio(
+  video: HTMLVideoElement
+): ElementAudioCapture | null {
+  const AudioContextImpl = (window.AudioContext ??
+    (window as unknown as { webkitAudioContext?: AudioContextConstructor })
+      .webkitAudioContext) as AudioContextConstructor | undefined;
+  if (!AudioContextImpl) return null;
+
+  const context = new AudioContextImpl();
+  const source = context.createMediaElementSource(video);
+  const destination = context.createMediaStreamDestination();
+  source.connect(destination);
+
+  const track = destination.stream.getAudioTracks()[0];
+  if (!track) {
+    source.disconnect();
+    void context.close();
+    return null;
+  }
+
+  // A MediaElementAudioSourceNode stays silent while the element is muted.
+  video.muted = false;
+  void context.resume();
+
+  return {
+    track,
+    dispose: () => {
+      video.muted = true;
+      source.disconnect();
+      track.stop();
+      void context.close();
+    },
+  };
 }
 
 export type CanvasRecorderSession = {
@@ -207,9 +471,14 @@ export type CanvasRecorderSession = {
   stop: () => Promise<Blob>;
 };
 
+export type RecorderSettings = {
+  videoBitsPerSecond: number;
+  withAudio?: boolean;
+};
+
 export async function startCanvasRecorder(
   stream: MediaStream,
-  bitsPerSecond: number
+  settings: RecorderSettings
 ): Promise<CanvasRecorderSession> {
   if (typeof MediaRecorder === 'undefined') {
     throw new Error(
@@ -217,15 +486,19 @@ export async function startCanvasRecorder(
     );
   }
 
+  const preferred = settings.withAudio ? AUDIO_VIDEO_TYPES : VIDEO_ONLY_TYPES;
   const candidates = [
-    ...RECORDER_TYPES.filter((type) => MediaRecorder.isTypeSupported(type)),
+    ...preferred.filter((type) => MediaRecorder.isTypeSupported(type)),
     '',
   ];
 
   let lastError: unknown;
   for (const mimeType of candidates) {
     try {
-      const options: MediaRecorderOptions = { videoBitsPerSecond: bitsPerSecond };
+      const options: MediaRecorderOptions = {
+        videoBitsPerSecond: settings.videoBitsPerSecond,
+      };
+      if (settings.withAudio) options.audioBitsPerSecond = AUDIO_BITRATE;
       if (mimeType) options.mimeType = mimeType;
       const recorder = new MediaRecorder(stream, options);
       const chunks: Blob[] = [];
@@ -305,9 +578,69 @@ function finalizeRecorder(
   });
 }
 
-type VideoWithFrameCallback = HTMLVideoElement & {
-  requestVideoFrameCallback?: (cb: () => void) => number;
+type VideoFrameMetadata = {
+  mediaTime: number;
+  presentedFrames: number;
 };
+
+type VideoWithFrameCallback = HTMLVideoElement & {
+  requestVideoFrameCallback?: (
+    cb: (now: number, metadata: VideoFrameMetadata) => void
+  ) => number;
+};
+
+export function normalizeFrameRate(frameRate: number): number {
+  if (!Number.isFinite(frameRate) || frameRate <= 0) return DEFAULT_FRAME_RATE;
+  return Math.min(MAX_FRAME_RATE, Math.max(MIN_FRAME_RATE, Math.round(frameRate)));
+}
+
+/**
+ * Measures the source frame rate from presented frames so the bitrate budget
+ * and progress counter match the clip instead of assuming 30fps.
+ * The video must already be playing.
+ */
+export function probeFrameRate(
+  video: HTMLVideoElement,
+  sampleMs = 400
+): Promise<number> {
+  const el = video as VideoWithFrameCallback;
+  if (typeof el.requestVideoFrameCallback !== 'function') {
+    return Promise.resolve(DEFAULT_FRAME_RATE);
+  }
+
+  return new Promise((resolve) => {
+    let first: VideoFrameMetadata | null = null;
+    let last: VideoFrameMetadata | null = null;
+    let stopped = false;
+
+    const onFrame = (_now: number, metadata: VideoFrameMetadata) => {
+      if (stopped) return;
+      if (!first) {
+        first = metadata;
+      } else {
+        last = metadata;
+      }
+      el.requestVideoFrameCallback!(onFrame);
+    };
+
+    window.setTimeout(() => {
+      stopped = true;
+      if (!first || !last) {
+        resolve(DEFAULT_FRAME_RATE);
+        return;
+      }
+      const frames = last.presentedFrames - first.presentedFrames;
+      const seconds = last.mediaTime - first.mediaTime;
+      if (frames < 2 || seconds <= 0) {
+        resolve(DEFAULT_FRAME_RATE);
+        return;
+      }
+      resolve(normalizeFrameRate(frames / seconds));
+    }, sampleMs);
+
+    el.requestVideoFrameCallback(onFrame);
+  });
+}
 
 export function attachFramePump(
   video: HTMLVideoElement,
