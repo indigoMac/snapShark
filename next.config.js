@@ -84,6 +84,8 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com",
               "font-src 'self' https://fonts.gstatic.com",
               "img-src 'self' data: blob: https://*.stripe.com https://images.clerk.dev https://*.clerk.com https://*.gravatar.com https://img.clerk.com https://*.tile.openstreetmap.org https://cdnjs.cloudflare.com",
+              // Local File blobs used by <video> in underwater colour-fix
+              "media-src 'self' blob:",
               "connect-src 'self' blob: https://api.stripe.com https://*.clerk.accounts.dev https://*.clerk.dev https://*.clerk.com https://clerk.snap-shark.com https://challenges.cloudflare.com https://vitals.vercel-insights.com https://clerk-telemetry.com https://cdn.jsdelivr.net https://*.google.com https://*.facebook.com https://*.github.com",
               "frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://challenges.cloudflare.com https://*.clerk.accounts.dev https://*.clerk.dev https://*.clerk.com https://*.google.com https://*.facebook.com https://*.github.com",
               "worker-src 'self' blob:",
